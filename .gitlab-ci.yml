@@ -1,15 +1,15 @@
-include:
-  - project: 'controls-ci/templates'
-    file: '/docker/build_image_template.yml'
-
 deploy:
-  extends: .build_image_template
+  image: docker:latest
+  services:
+    - docker:dind
   variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_HOST: unix:///var/run/docker.sock
     DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  tags:
+    - se13-docker-image-builder
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-  # All branches are tagged with $DOCKER_IMAGE_NAME (defaults to commit ref slug)
-  # Default branch is also tagged with `latest`
   script:
     - docker build --pull -t "$DOCKER_IMAGE_NAME" .
     - docker push "$DOCKER_IMAGE_NAME"
@@ -18,8 +18,12 @@ deploy:
         docker tag "$DOCKER_IMAGE_NAME" "$CI_REGISTRY_IMAGE:latest"
         docker push "$CI_REGISTRY_IMAGE:latest"
       fi
-  # Run this job when a tag is created and the Dockerfile exists
   rules:
-    - if: $CI_COMMIT_TAG
-      exists:
-        - Dockerfile
+    # Trigger the job for tags
+  - if: '$CI_COMMIT_TAG'
+  # Trigger the job for commits to main
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  # Trigger the job for merge requests to main
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+    exists:
+      - Dockerfile
