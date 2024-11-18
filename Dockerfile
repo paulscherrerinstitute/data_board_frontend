@@ -12,4 +12,8 @@ EXPOSE 8080
 
 RUN npm install -g serve
 
+RUN chmod +x /app/start.sh
+
+ENTRYPOINT ["/app/start.sh"]
+
 CMD ["serve", "-s", "build", "-l", "8080"]

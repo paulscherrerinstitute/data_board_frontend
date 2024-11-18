@@ -11,6 +11,9 @@
 # production
 /build
 
+# env config
+env-config.js
+
 # misc
 .DS_Store
 .env
