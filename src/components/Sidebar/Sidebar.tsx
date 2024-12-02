@@ -8,6 +8,7 @@ import {
     buttonContainerStyle,
     halfButtonStyle,
 } from "./Sidebar.styles";
+import Selector from "../Selector/Selector";
 
 const Sidebar: React.FC<SidebarProps> = ({
     initialWidthPercent = 40,
@@ -70,8 +71,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             window.removeEventListener("resize", handleResize);
         };
     }, [resize, stopResizing, stopResizingOnRightClick]);
-
-    const showSidebarContent = sidebarWidth >= windowWidth * 0.1; // Content visible if sidebar is at least 10% of the screen width
 
     const renderToggleButton = () => {
         return (
@@ -148,9 +147,9 @@ const Sidebar: React.FC<SidebarProps> = ({
             {renderToggleButton()}
 
             {/* Sidebar Content: Visible only if width >= 10% of screen width */}
-            {showSidebarContent && (
+            {(sidebarWidth >= windowWidth * 0.1 && sidebarWidth >= 200) && (
                 <Box sx={{ flexGrow: 1 }}>
-                    {/* Add your sidebar content here */}
+                    <Selector/>
                 </Box>
             )}
 
