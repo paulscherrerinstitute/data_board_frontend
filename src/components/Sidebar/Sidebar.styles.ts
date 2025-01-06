@@ -5,7 +5,8 @@ export const sidebarStyles: SxProps<Theme> = {
     flexDirection: "column",
     backgroundColor: "primary.main",
     position: "relative",
-    height: "100vh",
+    height: "100%",
+    background: "#353839",
 };
 
 export const resizerStyles: SxProps<Theme> = {
@@ -23,25 +24,35 @@ export const resizerStyles: SxProps<Theme> = {
 };
 
 export const buttonContainerStyle: SxProps<Theme> = {
-  position: "absolute",
-  top: "10px",
-  right: "-20px",
-  width: "60px",
-  zIndex: 1,
-  transform: "translateX(100%)",
-  display: "flex", // Ensure buttons are aligned horizontally
+    position: "absolute",
+    top: "10px",
+    right: "-20px",
+    width: "60px",
+    zIndex: 1,
+    transform: "translateX(100%)",
+    display: "flex",
 };
 
 export const toggleButtonStyles: SxProps<Theme> = {
-  flex: 1, // Take up all available space for a single button
-  minWidth: "100%",
-  width: "100%",
-  margin: 0,
+    flex: 1,
+    minWidth: "100%",
+    width: "100%",
+    margin: 0,
 };
 
 export const halfButtonStyle: SxProps<Theme> = {
-  flex: 1, // Share space evenly between the two half buttons
-  minWidth: 0,
-  width: "100%",
-  margin: 0,
+    flex: 1,
+    minWidth: 0,
+    width: "100%",
+    margin: 0,
 };
+
+export const selectorStyle = (
+    parentObjectWidth: number,
+    windowWidth: number
+): SxProps<Theme> => ({
+    display:
+        parentObjectWidth >= windowWidth * 0.1 && parentObjectWidth >= 200
+            ? "block"
+            : "none",
+});

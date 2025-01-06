@@ -1,18 +1,19 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, {
+    useRef,
+    useState,
+    useEffect,
+    useCallback,
+    useMemo,
+} from "react";
 import { Box, Button } from "@mui/material";
+import { throttle } from "lodash";
 import { SidebarProps } from "./Sidebar.types";
-import {
-    sidebarStyles,
-    resizerStyles,
-    toggleButtonStyles,
-    buttonContainerStyle,
-    halfButtonStyle,
-} from "./Sidebar.styles";
+import * as styles from "./Sidebar.styles";
 import Selector from "../Selector/Selector";
 
 const Sidebar: React.FC<SidebarProps> = ({
-    initialWidthPercent = 40,
-    maxWidthPercent = 60,
+    initialWidthPercent = 10,
+    maxWidthPercent = 100,
 }) => {
     const sidebarRef = useRef<HTMLDivElement>(null);
     const [isResizing, setIsResizing] = useState(false);
@@ -35,18 +36,23 @@ const Sidebar: React.FC<SidebarProps> = ({
 
     const stopResizing = useCallback(() => {
         setIsResizing(false);
+        console.log(sidebarWidth);
     }, []);
 
-    const resize = useCallback(
-        (event: MouseEvent) => {
-            if (isResizing && sidebarRef.current) {
-                const newWidth =
-                    event.clientX - sidebarRef.current.getBoundingClientRect().left;
-                setSidebarWidth(
-                    Math.max(minWidth, Math.min(newWidth, maxWidth))
-                );
-            }
-        },
+    const resize = useMemo(
+        () =>
+            throttle((event: MouseEvent) => {
+                if (isResizing && sidebarRef.current) {
+                    const newWidth =
+                        event.clientX -
+                        sidebarRef.current.getBoundingClientRect().left;
+                    //console.log(newWidth);
+                    setSidebarWidth(
+                        //870
+                        Math.max(minWidth, Math.min(newWidth, maxWidth))
+                    );
+                }
+            }, 42), // Update frequency (42ms ~= 24fps)
         [isResizing, maxWidth, minWidth]
     );
 
@@ -74,21 +80,21 @@ const Sidebar: React.FC<SidebarProps> = ({
 
     const renderToggleButton = () => {
         return (
-            <Box sx={buttonContainerStyle}>
-                {sidebarWidth <= minWidth ? (
+            <Box sx={styles.buttonContainerStyle}>
+                {sidebarWidth <= minWidth ? ( // Either only show expand button (if sidebar is fully collapsed)
                     <Button
-                        onClick={() => setSidebarWidth(maxWidth)} // Directly expand the sidebar
-                        sx={toggleButtonStyles}
+                        onClick={() => setSidebarWidth(maxWidth)}
+                        sx={styles.toggleButtonStyles}
                         variant="contained"
                         size="small"
                         aria-label="Expand Sidebar"
                     >
                         {">"}
                     </Button>
-                ) : sidebarWidth >= maxWidth ? (
+                ) : sidebarWidth >= maxWidth ? ( // Or only show collapse button (if sidebar is fully expanded)
                     <Button
-                        onClick={() => setSidebarWidth(minWidth)} // Directly collapse the sidebar
-                        sx={toggleButtonStyles}
+                        onClick={() => setSidebarWidth(minWidth)}
+                        sx={styles.toggleButtonStyles}
                         variant="contained"
                         size="small"
                         aria-label="Collapse Sidebar"
@@ -96,11 +102,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                         {"<"}
                     </Button>
                 ) : (
+                    // If the sidebar width is somewhere in between fully collapsed and fully expanded, show both
                     <>
                         <Button
                             onClick={() => setSidebarWidth(minWidth)} // Collapse
                             sx={{
-                                ...halfButtonStyle,
+                                ...styles.halfButtonStyle,
                                 borderTopRightRadius: 0,
                                 borderBottomRightRadius: 0,
                             }}
@@ -111,9 +118,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                             {"<"}
                         </Button>
                         <Button
-                            onClick={() => setSidebarWidth(maxWidth)} // Uncollapse
+                            onClick={() => setSidebarWidth(maxWidth)} // Expand
                             sx={{
-                                ...halfButtonStyle,
+                                ...styles.halfButtonStyle,
                                 borderTopLeftRadius: 0,
                                 borderBottomLeftRadius: 0,
                             }}
@@ -133,28 +140,24 @@ const Sidebar: React.FC<SidebarProps> = ({
         <Box
             ref={sidebarRef}
             sx={{
-                ...sidebarStyles,
+                ...styles.sidebarStyles,
                 width: sidebarWidth,
-                minWidth,
-                maxWidth,
                 transition: "width 0.1s ease",
                 userSelect: isResizing ? "none" : "auto", // Prevent text selection while resizing
             }}
-            aria-expanded={sidebarWidth > minWidth} // Accessibility improvement: show sidebar state for screen readers
+            aria-expanded={sidebarWidth > minWidth} // Accessibility: show sidebar state for screen readers
             aria-hidden={sidebarWidth <= minWidth} // If collapsed, hide content from screen readers
         >
             {/* Collapse/Expand Button */}
             {renderToggleButton()}
 
-            {/* Sidebar Content: Visible only if width >= 10% of screen width */}
-            {(sidebarWidth >= windowWidth * 0.1 && sidebarWidth >= 200) && (
-                <Box sx={{ flexGrow: 1 }}>
-                    <Selector/>
-                </Box>
-            )}
+            {/* Sidebar Content: Visible only if width >= 10% of screen width and that is >= 200px */}
+            <Box sx={{ ...styles.selectorStyle(sidebarWidth, windowWidth) }}>
+                <Selector />
+            </Box>
 
             {/* Resizer Handle */}
-            <Box sx={resizerStyles} onMouseDown={startResizing} />
+            <Box sx={styles.resizerStyles} onMouseDown={startResizing} />
         </Box>
     );
 };

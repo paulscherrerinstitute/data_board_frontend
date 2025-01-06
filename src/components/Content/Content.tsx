@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Box, Button, Typography } from "@mui/material";
-import {
-    contentContainerStyles,
-    topBarStyles,
-    gridContainerStyles,
-    gridItemStyles,
-} from "./Content.styles";
+import * as styles from "./Content.styles";
 import { useApiUrls } from "../ApiContext/ApiContext";
+import TimeSelector from "./TimeSelector/TimeSelector";
 
 const Content: React.FC = () => {
     const { backendUrl } = useApiUrls();
+    const gridItems = [1, 2, 3, 4, 5];
     const [counter, setCounter] = useState<number | null>(null);
+    const [timeValues, setTimeValues] = useState({
+        startTime: "",
+        endTime: "",
+        queryExpansion: false,
+    });
 
     useEffect(() => {
         // Fetch the current counter from the backend
@@ -31,22 +33,42 @@ const Content: React.FC = () => {
             );
     };
 
-    const gridItems = [1, 2, 3, 4, 5]; // Hardcoding 5 items for now
+    const handleTimeChange = useCallback(
+        (values: {
+            startTime: string;
+            endTime: string;
+            queryExpansion: boolean;
+        }) => {
+            setTimeValues(values);
+            console.log("Updated Time Values:", values);
+        },
+        []
+    );
+
+    const handleRefresh = () => {
+        console.log("refreshed");
+        console.log("Current Time Values:", timeValues);
+    };
 
     return (
-        <Box sx={contentContainerStyles}>
+        <Box sx={styles.contentContainerStyles}>
             {/* Top Bar Placeholder */}
-            <Box sx={topBarStyles}>
-                <Typography variant="h6" color="textSecondary">
-                    Here would be the time specification
-                </Typography>
+            <Box sx={styles.topBarStyles}>
+                <TimeSelector
+                    onTimeChange={handleTimeChange}
+                    onRefresh={handleRefresh}
+                />
             </Box>
 
             {/* Grid of elements */}
-            <Box sx={gridContainerStyles}>
+            <Box sx={styles.gridContainerStyles}>
                 {gridItems.map((item, index) => (
-                    <Box key={index} sx={gridItemStyles}>
-                        <Typography variant="h6" color="textPrimary" sx={{ marginBottom: 2 }}>
+                    <Box key={index} sx={styles.gridItemStyles}>
+                        <Typography
+                            variant="h6"
+                            color="textPrimary"
+                            sx={{ marginBottom: 2 }}
+                        >
                             Counter: {counter !== null ? counter : "Loading..."}
                         </Typography>
                         <Button
