@@ -6,5 +6,6 @@ export interface ListItemRowProps {
         onSelect: (key: string) => void;
         onDeselect: (key: string) => void;
         selectedChannels: string[];
+        isDraggable: boolean;
     };
 }

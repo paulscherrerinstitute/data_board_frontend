@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import React, {
+    useState,
+    useMemo,
+    useEffect,
+    useCallback,
+    useRef,
+} from "react";
 import {
     Box,
     Typography,
@@ -42,7 +48,9 @@ const Selector: React.FC = () => {
             if (selectRef.current) {
                 const width = selectRef.current.offsetWidth;
                 // Magic formula I discovered (brute forced), achieves the best character limits I could achieve amongst all screen sizes / resolutions.
-                setMaxCharacters(Math.floor(width/14.3 - Math.min(width/14.3, 11.3)));
+                setMaxCharacters(
+                    Math.floor(width / 14.3 - Math.min(width / 14.3, 11.3))
+                );
             }
         }, 16); // 16ms =~ 60fps
 
@@ -63,9 +71,9 @@ const Selector: React.FC = () => {
             try {
                 const parsedChannels = JSON.parse(channelsParam);
                 const channels = parsedChannels.map(
-                        (channel: { channelName: string; backend: string }) => {
-                                return `${channel.backend}|${channel.channelName}`;
-                        }
+                    (channel: { channelName: string; backend: string }) => {
+                        return `${channel.backend}|${channel.channelName}`;
+                    }
                 );
                 urlChannels = channels;
                 setSelectedChannels(channels);
@@ -74,7 +82,7 @@ const Selector: React.FC = () => {
             }
         }
 
-        const fetchRecent = async () =>  {
+        const fetchRecent = async () => {
             try {
                 const response = await axios.get<{
                     channels: string[][];
@@ -83,12 +91,10 @@ const Selector: React.FC = () => {
                 const joinedData = response.data.channels.map((item) =>
                     item.join("|")
                 );
-                const filteredResults = joinedData.filter(
-                    (key: string) => {
-                        const substring = key.split('|').slice(0, 2).join('|');
-                        return !urlChannels.includes(substring);
-                    }
-                );
+                const filteredResults = joinedData.filter((key: string) => {
+                    const substring = key.split("|").slice(0, 2).join("|");
+                    return !urlChannels.includes(substring);
+                });
 
                 // Extract unique backends and data types, used for filtering
                 const backends = Array.from(
@@ -97,7 +103,7 @@ const Selector: React.FC = () => {
                 const types = Array.from(
                     new Set(filteredResults.map((key) => key.split("|")[3]))
                 );
-                
+
                 if (searchResults.length === 0) {
                     setBackendOptions(backends);
                     setTypeOptions(types);
@@ -116,8 +122,8 @@ const Selector: React.FC = () => {
                 }
             } catch (err) {
                 console.log(err);
-            }        
-        }
+            }
+        };
         fetchRecent();
     }, []);
 
@@ -150,12 +156,10 @@ const Selector: React.FC = () => {
                     const joinedData = response.data.channels.map((item) =>
                         item.join("|")
                     );
-                    const filteredResults = joinedData.filter(
-                        (key: string) => {
-                            const substring = key.split('|').slice(0, 2).join('|');
-                            return !selectedChannels.includes(substring);
-                        }
-                    );
+                    const filteredResults = joinedData.filter((key: string) => {
+                        const substring = key.split("|").slice(0, 2).join("|");
+                        return !selectedChannels.includes(substring);
+                    });
 
                     // Extract unique backends and data types, used for filtering
                     const backends = Array.from(
@@ -185,7 +189,12 @@ const Selector: React.FC = () => {
                 }
                 setLoading(false);
             }, 300),
-        [selectedChannels, backendUrl, selectedBackends.length, selectedTypes.length]
+        [
+            selectedChannels,
+            backendUrl,
+            selectedBackends.length,
+            selectedTypes.length,
+        ]
     );
 
     const handleSearchTermChange = useCallback(
@@ -281,7 +290,7 @@ const Selector: React.FC = () => {
                     )}
                     :
                 </Typography>
-                <Box sx={{...styles.dropwDownBoxStyle}}>
+                <Box sx={{ ...styles.dropwDownBoxStyle }}>
                     <Select
                         multiple
                         value={selectedBackends}
@@ -294,7 +303,7 @@ const Selector: React.FC = () => {
                                 ? `${concatenated.slice(0, maxCharacters)}...`
                                 : concatenated;
                         }}
-                        sx = {styles.filterDropdownStyle}
+                        sx={styles.filterDropdownStyle}
                     >
                         {backendOptions.map((backend) => (
                             <MenuItem
@@ -342,11 +351,18 @@ const Selector: React.FC = () => {
             {/* Available unselected channels */}
             <Box sx={styles.listBoxStyle}>
                 <Typography sx={styles.typographyHeaderStyle}>
-                    {searchResultsIsRecent ? "Recent Channels" : "Search Results" } ({filteredResults.length})
+                    {searchResultsIsRecent
+                        ? "Recent Channels"
+                        : "Search Results"}{" "}
+                    ({filteredResults.length})
                 </Typography>
-                
-                {loading && <CircularProgress sx={styles.statusSymbolStyle}/>}
-                {error && <Alert severity="error" sx={styles.statusSymbolStyle}>{error}</Alert>}
+
+                {loading && <CircularProgress sx={styles.statusSymbolStyle} />}
+                {error && (
+                    <Alert severity="error" sx={styles.statusSymbolStyle}>
+                        {error}
+                    </Alert>
+                )}
 
                 <ListWindow
                     height={380}
@@ -358,6 +374,7 @@ const Selector: React.FC = () => {
                         onSelect: handleSelectChannel,
                         onDeselect: handleDeselectChannel,
                         selectedChannels,
+                        isDraggable: false,
                     }}
                 >
                     {ListItemRow}
@@ -379,6 +396,7 @@ const Selector: React.FC = () => {
                         onSelect: handleSelectChannel,
                         onDeselect: handleDeselectChannel,
                         selectedChannels,
+                        isDraggable: true,
                     }}
                 >
                     {ListItemRow}

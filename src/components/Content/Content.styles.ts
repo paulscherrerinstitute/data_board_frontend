@@ -52,3 +52,17 @@ export const gridItemStyles: SxProps<Theme> = {
         transform: "scale(1.05)",
     },
 };
+
+export const CreateWidgetStyles: SxProps<Theme> = {
+    ...gridItemStyles,
+    position: "relative",
+    "&::before": {
+        content: '"+"',
+        fontSize: "400px",
+        color: "white",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+    },
+}
