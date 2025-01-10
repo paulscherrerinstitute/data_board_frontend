@@ -66,7 +66,7 @@ const Selector: React.FC = () => {
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const channelsParam = urlParams.get("channels");
-        var urlChannels: any;
+        var urlChannels: string[] = [];
         if (channelsParam) {
             try {
                 const parsedChannels = JSON.parse(channelsParam);
@@ -103,7 +103,6 @@ const Selector: React.FC = () => {
                 const types = Array.from(
                     new Set(filteredResults.map((key) => key.split("|")[3]))
                 );
-
                 if (searchResults.length === 0) {
                     setBackendOptions(backends);
                     setTypeOptions(types);

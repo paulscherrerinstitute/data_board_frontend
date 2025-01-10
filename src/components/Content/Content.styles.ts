@@ -1,4 +1,5 @@
 import { SxProps, Theme } from "@mui/material";
+import Background from '../../media/plus.svg';
 
 export const contentContainerStyles: SxProps<Theme> = {
     flexGrow: 1,
@@ -24,45 +25,40 @@ export const topBarStyles: SxProps<Theme> = {
 };
 
 export const gridContainerStyles: SxProps<Theme> = {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(max(280px, 40vw), 1fr))", // 20% screen width, auto-fill for responsive layout
-    gap: "16px",
     width: "100%",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
     padding: "16px",
     flexGrow: 1,
     overflowY: "auto",
-    justifyItems: "center",
-    placeItems: "center",
-    height: 0,
 };
 
 export const gridItemStyles: SxProps<Theme> = {
-    minWidth: "280px",
-    width: "40vw",
+    width: "max(40vw, 280px)",
     height: "40vh",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#e0e0e0",
     borderRadius: "8px",
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-    transition: "transform 0.3s ease",
+    transition: "transform 0.3s ease, background-color 0.2s ease",
     "&:hover": {
-        transform: "scale(1.05)",
+        transform: "scale(1.01)",
     },
+
 };
 
 export const CreateWidgetStyles: SxProps<Theme> = {
     ...gridItemStyles,
-    position: "relative",
-    "&::before": {
-        content: '"+"',
-        fontSize: "400px",
-        color: "white",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-    },
+    height: "5vh",
+    minHeight: "5vh",
+    width: "10vw",
+    margin: "auto",
+    backgroundImage: `url(${Background})`,
+    backgroundSize: 'contain',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    WebkitBackgroundSize: "50%"
 }

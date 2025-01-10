@@ -1,4 +1,5 @@
 import { UUID } from "crypto";
+import ReactGridLayout from "react-grid-layout";
 
 export interface Channel {
     channelName: string;
@@ -6,6 +7,6 @@ export interface Channel {
 }
 
 export interface Widget {
-    key: string;
     channels: Channel[];
+    layout: ReactGridLayout.Layout
 }

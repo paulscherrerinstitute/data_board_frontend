@@ -36,7 +36,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
     const stopResizing = useCallback(() => {
         setIsResizing(false);
-        console.log(sidebarWidth);
     }, []);
 
     const resize = useMemo(
