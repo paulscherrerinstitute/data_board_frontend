@@ -1,16 +1,17 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { Box, Button, Typography, IconButton } from "@mui/material";
+import { Box, Button, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
-import { Widget, Channel } from "./Content.types";
-import { initial, uniqueId } from "lodash";
+import { Widget, Channel, TimeValues } from "./Content.types";
+import { uniqueId } from "lodash";
 import ReactGridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
+import PlotWidget from "./PlotWidget/PlotWidget";
 
 const Content: React.FC = () => {
-    const [timeValues, setTimeValues] = useState({
+    const [timeValues, setTimeValues] = useState<TimeValues>({
         startTime: "",
         endTime: "",
         queryExpansion: false,
@@ -18,6 +19,9 @@ const Content: React.FC = () => {
     const [widgets, setWidgets] = useState<Widget[]>([]);
     const [draggedOverKey, setDraggedOverKey] = useState("");
     const [hoveredOverKey, setHoveredOverKey] = useState("");
+    const [gridWidth, setGridWidth] = useState(
+        window.innerWidth - window.innerWidth * 0.05
+    );
     const createWidgetButtonRef = useRef<HTMLButtonElement | null>(null);
     const defaultWidgetWidth = 6;
     const defaultWidgetHeight = 12;
@@ -168,10 +172,6 @@ const Content: React.FC = () => {
         []
     );
 
-    const handleRefresh = () => {
-        console.log("Current Time Values:", timeValues);
-    };
-
     const handleLayoutChange = (newLayout: ReactGridLayout.Layout[]) => {
         setWidgets((prevWidgets) =>
             prevWidgets.map((widget) => {
@@ -189,13 +189,36 @@ const Content: React.FC = () => {
         );
     };
 
+    useEffect(() => {
+        const handleResize = () => {
+            setGridWidth(window.innerWidth - window.innerWidth * 0.05);
+        };
+
+        window.addEventListener("resize", handleResize);
+        if (widgets.length === 0) {
+            setWidgets([
+                {
+                    channels: [],
+                    layout: {
+                        i: uniqueId(),
+                        x: 0,
+                        y: 0,
+                        w: 12,
+                        h: (window.innerHeight * 0.9) / (30 + 10) - 1,
+                    },
+                },
+            ]);
+        }
+
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
+    }, []);
+
     return (
         <Box sx={styles.contentContainerStyles}>
             <Box sx={styles.topBarStyles}>
-                <TimeSelector
-                    onTimeChange={handleTimeChange}
-                    onRefresh={handleRefresh}
-                />
+                <TimeSelector onTimeChange={handleTimeChange} />
             </Box>
 
             <Box sx={styles.gridContainerStyles}>
@@ -203,7 +226,7 @@ const Content: React.FC = () => {
                     <ReactGridLayout
                         cols={12}
                         rowHeight={30}
-                        width={window.innerWidth - window.innerWidth * 0.05}
+                        width={gridWidth}
                         autoSize={true}
                         resizeHandles={["sw", "nw", "se", "ne"]}
                         onLayoutChange={handleLayoutChange}
@@ -213,10 +236,10 @@ const Content: React.FC = () => {
                                 sx={{
                                     ...styles.gridItemStyles,
                                     position: "relative",
-                                    backgroundColor:
+                                    filter:
                                         draggedOverKey === layout.i
-                                            ? "rgba(0, 0, 0, 0.2)"
-                                            : "#e0e0e0",
+                                            ? "brightness(0.5)"
+                                            : "brightness(1)",
                                 }}
                                 onDrop={(event) => handleDrop(event, layout.i)}
                                 onDragOver={(event) =>
@@ -254,23 +277,11 @@ const Content: React.FC = () => {
                                         <CloseIcon fontSize="small" />
                                     </IconButton>
                                 )}
-                                <Typography
-                                    variant="h6"
-                                    color="textPrimary"
-                                    sx={{ marginBottom: 2 }}
-                                >
-                                    Drag and Drop Channels to Plot:
-                                    {channels.map((channel, index) => (
-                                        <Typography
-                                            variant="body1"
-                                            color="textSecondary"
-                                            key={index}
-                                        >
-                                            {channel.channelName} (
-                                            {channel.backend})
-                                        </Typography>
-                                    ))}
-                                </Typography>
+                                <PlotWidget
+                                    channels={channels}
+                                    timeValues={timeValues}
+                                    index={layout.i}
+                                ></PlotWidget>
                             </Box>
                         ))}
                     </ReactGridLayout>
@@ -281,10 +292,8 @@ const Content: React.FC = () => {
                     onDragLeave={handleDragLeave}
                     sx={{
                         ...styles.CreateWidgetStyles,
-                        backgroundColor:
-                            draggedOverKey === "-1"
-                                ? "rgba(0, 0, 0, 0.2)"
-                                : "#e0e0e0",
+                        filter:
+                            draggedOverKey === "-1" ? "brightness(0.5)" : "",
                     }}
                     aria-label="Add new"
                     onClick={() => handleCreateWidget()}

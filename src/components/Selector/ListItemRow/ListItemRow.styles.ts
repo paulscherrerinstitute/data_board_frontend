@@ -5,13 +5,13 @@ export const checkboxStyle: SxProps<Theme> = {
         color: "black",
         background: "white",
         borderRadius: 0,
-        padding: 0
+        padding: 0,
     },
     ".MuiSvgIcon-root": {
         border: 0,
         padding: 0,
-        margin: -0.3 -0.3,
-    }
+        margin: -0.3 - 0.3,
+    },
 };
 
 export const listItemTextStyle: SxProps<Theme> = {
@@ -19,7 +19,7 @@ export const listItemTextStyle: SxProps<Theme> = {
     overflow: "hidden",
     userSelect: "text",
     alignSelf: "left",
-    justifySelf: "left"
+    justifySelf: "left",
 };
 
 export const boxStyle: SxProps<Theme> = {
@@ -29,7 +29,7 @@ export const boxStyle: SxProps<Theme> = {
 
 export const listItemButtonStyle: SxProps<Theme> = {
     width: "10px",
-   paddingRight: 5,
+    paddingRight: 5,
     flexShrink: 1,
     maxWidth: 10,
 };

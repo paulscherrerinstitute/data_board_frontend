@@ -20,12 +20,12 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
     const handleDragStart = (event: React.DragEvent) => {
         const channel: Channel = { channelName: name, backend };
         event.dataTransfer.setData("text", JSON.stringify(channel));
-    
+
         // Create a visual drag preview element
         const dragPreview = document.createElement("div");
         dragPreview.style.position = "absolute"; // Prevent layout shifts
         dragPreview.style.zIndex = "9999"; // Make sure it appears above everything
-    
+
         const previewContainer = document.createElement("div");
         previewContainer.innerHTML = `
             <div style="display: flex; align-items: center; padding: 10px; background: #333; border-radius: 5px;">
@@ -37,7 +37,7 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
             </div>
         `;
         dragPreview.appendChild(previewContainer);
-    
+
         document.body.appendChild(dragPreview);
         event.dataTransfer.setDragImage(dragPreview, 0, 0);
         setTimeout(() => document.body.removeChild(dragPreview), 0);
@@ -48,7 +48,10 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
             style={style}
             key={key}
             disablePadding
-            {...(isDraggable ? { draggable: true, onDragStart: handleDragStart } : {})}        >
+            {...(isDraggable
+                ? { draggable: true, onDragStart: handleDragStart }
+                : {})}
+        >
             <Box sx={styles.boxStyle}>
                 <ListItemButton
                     sx={styles.listItemButtonStyle}

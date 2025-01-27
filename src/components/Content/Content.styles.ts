@@ -1,5 +1,5 @@
 import { SxProps, Theme } from "@mui/material";
-import Background from '../../media/plus.svg';
+import Background from "../../media/plus.svg";
 
 export const contentContainerStyles: SxProps<Theme> = {
     flexGrow: 1,
@@ -43,11 +43,11 @@ export const gridItemStyles: SxProps<Theme> = {
     alignItems: "center",
     borderRadius: "8px",
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-    transition: "transform 0.3s ease, background-color 0.2s ease",
+    transition: "filter 0.3s ease",
+    background: "#e0e0e0",
     "&:hover": {
-        transform: "scale(1.01)",
+        backgroundColor: "rgba(0, 0, 0, 0.1)",
     },
-
 };
 
 export const CreateWidgetStyles: SxProps<Theme> = {
@@ -55,10 +55,9 @@ export const CreateWidgetStyles: SxProps<Theme> = {
     height: "5vh",
     minHeight: "5vh",
     width: "10vw",
-    margin: "auto",
+    margin: "0 auto 0 auto",
     backgroundImage: `url(${Background})`,
-    backgroundSize: 'contain',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-    WebkitBackgroundSize: "50%"
-}
+    backgroundSize: "contain",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+};

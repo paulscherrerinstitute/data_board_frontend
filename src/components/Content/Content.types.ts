@@ -1,12 +1,18 @@
 import { UUID } from "crypto";
 import ReactGridLayout from "react-grid-layout";
 
-export interface Channel {
+export type Channel = {
     channelName: string;
     backend: string;
-}
+};
 
-export interface Widget {
+export type Widget = {
     channels: Channel[];
-    layout: ReactGridLayout.Layout
-}
+    layout: ReactGridLayout.Layout;
+};
+
+export type TimeValues = {
+    startTime: string;
+    endTime: string;
+    queryExpansion: boolean;
+};

@@ -4,5 +4,8 @@ export interface TimeSelectorProps {
         endTime: string;
         queryExpansion: boolean;
     }) => void;
-    onRefresh: () => void;
 }
+
+export type timeSourceOption = "quickselect" | "manual";
+
+export type AutoPlotOption = "never" | "1min" | "10min";

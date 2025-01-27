@@ -11,8 +11,22 @@ export const containerStyle: SxProps<Theme> = {
 
 export const textFieldStyle: SxProps<Theme> = {
     marginBottom: 2,
-    '& label, & input, & p': {
-        color: "#fff"
+    "& label, & input, & p": {
+        color: "#fff",
+    },
+};
+
+export const searchBoxStyle: SxProps<Theme> = {
+    marginTop: 1,
+    marginBottom: 2,
+    "& .MuiInputBase-root": {
+        backgroundColor: "white",
+    },
+    "& .MuiInputLabel-root": {
+        color: "black",
+    },
+    "& .MuiFormHelperText-root": {
+        color: "white",
     },
 };
 
@@ -52,7 +66,7 @@ export const dropwDownBoxStyle: SxProps<Theme> = {
     flexDirection: "row",
     justifyContent: "space-evenly",
     padding: 0,
-    margin: 0
+    margin: 0,
 };
 
 export const filterDropdownStyle: SxProps<Theme> = {
@@ -60,19 +74,18 @@ export const filterDropdownStyle: SxProps<Theme> = {
     backgroundColor: "#f4f4f4",
     color: "#000",
     div: {
-        padding: 0.7
-    }
-
+        padding: 0.7,
+    },
 };
 
 export const menuItemStyle: SxProps<Theme> = {
     width: "100%",
     backgroundColor: "#f4f4f4",
-    color: "#000"
+    color: "#000",
 };
 
 export const statusSymbolStyle: SxProps<Theme> = {
     display: "flex",
     justifySelf: "center",
-    alignSelf: "center"
+    alignSelf: "center",
 };

@@ -5,7 +5,8 @@ export const timeSelectorContainerStyle: SxProps<Theme> = {
     alignItems: "center",
     gap: 2,
     width: "100%",
-    padding: "16px 16px 16px 100px",
+    height: "100%",
+    padding: "0px 16px 0px 100px",
     backgroundColor: "#f0f0f0",
     borderBottom: "1px solid #ccc",
     minWidth: "1035px",
@@ -31,4 +32,5 @@ export const toggleContainerStyle: SxProps<Theme> = {
 
 export const refreshButtonStyle: SxProps<Theme> = {
     flex: 1,
+    maxHeight: "95%",
 };

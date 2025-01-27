@@ -5,8 +5,8 @@ import { ApiProvider } from "./components/ApiContext/ApiContext";
 
 const App: React.FC = () => {
     const apiUrls = {
-      backendUrl: (window as any)._env_.DATA_BOARD_PUBLIC_BACKEND_URL,
-    }
+        backendUrl: (window as any)._env_.DATA_BOARD_PUBLIC_BACKEND_URL,
+    };
 
     return (
         <ApiProvider apiUrls={apiUrls}>
