@@ -4,6 +4,7 @@ import ReactGridLayout from "react-grid-layout";
 export type Channel = {
     channelName: string;
     backend: string;
+    datatype: string;
 };
 
 export type Widget = {

@@ -24,12 +24,11 @@ import ListItemRow from "./ListItemRow/ListItemRow";
 import { useApiUrls } from "../ApiContext/ApiContext";
 import * as styles from "./Selector.styles";
 import { throttle } from "lodash";
+import { BackendChannel, StoredChannel } from "./Selector.types";
 
 const Selector: React.FC = () => {
     const { backendUrl } = useApiUrls();
     const [searchTerm, setSearchTerm] = useState("");
-    const [searchResults, setSearchResults] = useState<string[]>([]);
-    const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [selectedBackends, setSelectedBackends] = useState<string[]>([]);
@@ -42,6 +41,30 @@ const Selector: React.FC = () => {
     const [maxCharacters, setMaxCharacters] = useState<number>(20);
 
     const [searchResultsIsRecent, setSearchResultsIsRecent] = useState(true);
+
+    const [storedChannels, setStoredChannels] = useState<StoredChannel[]>([]);
+
+    const [searchRegex, setSearchRegex] = useState("");
+
+    const filteredChannels = useMemo(() => {
+        return storedChannels.filter((channel) => {
+            const [backend, , type] = channel.key.split("|");
+            const matchesBackend =
+                selectedBackends.length === 0 ||
+                selectedBackends.includes(backend);
+            const matchesType =
+                selectedTypes.length === 0 || selectedTypes.includes(type);
+            const matchesSearch =
+                !searchRegex || new RegExp(searchRegex, "i").test(channel.key);
+            return matchesBackend && matchesType && matchesSearch;
+        });
+    }, [storedChannels, selectedBackends, selectedTypes, searchRegex]);
+
+    const selectedChannels = useMemo(() => {
+        return storedChannels.filter((channel) => {
+            return channel.selected;
+        });
+    }, [storedChannels]);
 
     useEffect(() => {
         const updateMaxCharacters = throttle(() => {
@@ -63,43 +86,50 @@ const Selector: React.FC = () => {
         return () => observer.disconnect();
     });
 
-    const fetchRecent = useCallback(async (urlChannels: string[]) => {
+    const fetchRecent = useCallback(async (urlChannels: StoredChannel[]) => {
         try {
             const response = await axios.get<{
-                channels: string[][];
+                channels: BackendChannel[];
             }>(`${backendUrl}/channels/recent`);
 
-            const joinedData = response.data.channels.map((item) =>
-                item.join("|")
+            const joinedData = response.data.channels.map((channel) =>
+                [channel.backend, channel.name, channel.type].join("|")
             );
-            const filteredResults = joinedData.filter((key: string) => {
-                const substring = key.split("|").slice(0, 2).join("|");
-                return !urlChannels.includes(substring);
-            });
+
+            const newStoredChannels = [
+                ...urlChannels,
+                ...joinedData
+                    .filter(
+                        (key: string) =>
+                            !urlChannels.some((channel) => channel.key === key)
+                    )
+                    .map((key: string) => ({
+                        key,
+                        selected: false,
+                    })),
+            ].sort((a, b) => a.key.localeCompare(b.key));
+            setStoredChannels(newStoredChannels);
 
             // Extract unique backends and data types, used for filtering
             const backends = Array.from(
-                new Set(filteredResults.map((key) => key.split("|")[0]))
+                new Set(
+                    newStoredChannels.map(
+                        (channel) => channel.key.split("|")[0]
+                    )
+                )
             );
             const types = Array.from(
-                new Set(filteredResults.map((key) => key.split("|")[3]))
+                new Set(
+                    newStoredChannels.map(
+                        (channel) => channel.key.split("|")[2]
+                    )
+                )
             );
-            if (searchResults.length === 0) {
-                setBackendOptions(backends);
-                setTypeOptions(types);
 
-                // In case the filters are empty, set them to include all data just fetched
-                if (
-                    selectedBackends.length === 0 &&
-                    selectedTypes.length === 0
-                ) {
-                    setSelectedBackends(backends);
-                    setSelectedTypes(types);
-                }
-
-                filteredResults.sort();
-                setSearchResults(filteredResults);
-            }
+            setBackendOptions(backends);
+            setTypeOptions(types);
+            setSelectedBackends(backends);
+            setSelectedTypes(types);
         } catch (err) {
             console.log(err);
         }
@@ -110,17 +140,21 @@ const Selector: React.FC = () => {
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const channelsParam = urlParams.get("channels");
-        let urlChannels: string[] = [];
+        let urlChannels = [] as StoredChannel[];
         if (channelsParam) {
             try {
                 const parsedChannels = JSON.parse(channelsParam);
                 const channels = parsedChannels.map(
-                    (channel: { channelName: string; backend: string }) => {
-                        return `${channel.backend}|${channel.channelName}`;
+                    // cn = channelname, be = backend, dt = datatype --> abbreviations to save space in url
+                    (channel: { cn: string; be: string; dt: string }) => {
+                        return `${channel.be}|${channel.cn}|${channel.dt}`;
                     }
                 );
-                urlChannels = channels;
-                setSelectedChannels(channels);
+                urlChannels = channels.map((key: string) => ({
+                    key,
+                    selected: true,
+                }));
+                setStoredChannels(urlChannels);
             } catch (e) {
                 console.error("Error parsing URL channels:", e);
             }
@@ -128,46 +162,57 @@ const Selector: React.FC = () => {
         fetchRecent(urlChannels);
     }, [fetchRecent]);
 
-    const updateUrl = useCallback((channels: string[]) => {
-        const queryString = channels
-            .map((channel) => {
-                const [backend, channelName] = channel.split("|");
-                return `{"channelName":"${encodeURIComponent(
-                    channelName
-                )}","backend":"${encodeURIComponent(backend)}"}`;
-            })
-            .join(",");
-
-        const newUrl = `${window.location.pathname}?channels=[${queryString}]`;
-        window.history.replaceState({}, "", newUrl);
-    }, []);
-
     const debouncedSearch = useMemo(
         () =>
             debounce(async (term: string) => {
                 setError(null);
                 setLoading(true);
                 try {
+                    setSearchRegex(term);
+
                     const response = await axios.get<{
-                        channels: string[][];
-                    }>(`${backendUrl}/channels/search?search_text=${term}`);
-
-                    console.log(response);
-
-                    const joinedData = response.data.channels.map((item) =>
-                        item.join("|")
-                    );
-                    const filteredResults = joinedData.filter((key: string) => {
-                        const substring = key.split("|").slice(0, 2).join("|");
-                        return !selectedChannels.includes(substring);
+                        channels: BackendChannel[];
+                    }>(`${backendUrl}/channels/search`, {
+                        params: {
+                            search_text: term,
+                        },
                     });
+
+                    // Take backend, channelname and datatype
+                    const joinedData = response.data.channels.map((channel) =>
+                        [channel.backend, channel.name, channel.type].join("|")
+                    );
+
+                    const newStoredChannels = [
+                        ...storedChannels,
+                        ...joinedData
+                            .filter(
+                                (key: string) =>
+                                    !storedChannels.some(
+                                        (channel) => channel.key === key
+                                    )
+                            )
+                            .map((key: string) => ({
+                                key,
+                                selected: false,
+                            })),
+                    ].sort((a, b) => a.key.localeCompare(b.key));
+                    setStoredChannels(newStoredChannels);
 
                     // Extract unique backends and data types, used for filtering
                     const backends = Array.from(
-                        new Set(filteredResults.map((key) => key.split("|")[0]))
+                        new Set(
+                            newStoredChannels.map(
+                                (channel) => channel.key.split("|")[0]
+                            )
+                        )
                     );
                     const types = Array.from(
-                        new Set(filteredResults.map((key) => key.split("|")[3]))
+                        new Set(
+                            newStoredChannels.map(
+                                (channel) => channel.key.split("|")[2]
+                            )
+                        )
                     );
 
                     // In case the filters are empty or selecting everything, set them to include all data just fetched
@@ -184,9 +229,6 @@ const Selector: React.FC = () => {
                     setBackendOptions(backends);
                     setTypeOptions(types);
 
-                    filteredResults.sort();
-                    setSearchResults(filteredResults);
-
                     setSearchResultsIsRecent(false);
                 } catch (err) {
                     setError("Error fetching channels");
@@ -195,13 +237,12 @@ const Selector: React.FC = () => {
                 setLoading(false);
             }, 300),
         [
-            selectedChannels,
             backendUrl,
             selectedBackends.length,
             selectedTypes.length,
             backendOptions.length,
             typeOptions.length,
-            searchResultsIsRecent,
+            storedChannels,
         ]
     );
 
@@ -213,32 +254,56 @@ const Selector: React.FC = () => {
         [debouncedSearch]
     );
 
+    const updateUrl = useCallback((channels: string[]) => {
+        const queryString = channels
+            .map((channel) => {
+                const [backend, channelname, datatype] = channel.split("|");
+                return JSON.stringify({
+                    cn: channelname,
+                    be: backend,
+                    dt: datatype,
+                });
+            })
+            .join(",");
+
+        const newUrl = `${window.location.pathname}?channels=[${queryString}]`;
+        window.history.replaceState({}, "", newUrl);
+    }, []);
+
     const handleSelectChannel = useCallback(
         (key: string) => {
             if (selectedChannels.length < 100) {
-                const updatedChannels = [...selectedChannels, key];
-                setSelectedChannels(updatedChannels);
-                updateUrl(updatedChannels);
-                setSearchResults((prev) => prev.filter((c) => c !== key));
+                const newStoredChannels = storedChannels.map((channel) =>
+                    channel.key === key
+                        ? { ...channel, selected: true }
+                        : channel
+                );
+                setStoredChannels(newStoredChannels);
+                updateUrl(
+                    newStoredChannels
+                        .filter((channel) => channel.selected)
+                        .map((channel) => channel.key)
+                );
             } else {
                 console.log("Nuh uh");
             }
         },
-        [selectedChannels, updateUrl]
+        [selectedChannels, storedChannels, updateUrl]
     );
 
     const handleDeselectChannel = useCallback(
         (key: string) => {
-            const updatedChannels = selectedChannels.filter((c) => c !== key);
-            setSelectedChannels(updatedChannels);
-            updateUrl(updatedChannels);
-            setSearchResults((prev) => {
-                const updatedResults = [...prev, key];
-                updatedResults.sort();
-                return updatedResults;
-            });
+            const newStoredChannels = storedChannels.map((channel) =>
+                channel.key === key ? { ...channel, selected: false } : channel
+            );
+            setStoredChannels(newStoredChannels);
+            updateUrl(
+                newStoredChannels
+                    .filter((channel) => channel.selected)
+                    .map((channel) => channel.key)
+            );
         },
-        [selectedChannels, updateUrl]
+        [storedChannels, updateUrl]
     );
 
     const handleKeyPress = useCallback(
@@ -249,18 +314,6 @@ const Selector: React.FC = () => {
         },
         [debouncedSearch, searchTerm]
     );
-
-    const filteredResults = useMemo(() => {
-        return searchResults.filter((key) => {
-            const [backend, , , type] = key.split("|");
-            const matchesBackend =
-                selectedBackends.length === 0 ||
-                selectedBackends.includes(backend);
-            const matchesType =
-                selectedTypes.length === 0 || selectedTypes.includes(type);
-            return matchesBackend && matchesType;
-        });
-    }, [searchResults, selectedBackends, selectedTypes]);
 
     return (
         <Box sx={styles.containerStyle} ref={selectRef}>
@@ -356,13 +409,13 @@ const Selector: React.FC = () => {
                 </Box>
             </Box>
 
-            {/* Available unselected channels */}
+            {/* Stored (filtered) channels */}
             <Box sx={styles.listBoxStyle}>
                 <Typography sx={styles.typographyHeaderStyle}>
                     {searchResultsIsRecent
                         ? "Recent Channels"
                         : "Search Results"}{" "}
-                    ({filteredResults.length})
+                    ({filteredChannels.length})
                 </Typography>
 
                 {loading && <CircularProgress sx={styles.statusSymbolStyle} />}
@@ -375,14 +428,13 @@ const Selector: React.FC = () => {
                 <ListWindow
                     style={{ background: "#46494A" }}
                     height={380}
-                    itemCount={filteredResults.length}
+                    itemCount={filteredChannels.length}
                     itemSize={46}
                     width="100%"
                     itemData={{
-                        items: filteredResults,
+                        items: filteredChannels,
                         onSelect: handleSelectChannel,
                         onDeselect: handleDeselectChannel,
-                        selectedChannels,
                         isDraggable: false,
                     }}
                 >
@@ -408,7 +460,6 @@ const Selector: React.FC = () => {
                         items: selectedChannels,
                         onSelect: handleSelectChannel,
                         onDeselect: handleDeselectChannel,
-                        selectedChannels,
                         isDraggable: true,
                     }}
                 >

@@ -45,9 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     const newWidth =
                         event.clientX -
                         sidebarRef.current.getBoundingClientRect().left;
-                    //console.log(newWidth);
                     setSidebarWidth(
-                        //870
                         Math.max(minWidth, Math.min(newWidth, maxWidth))
                     );
                 }

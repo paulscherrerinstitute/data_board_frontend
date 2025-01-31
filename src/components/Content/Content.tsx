@@ -31,10 +31,14 @@ const Content: React.FC = () => {
         setDraggedOverKey("");
         setHoveredOverKey("");
         const data = event.dataTransfer.getData("text");
-        console.log("Dropped data:", data);
         try {
             const channel: Channel = JSON.parse(data);
-            if (channel && channel.channelName && channel.backend) {
+            if (
+                channel &&
+                channel.channelName &&
+                channel.backend &&
+                channel.datatype
+            ) {
                 if (key === "-1") {
                     handleCreateWidget([channel]);
                 } else {
@@ -113,6 +117,7 @@ const Content: React.FC = () => {
                 break;
             }
         }
+
         setWidgets((prevWidgets) => [
             ...prevWidgets,
             {
@@ -127,12 +132,12 @@ const Content: React.FC = () => {
             },
         ]);
 
+        // Wait a bit until the new widget is rendered and then scroll such that the create widget button is in view.
         setTimeout(() => {
             const observer = new IntersectionObserver(
                 (entries, observer) => {
                     entries.forEach((entry) => {
                         if (entry.intersectionRatio < 0.999) {
-                            console.log(entry.intersectionRatio);
                             if (createWidgetButtonRef.current) {
                                 createWidgetButtonRef.current.focus();
                                 createWidgetButtonRef.current.scrollIntoView({
@@ -259,19 +264,7 @@ const Content: React.FC = () => {
                                         onClick={() =>
                                             handleRemoveWidget(layout.i)
                                         }
-                                        sx={{
-                                            position: "absolute",
-                                            top: 0,
-                                            right: 0,
-                                            color: "white",
-                                            backgroundColor:
-                                                "rgba(0, 0, 0, 0.5)",
-                                            "&:hover": {
-                                                backgroundColor:
-                                                    "rgba(0, 0, 0, 0.7)",
-                                            },
-                                            zIndex: 99999,
-                                        }}
+                                        sx={styles.removeWidgetButtonStyles}
                                         size="small"
                                     >
                                         <CloseIcon fontSize="small" />

@@ -6,6 +6,8 @@ export interface TimeSelectorProps {
     }) => void;
 }
 
-export type timeSourceOption = "quickselect" | "manual";
+export type TimeSourceOption = "quickselect" | "manual";
 
 export type AutoPlotOption = "never" | "1min" | "10min";
+
+export type QuickSelectOption = string | number;

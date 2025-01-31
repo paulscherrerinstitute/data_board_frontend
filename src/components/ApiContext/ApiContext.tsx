@@ -1,17 +1,8 @@
-import React, { createContext, useContext, ReactNode } from "react";
-
-interface ApiUrls {
-    backendUrl: string;
-}
+import React, { createContext, useContext } from "react";
+import { ApiProviderProps, ApiUrls } from "./ApiContext.types";
 
 // Create the context with a default value (or undefined if no provider is used)
 const ApiContext = createContext<ApiUrls | undefined>(undefined);
-
-// ApiProvider to wrap the app and provide the API URLs
-interface ApiProviderProps {
-    children: ReactNode;
-    apiUrls: ApiUrls; // Accept the API URLs as props
-}
 
 export const ApiProvider: React.FC<ApiProviderProps> = ({
     children,

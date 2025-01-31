@@ -10,7 +10,8 @@ import {
 import {
     AutoPlotOption,
     TimeSelectorProps,
-    timeSourceOption,
+    TimeSourceOption,
+    QuickSelectOption,
 } from "./TimeSelector.types";
 import * as styles from "./TimeSelector.styles";
 
@@ -31,11 +32,12 @@ const quickOptions = [
 
 const formatDateForLocalInput = (date: Date): string => {
     const year = date.getFullYear();
+    // The month is returned as a zero based index, so increment it once.
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
+    // getHours returns the local hours, so we can simply keep that.
     const hours = String(date.getHours()).padStart(2, "0");
     const minutes = String(date.getMinutes()).padStart(2, "0");
-
     return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
@@ -47,25 +49,31 @@ const getISOstringFromLocalInput = (localInput: string): string => {
     const [year, month, day] = datePart.split("-").map(Number);
     const [hours, minutes] = timePart.split(":").map(Number);
 
+    // Convert month back to zero based index and treat local hours as input for iso hours (Which is why we don't need to change hours to adapt).
     const date = new Date(year, month - 1, day, hours, minutes);
     return date.toISOString();
 };
 
 const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
-    const [startTime, setStartTime] = useState<string>(
-        formatDateForLocalInput(new Date(new Date().getTime() - 10 * 60 * 1000))
-    );
-    const [endTime, setEndTime] = useState<string>(
-        formatDateForLocalInput(new Date())
-    );
-    const [queryExpansion, setQueryExpansion] = useState<boolean>(false);
+    const [startTime, setStartTime] = useState("");
+    const [endTime, setEndTime] = useState("");
+    const [queryExpansion, setQueryExpansion] = useState(false);
     const [timeSource, setTimeSource] =
-        useState<timeSourceOption>("quickselect");
-    const [selectedQuickOption, setSelectedQuickOption] = useState<
-        string | number
-    >(quickOptions[1].value);
+        useState<TimeSourceOption>("quickselect");
+    const [selectedQuickOption, setSelectedQuickOption] =
+        useState<QuickSelectOption>(quickOptions[1].value);
     const [autoPlot, setAutoPlot] = useState<AutoPlotOption>("never");
     const autoPlotInterval = useRef<NodeJS.Timeout | null>(null);
+
+    // Initialize start and end time
+    useEffect(() => {
+        setStartTime(
+            formatDateForLocalInput(
+                new Date(new Date().getTime() - 10 * 60 * 1000)
+            )
+        );
+        setEndTime(formatDateForLocalInput(new Date()));
+    }, []);
 
     useEffect(() => {
         onTimeChange({
@@ -77,29 +85,31 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
         });
     }, [onTimeChange]);
 
-    const handleQuickSelect = (value: string | number) => {
-        setTimeSource("quickselect");
-        setSelectedQuickOption(value);
-
-        // Make the time fields also display the correct time
+    const convertQuickOptionToTimestamps = (option: QuickSelectOption) => {
         const now = new Date();
-        const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
-        let start;
-        if (typeof value === "number") {
-            start = new Date(now.getTime() - value * 60 * 1000);
+        const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+        let start, end;
+
+        if (typeof option === "number") {
+            start = new Date(now.getTime() - option * 60 * 1000);
+            end = now;
         } else {
-            const startOfDay = new Date(now.toISOString().split("T")[0]);
-            switch (value) {
+            switch (option) {
                 case "yesterday":
                     start = new Date(
                         startOfDay.getTime() - 24 * 60 * 60 * 1000
                     );
+                    end = startOfDay;
                     break;
                 case "today":
                     start = startOfDay;
+                    end = now;
                     break;
                 case "last_week":
                     start = new Date(
+                        startOfDay.getTime() - 14 * 24 * 60 * 60 * 1000
+                    );
+                    end = new Date(
                         startOfDay.getTime() - 7 * 24 * 60 * 60 * 1000
                     );
                     break;
@@ -107,69 +117,44 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
                     start = new Date(
                         now.getTime() - now.getDay() * 24 * 60 * 60 * 1000
                     );
+                    end = now;
                     break;
                 case "last_month":
+                    start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                    end = new Date(now.getFullYear(), now.getMonth(), 1);
+                    break;
                 case "this_month":
-                    const month =
-                        value === "last_month"
-                            ? now.getMonth() - 1
-                            : now.getMonth();
-                    start = new Date(now.getFullYear(), month, 1);
+                    start = new Date(now.getFullYear(), now.getMonth(), 1);
+                    end = now;
                     break;
                 default:
-                    start = tenMinutesAgo;
+                    start = new Date(now.getTime() - 10 * 60 * 1000); // tenMinutesAgo
+                    end = now;
             }
         }
-        setStartTime(formatDateForLocalInput(start));
-        setEndTime(formatDateForLocalInput(now));
+
+        return { start, end };
     };
 
-    const handlePlot = () => {
+    const handleQuickSelect = (value: QuickSelectOption) => {
+        setTimeSource("quickselect");
+        setSelectedQuickOption(value);
+
+        // Make the time fields also display the correct time
+        const { start, end } = convertQuickOptionToTimestamps(value);
+        setStartTime(formatDateForLocalInput(start));
+        setEndTime(formatDateForLocalInput(end));
+    };
+
+    const handleApply = () => {
         let calculatedStartTime = startTime;
         let calculatedEndTime = endTime;
+        // in case a quickselect option was selected last, recalculate the start and end times based on it
         if (timeSource === "quickselect") {
-            const now = new Date();
-            const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
-            let start: Date;
-            if (typeof selectedQuickOption === "number") {
-                start = new Date(
-                    now.getTime() - selectedQuickOption * 60 * 1000
-                );
-            } else {
-                const startOfDay = new Date(now.toISOString().split("T")[0]);
-                switch (selectedQuickOption) {
-                    case "yesterday":
-                        start = new Date(
-                            startOfDay.getTime() - 24 * 60 * 60 * 1000
-                        );
-                        break;
-                    case "today":
-                        start = startOfDay;
-                        break;
-                    case "last_week":
-                        start = new Date(
-                            startOfDay.getTime() - 7 * 24 * 60 * 60 * 1000
-                        );
-                        break;
-                    case "this_week":
-                        start = new Date(
-                            now.getTime() - now.getDay() * 24 * 60 * 60 * 1000
-                        );
-                        break;
-                    case "last_month":
-                    case "this_month":
-                        const month =
-                            selectedQuickOption === "last_month"
-                                ? now.getMonth() - 1
-                                : now.getMonth();
-                        start = new Date(now.getFullYear(), month, 1);
-                        break;
-                    default:
-                        start = tenMinutesAgo;
-                }
-            }
+            const { start, end } =
+                convertQuickOptionToTimestamps(selectedQuickOption);
             calculatedStartTime = formatDateForLocalInput(start);
-            calculatedEndTime = formatDateForLocalInput(new Date());
+            calculatedEndTime = formatDateForLocalInput(end);
             setStartTime(calculatedStartTime);
             setEndTime(calculatedEndTime);
         }
@@ -194,7 +179,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
         if (newAutoPlot !== "never") {
             const interval = newAutoPlot === "1min" ? 60000 : 600000; // 1 minute or 10 minutes
             autoPlotInterval.current = setInterval(() => {
-                handlePlot(); // Trigger the plot action
+                handleApply();
             }, interval);
         }
     };
@@ -262,7 +247,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
             <Button
                 variant="contained"
                 sx={styles.refreshButtonStyle}
-                onClick={handlePlot}
+                onClick={handleApply}
             >
                 Apply
             </Button>

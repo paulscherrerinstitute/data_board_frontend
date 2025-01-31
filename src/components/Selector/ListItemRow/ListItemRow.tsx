@@ -12,35 +12,25 @@ import { ListItemRowProps } from "./ListItemRow.types";
 import { Channel } from "../../Content/Content.types";
 
 const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
-    const { items, onSelect, onDeselect, selectedChannels, isDraggable } = data;
-    const key = items[index];
-    const isSelected = selectedChannels.includes(key);
-    const [backend, name, , type] = key.split("|");
+    const { items, onSelect, onDeselect, isDraggable } = data;
+    const key = items[index].key;
+    const isSelected = items[index].selected;
+    const [backend, name, type] = key.split("|");
 
     const handleDragStart = (event: React.DragEvent) => {
-        const channel: Channel = { channelName: name, backend };
+        const channel: Channel = { channelName: name, backend, datatype: type };
         event.dataTransfer.setData("text", JSON.stringify(channel));
 
-        // Create a visual drag preview element
         const dragPreview = document.createElement("div");
-        dragPreview.style.position = "absolute"; // Prevent layout shifts
-        dragPreview.style.zIndex = "9999"; // Make sure it appears above everything
-
-        const previewContainer = document.createElement("div");
-        previewContainer.innerHTML = `
-            <div style="display: flex; align-items: center; padding: 10px; background: #333; border-radius: 5px;">
-                <div style="margin-right: 8px; color: white;">✔</div>
-                <div>
-                    <div style="color: white; font-weight: bold;">${name}</div>
-                    <div style="color: #eee; font-size: 0.8em;">${backend}</div>
-                </div>
-            </div>
+        dragPreview.style.cssText = `
+            display: flex; align-items: center; padding: 10px; width: 300px; 
+            background: #333; border-radius: 5px; color: white; font-weight: bold;
         `;
-        dragPreview.appendChild(previewContainer);
+        dragPreview.innerText = `${name} (${backend} - ${type})`;
 
         document.body.appendChild(dragPreview);
         event.dataTransfer.setDragImage(dragPreview, 0, 0);
-        setTimeout(() => document.body.removeChild(dragPreview), 0);
+        setTimeout(() => dragPreview.remove(), 0);
     };
 
     return (
@@ -68,8 +58,10 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
                 </ListItemButton>
                 <ListItemText
                     sx={styles.listItemTextStyle}
-                    primaryTypographyProps={{ style: { color: "white" } }}
-                    secondaryTypographyProps={{ style: { color: "#eee" } }}
+                    slotProps={{
+                        primary: { style: { color: "white" } },
+                        secondary: { style: { color: "#eee" } },
+                    }}
                     primary={name}
                     secondary={`${backend} - ${type}`}
                 />

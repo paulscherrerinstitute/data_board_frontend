@@ -61,3 +61,15 @@ export const CreateWidgetStyles: SxProps<Theme> = {
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
 };
+
+export const removeWidgetButtonStyles: SxProps<Theme> = {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    color: "white",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    "&:hover": {
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+    },
+    zIndex: 99999,
+};

@@ -13,6 +13,7 @@ import axios from "axios";
 import { Channel } from "../Content.types";
 import { debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
+import { BackendChannel } from "../../Selector/Selector.types";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({ channels, timeValues, index }) => {
@@ -29,8 +30,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             yaxisRange: undefined,
         });
         const [xAxisTitle, setXAxisTitle] = useState("Time");
+        const numBins = 64000;
 
-        // Prevent event bubbling if its on a draggable surface
+        // Prevent event bubbling if its on a draggable surface so an event to drag the plot will not be handled by the grid layout to move the whole widget.
         const handleEventPropagation = (e: React.SyntheticEvent) => {
             const plotCanvas = e.target as HTMLElement;
             if (
@@ -95,14 +97,38 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         return prevCurves;
                     });
 
-                    console.log(curves);
-
                     // Fetch data after adding the new channel
+                    // First, get the seriesId by searching for the channel and filtering our values
+                    const searchResults = await axios.get<{
+                        channels: BackendChannel[];
+                    }>(`${backendUrl}/channels/search`, {
+                        params: {
+                            search_text: `^${channel.channelName}$`,
+                        },
+                    });
+                    const filteredResults = searchResults.data.channels.filter(
+                        (returnedChannel) =>
+                            returnedChannel.backend === channel.backend &&
+                            returnedChannel.name === channel.channelName &&
+                            returnedChannel.type === channel.datatype
+                    );
+
+                    // Now we have our seriesId, if the channel still exists
+                    if (filteredResults.length === 0) {
+                        alert(
+                            `Channel: ${channel.channelName} does not exist anymore on backend: ${channel.backend} with datatype ${channel.datatype}`
+                        );
+                        return;
+                    }
+                    const seriesId = filteredResults[0].seriesId;
+                    // Use seriesId as soon as datahub supports it
+
+                    // Now, fetch the actual data
                     const response = await axios.get<CurveData>(
                         `${backendUrl}/channels/curve`,
                         {
                             params: {
-                                channel_name: channel.channelName,
+                                channel_name: channel.channelName, // REPLACE WITH SERIESID AS SOON AS SUPPORTED BY DATAHUB
                                 begin_time: Math.floor(
                                     new Date(timeValues.startTime).getTime() /
                                         1000
@@ -112,6 +138,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         1000
                                 ),
                                 backend: channel.backend,
+                                num_bins: numBins,
                                 query_expansion: timeValues.queryExpansion,
                             },
                         }
@@ -119,7 +146,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     // Now update the data after it is fetched
                     setCurves((prevCurves) => {
-                        console.log(response.data.curve);
                         if (!response.data.curve) {
                             alert("No data for curve: " + channel.channelName);
                             return prevCurves;
@@ -179,10 +205,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 fetchData(channel);
             }
         }, [channels, timeValues, backendUrl]);
-
-        useEffect(() => {
-            console.log("Render");
-        });
 
         const handleRelayout = (e: any) => {
             // Save the zoom state when the user zooms or pans the plot
@@ -283,7 +305,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 ...Object.assign({}, ...yAxes), // Merge all y-axis definitions into layout
                 showlegend: true,
             } as Plotly.Layout;
-        }, [curves, containerDimensions, zoomState, xAxisTitle]);
+        }, [curves, containerDimensions, zoomState, xAxisTitle, index]);
 
         return (
             <Box
