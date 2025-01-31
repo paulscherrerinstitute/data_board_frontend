@@ -178,9 +178,9 @@ const Selector: React.FC = () => {
                         },
                     });
 
-                    // Take backend, channelname and datatype
+                    // Take backend, channelname and datatype (if no datatype, show [])
                     const joinedData = response.data.channels.map((channel) =>
-                        [channel.backend, channel.name, channel.type].join("|")
+                        [channel.backend, channel.name, channel.type ? channel.type : "[]"].join("|")
                     );
 
                     const newStoredChannels = [
