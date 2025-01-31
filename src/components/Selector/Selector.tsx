@@ -133,9 +133,8 @@ const Selector: React.FC = () => {
         } catch (err) {
             console.log(err);
         }
-        // We do not care about anything changing, this should only be executed once on load of the app, afterwards never again.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+
+    }, [backendUrl]);
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);

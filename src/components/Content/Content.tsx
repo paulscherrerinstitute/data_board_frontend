@@ -17,6 +17,7 @@ const Content: React.FC = () => {
         queryExpansion: false,
     });
     const [widgets, setWidgets] = useState<Widget[]>([]);
+    const isWidgetsInitialized  = useRef(false);
     const [draggedOverKey, setDraggedOverKey] = useState("");
     const [hoveredOverKey, setHoveredOverKey] = useState("");
     const [gridWidth, setGridWidth] = useState(
@@ -82,6 +83,10 @@ const Content: React.FC = () => {
     };
 
     const handleCreateWidget = (initialChannels: Channel[] = []) => {
+        if (!isWidgetsInitialized.current) {
+            isWidgetsInitialized.current = true;
+        }
+
         const maxEndY = Math.max(
             ...widgets.map((widget) => widget.layout.y + widget.layout.h)
         );
@@ -200,7 +205,7 @@ const Content: React.FC = () => {
         };
 
         window.addEventListener("resize", handleResize);
-        if (widgets.length === 0) {
+        if (!isWidgetsInitialized.current) {
             setWidgets([
                 {
                     channels: [],
@@ -214,6 +219,7 @@ const Content: React.FC = () => {
                 },
             ]);
         }
+        isWidgetsInitialized.current = true;
 
         return () => {
             window.removeEventListener("resize", handleResize);
