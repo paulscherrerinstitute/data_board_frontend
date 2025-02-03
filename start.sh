@@ -4,7 +4,7 @@
 # This is done so the app can use environment variables which are not set at built time, but rather when the container is run. 
 
 # Recreate env config file
-rm -f ./build/env-config.js
+rm ./build/env-config.js
 touch ./build/env-config.js
 
 # Add assignment
