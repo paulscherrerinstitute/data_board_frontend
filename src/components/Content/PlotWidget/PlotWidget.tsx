@@ -106,11 +106,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             search_text: `^${channel.channelName}$`,
                         },
                     });
+
                     const filteredResults = searchResults.data.channels.filter(
                         (returnedChannel) =>
                             returnedChannel.backend === channel.backend &&
                             returnedChannel.name === channel.channelName &&
-                            returnedChannel.type === channel.datatype
+                            channel.datatype === "[]" ? returnedChannel.type === "" : returnedChannel.type === channel.datatype
                     );
 
                     // Now we have our seriesId, if the channel still exists
