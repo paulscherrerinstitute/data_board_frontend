@@ -206,6 +206,7 @@ const Content: React.FC = () => {
 
         window.addEventListener("resize", handleResize);
         if (!isWidgetsInitialized.current) {
+            isWidgetsInitialized.current = true;
             setWidgets([
                 {
                     channels: [],
@@ -219,7 +220,6 @@ const Content: React.FC = () => {
                 },
             ]);
         }
-        isWidgetsInitialized.current = true;
 
         return () => {
             window.removeEventListener("resize", handleResize);

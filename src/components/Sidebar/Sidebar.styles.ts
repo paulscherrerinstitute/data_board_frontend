@@ -49,13 +49,3 @@ export const halfButtonStyle: SxProps<Theme> = {
     width: "100%",
     margin: 0,
 };
-
-export const selectorStyle = (
-    parentObjectWidth: number,
-    windowWidth: number
-): SxProps<Theme> => ({
-    display:
-        parentObjectWidth >= windowWidth * 0.1 && parentObjectWidth >= 200
-            ? "block"
-            : "none",
-});

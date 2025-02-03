@@ -149,7 +149,14 @@ const Sidebar: React.FC<SidebarProps> = ({
             {renderToggleButton()}
 
             {/* Sidebar Content: Visible only if width >= 10% of screen width and that is >= 200px */}
-            <Box sx={{ ...styles.selectorStyle(sidebarWidth, windowWidth) }}>
+            <Box
+                sx={{
+                    display:
+                        sidebarWidth >= windowWidth * 0.1 && windowWidth >= 200
+                            ? "block"
+                            : "none",
+                }}
+            >
                 <Selector />
             </Box>
 
