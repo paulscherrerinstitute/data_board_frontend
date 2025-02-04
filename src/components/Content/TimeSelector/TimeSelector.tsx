@@ -30,30 +30,6 @@ const quickOptions = [
     { label: "This Month", value: "this_month" },
 ];
 
-const formatDateForLocalInput = (date: Date): string => {
-    const year = date.getFullYear();
-    // The month is returned as a zero based index, so increment it once.
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    // getHours returns the local hours, so we can simply keep that.
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
-const getISOstringFromLocalInput = (localInput: string): string => {
-    if (localInput === "") {
-        return new Date().toISOString();
-    }
-    const [datePart, timePart] = localInput.split("T");
-    const [year, month, day] = datePart.split("-").map(Number);
-    const [hours, minutes] = timePart.split(":").map(Number);
-
-    // Convert month back to zero based index and treat local hours as input for iso hours (Which is why we don't need to change hours to adapt).
-    const date = new Date(year, month - 1, day, hours, minutes);
-    return date.toISOString();
-};
-
 const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
@@ -63,6 +39,30 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
     const [autoPlot, setAutoPlot] = useState<AutoPlotOption>("never");
     const autoPlotIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const timeSourceRef = useRef<TimeSourceOption>("quickselect");
+
+    const formatDateForLocalInput = (date: Date): string => {
+        const year = date.getFullYear();
+        // The month is returned as a zero based index, so increment it once.
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        // getHours returns the local hours, so we can simply keep that.
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
+    const getISOstringFromLocalInput = (localInput: string): string => {
+        if (localInput === "") {
+            return new Date().toISOString();
+        }
+        const [datePart, timePart] = localInput.split("T");
+        const [year, month, day] = datePart.split("-").map(Number);
+        const [hours, minutes] = timePart.split(":").map(Number);
+
+        // Convert month back to zero based index and treat local hours as input for iso hours (Which is why we don't need to change hours to adapt).
+        const date = new Date(year, month - 1, day, hours, minutes);
+        return date.toISOString();
+    };
 
     // Initialize start and end time
     useEffect(() => {
