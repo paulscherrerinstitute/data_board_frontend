@@ -17,13 +17,14 @@ const Content: React.FC = () => {
         queryExpansion: false,
     });
     const [widgets, setWidgets] = useState<Widget[]>([]);
-    const isWidgetsInitialized  = useRef(false);
+    const prevWidgetsLength = useRef(0);
+    const isWidgetsInitialized = useRef(false);
     const [draggedOverKey, setDraggedOverKey] = useState("");
     const [hoveredOverKey, setHoveredOverKey] = useState("");
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
-    const createWidgetButtonRef = useRef<HTMLButtonElement | null>(null);
+    const gridContainerRef = useRef<HTMLElement | null>(null);
     const defaultWidgetWidth = 6;
     const defaultWidgetHeight = 12;
 
@@ -47,9 +48,9 @@ const Content: React.FC = () => {
                         prevWidgets.map((widget) =>
                             widget.layout.i === key
                                 ? {
-                                      ...widget,
-                                      channels: [...widget.channels, channel],
-                                  }
+                                    ...widget,
+                                    channels: [...widget.channels, channel],
+                                }
                                 : widget
                         )
                     );
@@ -136,32 +137,21 @@ const Content: React.FC = () => {
                 },
             },
         ]);
-
-        // Wait a bit until the new widget is rendered and then scroll such that the create widget button is in view.
-        setTimeout(() => {
-            const observer = new IntersectionObserver(
-                (entries, observer) => {
-                    entries.forEach((entry) => {
-                        if (entry.intersectionRatio < 0.999) {
-                            if (createWidgetButtonRef.current) {
-                                createWidgetButtonRef.current.focus();
-                                createWidgetButtonRef.current.scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "center",
-                                });
-                            }
-                        }
-                        observer.disconnect();
-                    });
-                },
-                { threshold: 0 }
-            );
-
-            if (createWidgetButtonRef.current) {
-                observer.observe(createWidgetButtonRef.current);
-            }
-        }, 200);
     };
+
+    useEffect(() => {
+        // In case widgets have been added, scroll to the bottom, but wait a bit for animation to finish
+        if (prevWidgetsLength.current < widgets.length) {
+            setTimeout(() => {
+                if (gridContainerRef.current) {
+                    gridContainerRef.current.scrollTo({
+                        top: gridContainerRef.current.scrollHeight,
+                        behavior: "smooth",
+                    });                }
+            }, 250);
+        }
+        prevWidgetsLength.current = widgets.length;
+    }, [widgets])
 
     const handleMouseEnter = (key: string) => {
         setHoveredOverKey(key);
@@ -232,7 +222,7 @@ const Content: React.FC = () => {
                 <TimeSelector onTimeChange={handleTimeChange} />
             </Box>
 
-            <Box sx={styles.gridContainerStyles}>
+            <Box sx={styles.gridContainerStyles} ref={gridContainerRef}>
                 <div>
                     <ReactGridLayout
                         cols={12}
@@ -296,7 +286,6 @@ const Content: React.FC = () => {
                     }}
                     aria-label="Add new"
                     onClick={() => handleCreateWidget()}
-                    ref={createWidgetButtonRef}
                 ></Button>
             </Box>
         </Box>
