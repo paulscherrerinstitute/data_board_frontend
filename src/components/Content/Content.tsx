@@ -17,13 +17,13 @@ const Content: React.FC = () => {
         queryExpansion: false,
     });
     const [widgets, setWidgets] = useState<Widget[]>([]);
-    const prevWidgetsLength = useRef(0);
-    const isWidgetsInitialized = useRef(false);
     const [draggedOverKey, setDraggedOverKey] = useState("");
     const [hoveredOverKey, setHoveredOverKey] = useState("");
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
+    const prevWidgetsLengthRef = useRef(0);
+    const isWidgetsInitializedRef = useRef(false);
     const gridContainerRef = useRef<HTMLElement | null>(null);
     const defaultWidgetWidth = 6;
     const defaultWidgetHeight = 12;
@@ -84,8 +84,8 @@ const Content: React.FC = () => {
     };
 
     const handleCreateWidget = (initialChannels: Channel[] = []) => {
-        if (!isWidgetsInitialized.current) {
-            isWidgetsInitialized.current = true;
+        if (!isWidgetsInitializedRef.current) {
+            isWidgetsInitializedRef.current = true;
         }
 
         const maxEndY = Math.max(
@@ -141,16 +141,17 @@ const Content: React.FC = () => {
 
     useEffect(() => {
         // In case widgets have been added, scroll to the bottom, but wait a bit for animation to finish
-        if (prevWidgetsLength.current < widgets.length) {
+        if (prevWidgetsLengthRef.current < widgets.length) {
             setTimeout(() => {
                 if (gridContainerRef.current) {
                     gridContainerRef.current.scrollTo({
                         top: gridContainerRef.current.scrollHeight,
                         behavior: "smooth",
-                    });                }
+                    });
+                }
             }, 250);
         }
-        prevWidgetsLength.current = widgets.length;
+        prevWidgetsLengthRef.current = widgets.length;
     }, [widgets])
 
     const handleMouseEnter = (key: string) => {
@@ -195,8 +196,8 @@ const Content: React.FC = () => {
         };
 
         window.addEventListener("resize", handleResize);
-        if (!isWidgetsInitialized.current) {
-            isWidgetsInitialized.current = true;
+        if (!isWidgetsInitializedRef.current) {
+            isWidgetsInitializedRef.current = true;
             setWidgets([
                 {
                     channels: [],

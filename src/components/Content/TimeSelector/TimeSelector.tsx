@@ -58,12 +58,11 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
     const [queryExpansion, setQueryExpansion] = useState(false);
-    const [timeSource, setTimeSource] =
-        useState<TimeSourceOption>("quickselect");
     const [selectedQuickOption, setSelectedQuickOption] =
         useState<QuickSelectOption>(quickOptions[1].value);
     const [autoPlot, setAutoPlot] = useState<AutoPlotOption>("never");
-    const autoPlotInterval = useRef<NodeJS.Timeout | null>(null);
+    const autoPlotIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const timeSourceRef = useRef<TimeSourceOption>("quickselect");
 
     // Initialize start and end time
     useEffect(() => {
@@ -137,7 +136,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
     };
 
     const handleQuickSelect = (value: QuickSelectOption) => {
-        setTimeSource("quickselect");
+        timeSourceRef.current = "quickselect";
         setSelectedQuickOption(value);
 
         // Make the time fields also display the correct time
@@ -150,7 +149,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
         let calculatedStartTime = startTime;
         let calculatedEndTime = endTime;
         // in case a quickselect option was selected last, recalculate the start and end times based on it
-        if (timeSource === "quickselect") {
+        if (timeSourceRef.current === "quickselect") {
             const { start, end } =
                 convertQuickOptionToTimestamps(selectedQuickOption);
             calculatedStartTime = formatDateForLocalInput(start);
@@ -171,14 +170,14 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
         setAutoPlot(newAutoPlot);
 
         // Clear existing interval
-        if (autoPlotInterval.current) {
-            clearInterval(autoPlotInterval.current);
+        if (autoPlotIntervalRef.current) {
+            clearInterval(autoPlotIntervalRef.current);
         }
 
         // Set interval if not 'never'
         if (newAutoPlot !== "never") {
             const interval = newAutoPlot === "1min" ? 60000 : 600000; // 1 minute or 10 minutes
-            autoPlotInterval.current = setInterval(() => {
+            autoPlotIntervalRef.current = setInterval(() => {
                 handleApply();
             }, interval);
         }
@@ -193,7 +192,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
                     value={startTime}
                     onChange={(e) => {
                         setStartTime(e.target.value);
-                        setTimeSource("manual");
+                        timeSourceRef.current = "manual"
                     }}
                     fullWidth
                 />
@@ -205,7 +204,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
                     value={endTime}
                     onChange={(e) => {
                         setEndTime(e.target.value);
-                        setTimeSource("manual");
+                        timeSourceRef.current = "manual"
                     }}
                     fullWidth
                 />

@@ -17,7 +17,6 @@ import { BackendChannel } from "../../Selector/Selector.types";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({ channels, timeValues, index }) => {
-        const plotContainerRef = useRef<HTMLDivElement | null>(null);
         const { backendUrl } = useApiUrls();
         const [containerDimensions, setContainerDimensions] =
             useState<ContainerDimensions>({
@@ -30,6 +29,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             yaxisRange: undefined,
         });
         const [xAxisTitle, setXAxisTitle] = useState("Time");
+        const plotContainerRef = useRef<HTMLDivElement | null>(null);
         const numBins = 64000;
 
         // Prevent event bubbling if its on a draggable surface so an event to drag the plot will not be handled by the grid layout to move the whole widget.
@@ -110,8 +110,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     const filteredResults = searchResults.data.channels.filter(
                         (returnedChannel) =>
                             returnedChannel.backend === channel.backend &&
-                            returnedChannel.name === channel.channelName &&
-                            channel.datatype === "[]" ? returnedChannel.type === "" : returnedChannel.type === channel.datatype
+                                returnedChannel.name === channel.channelName &&
+                                channel.datatype === "[]" ? returnedChannel.type === "" : returnedChannel.type === channel.datatype
                     );
 
                     // Now we have our seriesId, if the channel still exists
@@ -132,11 +132,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 channel_name: channel.channelName, // REPLACE WITH SERIESID AS SOON AS SUPPORTED BY DATAHUB
                                 begin_time: Math.floor(
                                     new Date(timeValues.startTime).getTime() /
-                                        1000
+                                    1000
                                 ),
                                 end_time: Math.floor(
                                     new Date(timeValues.endTime).getTime() /
-                                        1000
+                                    1000
                                 ),
                                 backend: channel.backend,
                                 num_bins: numBins,
@@ -273,11 +273,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             const yAxes = curves.flatMap((curve, curveIndex) =>
                 Object.keys(curve.curveData.curve).map(
                     (channelName, channelIndex) => ({
-                        [`yaxis${
-                            curveIndex === 0 && channelIndex === 0
+                        [`yaxis${curveIndex === 0 && channelIndex === 0
                                 ? ""
                                 : `${curveIndex + channelIndex + 1}`
-                        }`]: {
+                            }`]: {
                             title: {
                                 text: `${channelName} - ${curve.backend}`,
                             },

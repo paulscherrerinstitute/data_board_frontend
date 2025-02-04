@@ -33,18 +33,14 @@ const Selector: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [selectedBackends, setSelectedBackends] = useState<string[]>([]);
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-
     const [backendOptions, setBackendOptions] = useState<string[]>([]);
     const [typeOptions, setTypeOptions] = useState<string[]>([]);
-
-    const selectRef = useRef<HTMLHeadingElement>(null);
     const [maxCharacters, setMaxCharacters] = useState<number>(20);
-
     const [searchResultsIsRecent, setSearchResultsIsRecent] = useState(true);
-
     const [storedChannels, setStoredChannels] = useState<StoredChannel[]>([]);
-
     const [searchRegex, setSearchRegex] = useState("");
+    const selectRef = useRef<HTMLHeadingElement>(null);
+
 
     const filteredChannels = useMemo(() => {
         return storedChannels.filter((channel) => {
