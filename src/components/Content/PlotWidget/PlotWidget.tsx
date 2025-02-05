@@ -323,7 +323,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     data={data}
                     layout={layout}
                     config={{
-                        edits: { titleText: true, axisTitleText: true },
+                        edits: { axisTitleText: true },
                         displaylogo: false,
                     }}
                     style={{ width: "100%", height: "100%" }}

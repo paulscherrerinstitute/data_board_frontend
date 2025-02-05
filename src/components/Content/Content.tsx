@@ -22,7 +22,7 @@ const Content: React.FC = () => {
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
-    const prevWidgetsLengthRef = useRef(0);
+    const prevWidgetsLengthRef = useRef<number | null>(null);
     const isWidgetsInitializedRef = useRef(false);
     const gridContainerRef = useRef<HTMLElement | null>(null);
     const defaultWidgetWidth = 6;
@@ -141,7 +141,7 @@ const Content: React.FC = () => {
 
     useEffect(() => {
         // In case widgets have been added, scroll to the bottom, but wait a bit for animation to finish
-        if (prevWidgetsLengthRef.current < widgets.length) {
+        if (prevWidgetsLengthRef.current && prevWidgetsLengthRef.current < widgets.length) {
             setTimeout(() => {
                 if (gridContainerRef.current) {
                     gridContainerRef.current.scrollTo({
@@ -196,8 +196,11 @@ const Content: React.FC = () => {
         };
 
         window.addEventListener("resize", handleResize);
+        // If widgets is not yet initialized, add an initial widget
         if (!isWidgetsInitializedRef.current) {
             isWidgetsInitializedRef.current = true;
+            // Make this not trigger a scroll to bottom
+            prevWidgetsLengthRef.current = null;
             setWidgets([
                 {
                     channels: [],
