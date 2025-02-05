@@ -8,6 +8,6 @@ export interface TimeSelectorProps {
 
 export type TimeSourceOption = "quickselect" | "manual";
 
-export type AutoPlotOption = "never" | "1min" | "10min";
+export type AutoApplyOption = "never" | "1min" | "10min";
 
 export type QuickSelectOption = string | number;

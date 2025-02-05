@@ -25,9 +25,11 @@ import { useApiUrls } from "../ApiContext/ApiContext";
 import * as styles from "./Selector.styles";
 import { throttle } from "lodash";
 import { BackendChannel, StoredChannel } from "./Selector.types";
+import { useSearchParams } from "react-router-dom";
 
 const Selector: React.FC = () => {
     const { backendUrl } = useApiUrls();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [searchTerm, setSearchTerm] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -39,8 +41,8 @@ const Selector: React.FC = () => {
     const [searchResultsIsRecent, setSearchResultsIsRecent] = useState(true);
     const [storedChannels, setStoredChannels] = useState<StoredChannel[]>([]);
     const [searchRegex, setSearchRegex] = useState("");
+    const alreadyFetchedRecentRef = useRef(false);
     const selectRef = useRef<HTMLHeadingElement>(null);
-
 
     const filteredChannels = useMemo(() => {
         return storedChannels.filter((channel) => {
@@ -82,59 +84,66 @@ const Selector: React.FC = () => {
         return () => observer.disconnect();
     });
 
-    const fetchRecent = useCallback(async (urlChannels: StoredChannel[]) => {
-        try {
-            const response = await axios.get<{
-                channels: BackendChannel[];
-            }>(`${backendUrl}/channels/recent`);
+    const fetchRecent = useCallback(
+        async (urlChannels: StoredChannel[]) => {
+            try {
+                const response = await axios.get<{
+                    channels: BackendChannel[];
+                }>(`${backendUrl}/channels/recent`);
 
-            const joinedData = response.data.channels.map((channel) =>
-                [channel.backend, channel.name, channel.type].join("|")
-            );
+                const joinedData = response.data.channels.map((channel) =>
+                    [channel.backend, channel.name, channel.type].join("|")
+                );
 
-            const newStoredChannels = [
-                ...urlChannels,
-                ...joinedData
-                    .filter(
-                        (key: string) =>
-                            !urlChannels.some((channel) => channel.key === key)
+                const newStoredChannels = [
+                    ...urlChannels,
+                    ...joinedData
+                        .filter(
+                            (key: string) =>
+                                !urlChannels.some(
+                                    (channel) => channel.key === key
+                                )
+                        )
+                        .map((key: string) => ({
+                            key,
+                            selected: false,
+                        })),
+                ].sort((a, b) => a.key.localeCompare(b.key));
+                setStoredChannels(newStoredChannels);
+
+                // Extract unique backends and data types, used for filtering
+                const backends = Array.from(
+                    new Set(
+                        newStoredChannels.map(
+                            (channel) => channel.key.split("|")[0]
+                        )
                     )
-                    .map((key: string) => ({
-                        key,
-                        selected: false,
-                    })),
-            ].sort((a, b) => a.key.localeCompare(b.key));
-            setStoredChannels(newStoredChannels);
-
-            // Extract unique backends and data types, used for filtering
-            const backends = Array.from(
-                new Set(
-                    newStoredChannels.map(
-                        (channel) => channel.key.split("|")[0]
+                );
+                const types = Array.from(
+                    new Set(
+                        newStoredChannels.map(
+                            (channel) => channel.key.split("|")[2]
+                        )
                     )
-                )
-            );
-            const types = Array.from(
-                new Set(
-                    newStoredChannels.map(
-                        (channel) => channel.key.split("|")[2]
-                    )
-                )
-            );
+                );
 
-            setBackendOptions(backends);
-            setTypeOptions(types);
-            setSelectedBackends(backends);
-            setSelectedTypes(types);
-        } catch (err) {
-            console.log(err);
-        }
-
-    }, [backendUrl]);
+                setBackendOptions(backends);
+                setTypeOptions(types);
+                setSelectedBackends(backends);
+                setSelectedTypes(types);
+            } catch (err) {
+                console.log(err);
+            }
+        },
+        [backendUrl]
+    );
 
     useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const channelsParam = urlParams.get("channels");
+        if (alreadyFetchedRecentRef.current) {
+            return;
+        }
+        alreadyFetchedRecentRef.current = true;
+        const channelsParam = searchParams.get("channels");
         let urlChannels = [] as StoredChannel[];
         if (channelsParam) {
             try {
@@ -155,7 +164,7 @@ const Selector: React.FC = () => {
             }
         }
         fetchRecent(urlChannels);
-    }, [fetchRecent]);
+    }, [fetchRecent, searchParams]);
 
     const debouncedSearch = useMemo(
         () =>
@@ -175,7 +184,11 @@ const Selector: React.FC = () => {
 
                     // Take backend, channelname and datatype (if no datatype, show [])
                     const joinedData = response.data.channels.map((channel) =>
-                        [channel.backend, channel.name, channel.type ? channel.type : "[]"].join("|")
+                        [
+                            channel.backend,
+                            channel.name,
+                            channel.type ? channel.type : "[]",
+                        ].join("|")
                     );
 
                     const newStoredChannels = [
@@ -249,21 +262,27 @@ const Selector: React.FC = () => {
         [debouncedSearch]
     );
 
-    const updateUrl = useCallback((channels: string[]) => {
-        const queryString = channels
-            .map((channel) => {
-                const [backend, channelname, datatype] = channel.split("|");
-                return JSON.stringify({
-                    cn: channelname,
-                    be: backend,
-                    dt: datatype,
-                });
-            })
-            .join(",");
+    const updateUrl = useCallback(
+        (channels: string[]) => {
+            const queryString = JSON.stringify(
+                channels.map((channel) => {
+                    const [backend, channelname, datatype] = channel.split("|");
+                    return {
+                        cn: channelname,
+                        be: backend,
+                        dt: datatype,
+                    };
+                })
+            );
 
-        const newUrl = `${window.location.pathname}?channels=[${queryString}]`;
-        window.history.replaceState({}, "", newUrl);
-    }, []);
+            setSearchParams((searchParams) => {
+                const newSearchParams = searchParams;
+                newSearchParams.set("channels", queryString);
+                return newSearchParams;
+            });
+        },
+        [setSearchParams]
+    );
 
     const handleSelectChannel = useCallback(
         (key: string) => {

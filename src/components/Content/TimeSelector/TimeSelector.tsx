@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     Box,
     TextField,
@@ -8,12 +8,13 @@ import {
     Typography,
 } from "@mui/material";
 import {
-    AutoPlotOption,
+    AutoApplyOption,
     TimeSelectorProps,
     TimeSourceOption,
     QuickSelectOption,
 } from "./TimeSelector.types";
 import * as styles from "./TimeSelector.styles";
+import { useSearchParams } from "react-router-dom";
 
 const quickOptions = [
     { label: "Last 1m", value: 1 },
@@ -31,14 +32,18 @@ const quickOptions = [
 ];
 
 const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [isAutoApplyPressSimulated, setIsAutoApplyPressSimulated] =
+        useState(false);
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
     const [queryExpansion, setQueryExpansion] = useState(false);
     const [selectedQuickOption, setSelectedQuickOption] =
         useState<QuickSelectOption>(quickOptions[1].value);
-    const [autoPlot, setAutoPlot] = useState<AutoPlotOption>("never");
-    const autoPlotIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const [autoApply, setAutoApply] = useState<AutoApplyOption>("never");
+    const autoApplyIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const timeSourceRef = useRef<TimeSourceOption>("quickselect");
+    const isUrlParsed = useRef(false);
 
     const formatDateForLocalInput = (date: Date): string => {
         const year = date.getFullYear();
@@ -63,26 +68,6 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
         const date = new Date(year, month - 1, day, hours, minutes);
         return date.toISOString();
     };
-
-    // Initialize start and end time
-    useEffect(() => {
-        setStartTime(
-            formatDateForLocalInput(
-                new Date(new Date().getTime() - 10 * 60 * 1000)
-            )
-        );
-        setEndTime(formatDateForLocalInput(new Date()));
-    }, []);
-
-    useEffect(() => {
-        onTimeChange({
-            startTime: new Date(
-                new Date().getTime() - 10 * 60 * 1000
-            ).toISOString(),
-            endTime: new Date().toISOString(),
-            queryExpansion: false,
-        });
-    }, [onTimeChange]);
 
     const convertQuickOptionToTimestamps = (option: QuickSelectOption) => {
         const now = new Date();
@@ -145,7 +130,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
         setEndTime(formatDateForLocalInput(end));
     };
 
-    const handleApply = () => {
+    const handleApply = useCallback(() => {
         let calculatedStartTime = startTime;
         let calculatedEndTime = endTime;
         // in case a quickselect option was selected last, recalculate the start and end times based on it
@@ -164,24 +149,139 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
             endTime: endTimeISO,
             queryExpansion,
         });
+
+        const startParam = (new Date(startTimeISO).getTime() / 1000).toString();
+        const endParam = (new Date(endTimeISO).getTime() / 1000).toString();
+
+        setSearchParams((searchParams) => {
+            const newSearchParams = searchParams;
+            newSearchParams.set("startTime", startParam);
+            newSearchParams.set("endTime", endParam);
+            if (timeSourceRef.current === "quickselect") {
+                newSearchParams.set(
+                    "relativeTime",
+                    selectedQuickOption.toString()
+                );
+            } else {
+                newSearchParams.set("relativeTime", "false");
+            }
+            newSearchParams.set(
+                "queryExpansion",
+                queryExpansion ? "true" : "false"
+            );
+            newSearchParams.set("autoApply", autoApply);
+            return newSearchParams;
+        });
+    }, [
+        autoApply,
+        endTime,
+        onTimeChange,
+        queryExpansion,
+        selectedQuickOption,
+        setSearchParams,
+        startTime,
+    ]);
+
+    const simulateAutoApplyPress = () => {
+        setIsAutoApplyPressSimulated(true);
+        setTimeout(() => setIsAutoApplyPressSimulated(false), 200);
     };
 
-    const handleAutoPlotChange = (newAutoPlot: AutoPlotOption) => {
-        setAutoPlot(newAutoPlot);
+    const handleAutoApplyChange = useCallback(
+        (newAutoApply: AutoApplyOption) => {
+            setAutoApply(newAutoApply);
 
-        // Clear existing interval
-        if (autoPlotIntervalRef.current) {
-            clearInterval(autoPlotIntervalRef.current);
-        }
+            // Clear existing interval
+            if (autoApplyIntervalRef.current) {
+                clearInterval(autoApplyIntervalRef.current);
+            }
 
-        // Set interval if not 'never'
-        if (newAutoPlot !== "never") {
-            const interval = newAutoPlot === "1min" ? 60000 : 600000; // 1 minute or 10 minutes
-            autoPlotIntervalRef.current = setInterval(() => {
-                handleApply();
-            }, interval);
-        }
+            // Set interval if not 'never'
+            if (newAutoApply !== "never") {
+                const interval = newAutoApply === "1min" ? 60000 : 600000; // 1 minute or 10 minutes
+                autoApplyIntervalRef.current = setInterval(() => {
+                    simulateAutoApplyPress();
+                    handleApply();
+                }, interval);
+            }
+        },
+        [handleApply]
+    );
+
+    const isValueInQuickSelectOptions = (value: string | number) => {
+        const possibleValues = quickOptions.map((option) => option.value);
+        return possibleValues.includes(value);
     };
+
+    // Initially, parse all relevant url parameters
+    useEffect(() => {
+        if (isUrlParsed.current) {
+            return;
+        }
+        isUrlParsed.current = true;
+
+        const startTimeParam = searchParams.get("startTime");
+        const endTimeParam = searchParams.get("endTime");
+        const quickSelectParam = searchParams.get("relativeTime");
+        const queryExpansionParam = searchParams.get("queryExpansion");
+        const autoApplyParam = searchParams.get("autoApply");
+
+        const startTime = Number(startTimeParam);
+        const endTime = Number(endTimeParam);
+        let start, end;
+        // If both time parameters are valid numbers, initialize the time to those
+        if (!isNaN(startTime) && !isNaN(endTime) && startTime * endTime) {
+            start = new Date(startTime * 1000);
+            end = new Date(endTime * 1000);
+        } else {
+            // Else, default to ten minutes ago
+            ({ start, end } = convertQuickOptionToTimestamps(10));
+        }
+
+        const formattedStart = formatDateForLocalInput(start);
+        const formattedEnd = formatDateForLocalInput(end);
+
+        setStartTime(formattedStart);
+        setEndTime(formattedEnd);
+
+        if (quickSelectParam) {
+            if (quickSelectParam === "false") {
+                timeSourceRef.current = "manual";
+            } else if (isValueInQuickSelectOptions(quickSelectParam)) {
+                timeSourceRef.current = "quickselect";
+                setSelectedQuickOption(quickSelectParam);
+            } else if (isValueInQuickSelectOptions(Number(quickSelectParam))) {
+                timeSourceRef.current = "quickselect";
+                setSelectedQuickOption(Number(quickSelectParam));
+            }
+        }
+
+        let newQueryExpansion = false;
+        if (queryExpansionParam) {
+            if (queryExpansionParam === "true") {
+                newQueryExpansion = true;
+                setQueryExpansion(newQueryExpansion);
+            } else if (queryExpansionParam === "false") {
+                setQueryExpansion(false);
+            }
+        }
+
+        if (autoApplyParam) {
+            if (
+                autoApplyParam === "never" ||
+                autoApplyParam === "1min" ||
+                autoApplyParam === "10min"
+            ) {
+                handleAutoApplyChange(autoApplyParam);
+            }
+        }
+
+        onTimeChange({
+            startTime: formattedStart,
+            endTime: formattedEnd,
+            queryExpansion: newQueryExpansion,
+        });
+    }, [handleAutoApplyChange, onTimeChange, searchParams]);
 
     return (
         <Box sx={styles.timeSelectorContainerStyle}>
@@ -192,7 +292,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
                     value={startTime}
                     onChange={(e) => {
                         setStartTime(e.target.value);
-                        timeSourceRef.current = "manual"
+                        timeSourceRef.current = "manual";
                     }}
                     fullWidth
                 />
@@ -204,7 +304,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
                     value={endTime}
                     onChange={(e) => {
                         setEndTime(e.target.value);
-                        timeSourceRef.current = "manual"
+                        timeSourceRef.current = "manual";
                     }}
                     fullWidth
                 />
@@ -234,9 +334,9 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
             <TextField
                 select
                 label="Auto Apply"
-                value={autoPlot}
+                value={autoApply}
                 onChange={(e) =>
-                    handleAutoPlotChange(e.target.value as AutoPlotOption)
+                    handleAutoApplyChange(e.target.value as AutoApplyOption)
                 }
             >
                 <MenuItem value="never">Never</MenuItem>
@@ -245,7 +345,12 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
             </TextField>
             <Button
                 variant="contained"
-                sx={styles.refreshButtonStyle}
+                sx={{
+                    ...styles.refreshButtonStyle,
+                    ...(isAutoApplyPressSimulated && {
+                        transform: "scale(0.95)",
+                    }),
+                }}
                 onClick={handleApply}
             >
                 Apply
