@@ -117,7 +117,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     // Now we have our seriesId, if the channel still exists
                     if (filteredResults.length === 0) {
                         alert(
-                            `Channel: ${channel.channelName} does not exist anymore on backend: ${channel.backend} with datatype ${channel.datatype}`
+                            `Channel: ${channel.channelName} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.datatype}`
                         );
                         return;
                     }

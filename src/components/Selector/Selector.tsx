@@ -271,6 +271,7 @@ const Selector: React.FC = () => {
                         cn: channelname,
                         be: backend,
                         dt: datatype,
+                        p1: false,
                     };
                 })
             );

@@ -9,6 +9,7 @@ import ReactGridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import PlotWidget from "./PlotWidget/PlotWidget";
+import { useSearchParams } from "react-router-dom";
 
 const Content: React.FC = () => {
     const [timeValues, setTimeValues] = useState<TimeValues>({
@@ -16,6 +17,7 @@ const Content: React.FC = () => {
         endTime: "",
         queryExpansion: false,
     });
+    const [searchParams, setSearchParams] = useSearchParams();
     const [widgets, setWidgets] = useState<Widget[]>([]);
     const [draggedOverKey, setDraggedOverKey] = useState("");
     const [hoveredOverKey, setHoveredOverKey] = useState("");
@@ -44,16 +46,50 @@ const Content: React.FC = () => {
                 if (key === "-1") {
                     handleCreateWidget([channel]);
                 } else {
-                    setWidgets((prevWidgets) =>
-                        prevWidgets.map((widget) =>
-                            widget.layout.i === key
-                                ? {
-                                    ...widget,
-                                    channels: [...widget.channels, channel],
-                                }
-                                : widget
-                        )
+                    const newWidgets = widgets.map((widget) =>
+                        widget.layout.i === key
+                            ? {
+                                  ...widget,
+                                  channels: [...widget.channels, channel],
+                              }
+                            : widget
                     );
+                    setWidgets(newWidgets);
+
+                    // Save channels of first plot in Url
+                    if (key === "1") {
+                        const oldChannelsParam = searchParams.get("channels");
+                        if (oldChannelsParam) {
+                            try {
+                                const oldChannelsParsed =
+                                    JSON.parse(oldChannelsParam);
+                                // Find and update the channel just added
+                                const newChannels = oldChannelsParsed.map(
+                                    (selectedChannel: any) => {
+                                        if (
+                                            selectedChannel.cn ===  channel.channelName &&
+                                            selectedChannel.be === channel.backend &&
+                                            selectedChannel.dt === channel.datatype
+                                        ) {
+                                            return {
+                                                ...selectedChannel,
+                                                p1: true, // Set p1 to true to say this channel is in plot 1
+                                            };
+                                        }
+                                        return selectedChannel; // Keep other channels unchanged
+                                    }
+                                );
+                                const newChannelsParam = JSON.stringify(newChannels);
+                                setSearchParams((searchParams) => {
+                                    const newSearchParams = searchParams;
+                                    newSearchParams.set("channels", newChannelsParam);
+                                    return newSearchParams;
+                                })
+                            } catch (e) {
+                                console.error("Error parsing URL channels:", e);
+                            }
+                        }
+                    }
                 }
             } else {
                 console.error("Invalid channel structure.");
@@ -141,7 +177,10 @@ const Content: React.FC = () => {
 
     useEffect(() => {
         // In case widgets have been added, scroll to the bottom, but wait a bit for animation to finish
-        if (prevWidgetsLengthRef.current && prevWidgetsLengthRef.current < widgets.length) {
+        if (
+            prevWidgetsLengthRef.current &&
+            prevWidgetsLengthRef.current < widgets.length
+        ) {
             setTimeout(() => {
                 if (gridContainerRef.current) {
                     gridContainerRef.current.scrollTo({
@@ -152,7 +191,7 @@ const Content: React.FC = () => {
             }, 250);
         }
         prevWidgetsLengthRef.current = widgets.length;
-    }, [widgets])
+    }, [widgets]);
 
     const handleMouseEnter = (key: string) => {
         setHoveredOverKey(key);
@@ -201,9 +240,28 @@ const Content: React.FC = () => {
             isWidgetsInitializedRef.current = true;
             // Make this not trigger a scroll to bottom
             prevWidgetsLengthRef.current = null;
+            
+            // Get all channels from the URL that are set to be in the first plot
+            const channelsParam = searchParams.get("channels");
+            let channelsInFirstPlot: Channel[] = [];
+            if (channelsParam) {
+                try {
+                    const parsedChannels = JSON.parse(channelsParam);
+                    channelsInFirstPlot = parsedChannels
+                        .filter((channel: any) => channel.p1 === true)
+                        .map((channel: any) => ({
+                            channelName: channel.cn,
+                            backend: channel.be,
+                            datatype: channel.dt,
+                        }));
+                } catch (e) {
+                    console.error("Error parsing URL channels:", e);
+                }
+            }
+
             setWidgets([
                 {
-                    channels: [],
+                    channels: channelsInFirstPlot,
                     layout: {
                         i: uniqueId(),
                         x: 0,
@@ -218,7 +276,7 @@ const Content: React.FC = () => {
         return () => {
             window.removeEventListener("resize", handleResize);
         };
-    }, []);
+    }, [searchParams]);
 
     return (
         <Box sx={styles.contentContainerStyles}>
