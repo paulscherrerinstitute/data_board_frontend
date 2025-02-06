@@ -3,15 +3,18 @@ import { Box, Button, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
-import { Widget, Channel, TimeValues } from "./Content.types";
+import { Widget, Channel, TimeValues, Dashboard } from "./Content.types";
 import { uniqueId } from "lodash";
 import ReactGridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import PlotWidget from "./PlotWidget/PlotWidget";
 import { useSearchParams } from "react-router-dom";
+import axios from "axios";
+import { useApiUrls } from "../ApiContext/ApiContext";
 
 const Content: React.FC = () => {
+    const { backendUrl } = useApiUrls();
     const [timeValues, setTimeValues] = useState<TimeValues>({
         startTime: "",
         endTime: "",
@@ -67,9 +70,12 @@ const Content: React.FC = () => {
                                 const newChannels = oldChannelsParsed.map(
                                     (selectedChannel: any) => {
                                         if (
-                                            selectedChannel.cn ===  channel.channelName &&
-                                            selectedChannel.be === channel.backend &&
-                                            selectedChannel.dt === channel.datatype
+                                            selectedChannel.cn ===
+                                                channel.channelName &&
+                                            selectedChannel.be ===
+                                                channel.backend &&
+                                            selectedChannel.dt ===
+                                                channel.datatype
                                         ) {
                                             return {
                                                 ...selectedChannel,
@@ -79,12 +85,16 @@ const Content: React.FC = () => {
                                         return selectedChannel; // Keep other channels unchanged
                                     }
                                 );
-                                const newChannelsParam = JSON.stringify(newChannels);
+                                const newChannelsParam =
+                                    JSON.stringify(newChannels);
                                 setSearchParams((searchParams) => {
                                     const newSearchParams = searchParams;
-                                    newSearchParams.set("channels", newChannelsParam);
+                                    newSearchParams.set(
+                                        "channels",
+                                        newChannelsParam
+                                    );
                                     return newSearchParams;
-                                })
+                                });
                             } catch (e) {
                                 console.error("Error parsing URL channels:", e);
                             }
@@ -240,7 +250,7 @@ const Content: React.FC = () => {
             isWidgetsInitializedRef.current = true;
             // Make this not trigger a scroll to bottom
             prevWidgetsLengthRef.current = null;
-            
+
             // Get all channels from the URL that are set to be in the first plot
             const channelsParam = searchParams.get("channels");
             let channelsInFirstPlot: Channel[] = [];
@@ -277,6 +287,39 @@ const Content: React.FC = () => {
             window.removeEventListener("resize", handleResize);
         };
     }, [searchParams]);
+
+    const handleCreateDashboard = useCallback(async () => {
+        const response = await axios.post<Dashboard>(
+            `${backendUrl}/dashboard`,
+            {
+                params: {
+                    dashboard: { widgets: widgets },
+                },
+            }
+        );
+        const dashboardId = response.data.id;
+        setSearchParams((searchParams) => {
+            const newSearchParams = searchParams;
+            newSearchParams.set("dashboardId", dashboardId);
+            return newSearchParams;
+        });
+    }, [backendUrl, setSearchParams, widgets]);
+
+    const handleSaveDashboard = useCallback(async () => {
+        const dashboardId = searchParams.get("dashboardId");
+        if (dashboardId) {
+            try {
+                await axios.patch<Dashboard>(
+                    `${backendUrl}/dashboard/${dashboardId}`,
+                    {
+                        dashboard: { widgets: widgets },
+                    }
+                );
+                return;
+            } catch {}
+        }
+        handleCreateDashboard();
+    }, [backendUrl, handleCreateDashboard, searchParams, widgets]);
 
     return (
         <Box sx={styles.contentContainerStyles}>
@@ -337,18 +380,34 @@ const Content: React.FC = () => {
                         ))}
                     </ReactGridLayout>
                 </div>
-                <Button
-                    onDrop={(event) => handleDrop(event, "-1")}
-                    onDragOver={(event) => handleDragOver(event, "-1")}
-                    onDragLeave={handleDragLeave}
-                    sx={{
-                        ...styles.CreateWidgetStyles,
-                        filter:
-                            draggedOverKey === "-1" ? "brightness(0.5)" : "",
-                    }}
-                    aria-label="Add new"
-                    onClick={() => handleCreateWidget()}
-                ></Button>
+                <Box sx={styles.actionButtonBoxStyles}>
+                    <Button
+                        onDrop={(event) => handleDrop(event, "-1")}
+                        onDragOver={(event) => handleDragOver(event, "-1")}
+                        onDragLeave={handleDragLeave}
+                        sx={{
+                            ...styles.CreateWidgetStyles,
+                            filter:
+                                draggedOverKey === "-1"
+                                    ? "brightness(0.5)"
+                                    : "",
+                        }}
+                        aria-label="Add new"
+                        onClick={() => handleCreateWidget()}
+                    ></Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => handleSaveDashboard()}
+                    >
+                        Save Dasbhoard
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => handleCreateDashboard()}
+                    >
+                        Save as new Dashboard
+                    </Button>
+                </Box>
             </Box>
         </Box>
     );

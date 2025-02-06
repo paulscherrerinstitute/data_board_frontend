@@ -271,32 +271,33 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        }, [])
+        }, []);
 
         const downloadDataCSV = useCallback(() => {
             const curvesData = curvesRef.current;
-        
+
             const headers = ["Backend", "Channel", "Timestamp", "Value"];
             const rows: string[] = [];
-        
+
             curvesData.forEach((curve) => {
                 const backend = curve.backend;
                 const curveEntries = Object.entries(curve.curveData.curve);
-        
+
                 curveEntries.forEach(([channel, timestamps]) => {
                     Object.entries(timestamps).forEach(([timestamp, value]) => {
-                        rows.push([backend, channel, timestamp, value].join(","));
+                        rows.push(
+                            [backend, channel, timestamp, value].join(",")
+                        );
                     });
                 });
             });
-        
+
             const csvContent = [headers.join(","), ...rows].join("\n");
             const blob = new Blob([csvContent], { type: "text/csv" });
-        
+
             const fileName = `curves_${new Date().toISOString()}.csv`;
             downloadBlob(blob, fileName);
         }, [downloadBlob]);
-        
 
         const downloadDataJSON = useCallback(() => {
             const curvesData = curvesRef.current;
@@ -358,10 +359,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     range: zoomState.xaxisRange,
                     domain: [
                         // Specify the width of the X axis to leave enough room for all y axes
-                        curves.length / 2 / (40 * (window.innerWidth / 2560)),
-                        1 -
-                            curves.length /
-                                2 /
+                        0.01 + Math.ceil(curves.length / 2) /
+                            (40 * (window.innerWidth / 2560)),
+                        1.01 -
+                            Math.floor(curves.length / 2) /
                                 (40 * 0.5 * (window.innerWidth / 2560)),
                     ],
                 },

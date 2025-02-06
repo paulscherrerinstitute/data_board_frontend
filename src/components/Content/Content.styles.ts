@@ -55,7 +55,6 @@ export const CreateWidgetStyles: SxProps<Theme> = {
     height: "5vh",
     minHeight: "5vh",
     width: "10vw",
-    margin: "0 auto 0 auto",
     backgroundImage: `url(${Background})`,
     backgroundSize: "contain",
     backgroundPosition: "center",
@@ -72,4 +71,11 @@ export const removeWidgetButtonStyles: SxProps<Theme> = {
         backgroundColor: "rgba(0, 0, 0, 0.7)",
     },
     zIndex: 99999,
+};
+
+export const actionButtonBoxStyles: SxProps<Theme> = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: "50px"
 };
