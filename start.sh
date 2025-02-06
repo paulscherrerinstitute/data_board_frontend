@@ -4,11 +4,11 @@
 # This is done so the app can use environment variables which are not set at built time, but rather when the container is run. 
 
 # Recreate env config file
-rm ./build/env-config.js
-touch ./build/env-config.js
+rm ./env-config.js
+touch ./env-config.js
 
 # Add assignment
-echo "window._env_ = {" >> ./build/env-config.js
+echo "window._env_ = {" >> ./env-config.js
 
 # Loop through all environment variables
 for varname in $(printenv | grep -o 'DATA_BOARD_PUBLIC[^=]*' | sort -u); do
@@ -16,10 +16,10 @@ for varname in $(printenv | grep -o 'DATA_BOARD_PUBLIC[^=]*' | sort -u); do
   value="${!varname}"
 
   # Append variable name and value to the file
-  echo "  $varname: \"$value\"," >> ./build/env-config.js
+  echo "  $varname: \"$value\"," >> ./env-config.js
 done
 
-echo "}" >> ./build/env-config.js
+echo "}" >> ./env-config.js
 
 # Execute the command specified as argument to the script
 exec "$@"
