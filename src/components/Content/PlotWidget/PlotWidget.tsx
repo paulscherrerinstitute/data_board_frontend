@@ -110,8 +110,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     const filteredResults = searchResults.data.channels.filter(
                         (returnedChannel) =>
                             returnedChannel.backend === channel.backend &&
-                                returnedChannel.name === channel.channelName &&
-                                channel.datatype === "[]" ? returnedChannel.type === "" : returnedChannel.type === channel.datatype
+                            returnedChannel.name === channel.channelName &&
+                            channel.datatype === "[]"
+                                ? returnedChannel.type === ""
+                                : returnedChannel.type === channel.datatype
                     );
 
                     // Now we have our seriesId, if the channel still exists
@@ -132,11 +134,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 channel_name: channel.channelName, // REPLACE WITH SERIESID AS SOON AS SUPPORTED BY DATAHUB
                                 begin_time: Math.floor(
                                     new Date(timeValues.startTime).getTime() /
-                                    1000
+                                        1000
                                 ),
                                 end_time: Math.floor(
                                     new Date(timeValues.endTime).getTime() /
-                                    1000
+                                        1000
                                 ),
                                 backend: channel.backend,
                                 num_bins: numBins,
@@ -270,25 +272,27 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const layout = useMemo(() => {
             // Define dynamic y-axes using channel names
-            const yAxes = curves.flatMap((curve, curveIndex) =>
-                Object.keys(curve.curveData.curve).map(
-                    (channelName, channelIndex) => ({
-                        [`yaxis${curveIndex === 0 && channelIndex === 0
-                                ? ""
-                                : `${curveIndex + channelIndex + 1}`
-                            }`]: {
-                            title: {
-                                text: `${channelName} - ${curve.backend}`,
-                            },
-                            overlaying:
-                                curveIndex === 0 && channelIndex === 0
-                                    ? undefined
-                                    : "y", // Overlay all except the first axis
-                            side: curveIndex % 2 === 0 ? "left" : "right", // Alternate sides for clarity, starting with left
+            const yAxes = curves.map((curve, curveIndex) => {
+                const channelName = Object.keys(curve.curveData.curve)[0];
+                console.log(window.innerWidth);
+                return {
+                    [`yaxis${curveIndex === 0 ? "" : `${curveIndex + 1}`}`]: {
+                        title: {
+                            text: `${channelName} - ${curve.backend}`,
                         },
-                    })
-                )
-            );
+                        overlaying: curveIndex === 0 ? undefined : "y", // Overlay all except the first axis, this shows all grids
+                        side: curveIndex % 2 === 0 ? "left" : "right", // Alternate sides for clarity, starting with left
+                        anchor: "free",
+                        // Calculate the position based on the index, as plotly can't do this automatically...
+                        position:
+                            curveIndex % 2 === 0
+                                ? curveIndex / (40 * (window.innerWidth / 2560))
+                                : 1 -
+                                  curveIndex /
+                                      (40 * (window.innerWidth / 2560)),
+                    },
+                };
+            });
 
             return {
                 title: { text: `Plot ${index}` },
@@ -298,6 +302,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 xaxis: {
                     title: { text: xAxisTitle },
                     range: zoomState.xaxisRange,
+                    domain: [
+                        // Specify the width of the X axis to leave enough room for all y axes
+                        curves.length / 2 / (40 * (window.innerWidth / 2560)),
+                        1 -
+                            curves.length /
+                                2 /
+                                (40 * (window.innerWidth / 2560)),
+                    ],
                 },
                 yaxis: {
                     title: { text: "" }, // Remove the default "Click to add title"
