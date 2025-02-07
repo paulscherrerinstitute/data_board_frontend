@@ -43,19 +43,29 @@ const Selector: React.FC = () => {
     const [searchRegex, setSearchRegex] = useState("");
     const alreadyFetchedRecentRef = useRef(false);
     const selectRef = useRef<HTMLHeadingElement>(null);
+    const searchIsRunningRef = useRef(false);
 
     const filteredChannels = useMemo(() => {
+        let regex: RegExp | null = null;
+
+        if (searchRegex) {
+            try {
+                regex = new RegExp(searchRegex, "i");
+            } catch (e) { // ignore invalid regex
+            }
+        }
+
         return storedChannels.filter((channel) => {
             const [backend, , type] = channel.key.split("|");
             const matchesBackend =
-                selectedBackends.length === 0 ||
-                selectedBackends.includes(backend);
+                selectedBackends.length === 0 || selectedBackends.includes(backend);
             const matchesType =
                 selectedTypes.length === 0 || selectedTypes.includes(type);
-            const matchesSearch =
-                !searchRegex || new RegExp(searchRegex, "i").test(channel.key);
+            const matchesSearch = !searchRegex || (regex && regex.test(channel.key));
+
             return matchesBackend && matchesType && matchesSearch;
         });
+
     }, [storedChannels, selectedBackends, selectedTypes, searchRegex]);
 
     const selectedChannels = useMemo(() => {
@@ -169,6 +179,10 @@ const Selector: React.FC = () => {
     const debouncedSearch = useMemo(
         () =>
             debounce(async (term: string) => {
+                if (searchIsRunningRef.current) {
+                    return;
+                }
+                searchIsRunningRef.current = true;
                 setError(null);
                 setLoading(true);
                 try {
@@ -191,20 +205,20 @@ const Selector: React.FC = () => {
                         ].join("|")
                     );
 
+                    const previousChannels = storedChannels;
+
+                    const channelKeys = new Set(previousChannels.map(channel => channel.key));
+
                     const newStoredChannels = [
-                        ...storedChannels,
+                        ...previousChannels,
                         ...joinedData
-                            .filter(
-                                (key: string) =>
-                                    !storedChannels.some(
-                                        (channel) => channel.key === key
-                                    )
-                            )
+                            .filter((key: string) => !channelKeys.has(key))
                             .map((key: string) => ({
                                 key,
                                 selected: false,
-                            })),
+                            }))
                     ].sort((a, b) => a.key.localeCompare(b.key));
+
                     setStoredChannels(newStoredChannels);
 
                     // Extract unique backends and data types, used for filtering
@@ -243,7 +257,8 @@ const Selector: React.FC = () => {
                     console.log(err);
                 }
                 setLoading(false);
-            }, 300),
+                searchIsRunningRef.current = false;
+            }, 500),
         [
             backendUrl,
             selectedBackends.length,
