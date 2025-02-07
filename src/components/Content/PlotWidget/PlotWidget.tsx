@@ -140,14 +140,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         {
                             params: {
                                 channel_name: channel.channelName, // REPLACE WITH SERIESID AS SOON AS SUPPORTED BY DATAHUB
-                                begin_time: Math.floor(
-                                    new Date(timeValues.startTime).getTime() /
-                                        1000
-                                ),
-                                end_time: Math.floor(
-                                    new Date(timeValues.endTime).getTime() /
-                                        1000
-                                ),
+                                begin_time: timeValues.startTime,
+                                end_time: timeValues.endTime,
                                 backend: channel.backend,
                                 num_bins: numBins,
                                 query_expansion: timeValues.queryExpansion,

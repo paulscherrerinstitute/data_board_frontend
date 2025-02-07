@@ -12,8 +12,8 @@ export type Widget = {
 };
 
 export type TimeValues = {
-    startTime: string;
-    endTime: string;
+    startTime: number;
+    endTime: number;
     queryExpansion: boolean;
 };
 

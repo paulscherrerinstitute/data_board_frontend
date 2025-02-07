@@ -15,8 +15,8 @@ import { useApiUrls } from "../ApiContext/ApiContext";
 const Content: React.FC = () => {
     const { backendUrl } = useApiUrls();
     const [timeValues, setTimeValues] = useState<TimeValues>({
-        startTime: "",
-        endTime: "",
+        startTime: 0,
+        endTime: 0,
         queryExpansion: false,
     });
     const [searchParams, setSearchParams] = useSearchParams();
@@ -173,8 +173,8 @@ const Content: React.FC = () => {
 
     const handleTimeChange = useCallback(
         (values: {
-            startTime: string;
-            endTime: string;
+            startTime: number;
+            endTime: number;
             queryExpansion: boolean;
         }) => {
             setTimeValues(values);

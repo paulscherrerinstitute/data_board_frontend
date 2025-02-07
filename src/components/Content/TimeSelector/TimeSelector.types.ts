@@ -1,7 +1,7 @@
 export interface TimeSelectorProps {
     onTimeChange: (values: {
-        startTime: string;
-        endTime: string;
+        startTime: number;
+        endTime: number;
         queryExpansion: boolean;
     }) => void;
 }
