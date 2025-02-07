@@ -27,5 +27,3 @@ deploy:
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
     exists:
       - Dockerfile
-  # Allow manual execution of pipeline
-  - when: manual
