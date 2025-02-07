@@ -3,8 +3,7 @@ import { Box, Button, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
-import { Widget, Channel, TimeValues, Dashboard } from "./Content.types";
-import { uniqueId } from "lodash";
+import { Widget, Channel, TimeValues, DashboardDto } from "./Content.types";
 import ReactGridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -30,6 +29,7 @@ const Content: React.FC = () => {
     const prevWidgetsLengthRef = useRef<number | null>(null);
     const isWidgetsInitializedRef = useRef(false);
     const gridContainerRef = useRef<HTMLElement | null>(null);
+    const newPlotNumberRef = useRef(1);
     const defaultWidgetWidth = 6;
     const defaultWidgetHeight = 12;
 
@@ -58,48 +58,6 @@ const Content: React.FC = () => {
                             : widget
                     );
                     setWidgets(newWidgets);
-
-                    // Save channels of first plot in Url
-                    if (key === "1") {
-                        const oldChannelsParam = searchParams.get("channels");
-                        if (oldChannelsParam) {
-                            try {
-                                const oldChannelsParsed =
-                                    JSON.parse(oldChannelsParam);
-                                // Find and update the channel just added
-                                const newChannels = oldChannelsParsed.map(
-                                    (selectedChannel: any) => {
-                                        if (
-                                            selectedChannel.cn ===
-                                                channel.channelName &&
-                                            selectedChannel.be ===
-                                                channel.backend &&
-                                            selectedChannel.dt ===
-                                                channel.datatype
-                                        ) {
-                                            return {
-                                                ...selectedChannel,
-                                                p1: true, // Set p1 to true to say this channel is in plot 1
-                                            };
-                                        }
-                                        return selectedChannel; // Keep other channels unchanged
-                                    }
-                                );
-                                const newChannelsParam =
-                                    JSON.stringify(newChannels);
-                                setSearchParams((searchParams) => {
-                                    const newSearchParams = searchParams;
-                                    newSearchParams.set(
-                                        "channels",
-                                        newChannelsParam
-                                    );
-                                    return newSearchParams;
-                                });
-                            } catch (e) {
-                                console.error("Error parsing URL channels:", e);
-                            }
-                        }
-                    }
                 }
             } else {
                 console.error("Invalid channel structure.");
@@ -170,12 +128,14 @@ const Content: React.FC = () => {
             }
         }
 
+        const plotNumber = newPlotNumberRef.current;
+        newPlotNumberRef.current++;
         setWidgets((prevWidgets) => [
             ...prevWidgets,
             {
                 channels: initialChannels,
                 layout: {
-                    i: uniqueId(),
+                    i: plotNumber.toString(),
                     x: calculatedX,
                     y: Infinity,
                     w: defaultWidgetWidth,
@@ -245,56 +205,63 @@ const Content: React.FC = () => {
         };
 
         window.addEventListener("resize", handleResize);
-        // If widgets is not yet initialized, add an initial widget
-        if (!isWidgetsInitializedRef.current) {
-            isWidgetsInitializedRef.current = true;
-            // Make this not trigger a scroll to bottom
-            prevWidgetsLengthRef.current = null;
+        const initializeWidgets = async () => {
+            if (!isWidgetsInitializedRef.current) {
+                isWidgetsInitializedRef.current = true;
+                // Make this not trigger a scroll to bottom
+                prevWidgetsLengthRef.current = null;
 
-            // Get all channels from the URL that are set to be in the first plot
-            const channelsParam = searchParams.get("channels");
-            let channelsInFirstPlot: Channel[] = [];
-            if (channelsParam) {
-                try {
-                    const parsedChannels = JSON.parse(channelsParam);
-                    channelsInFirstPlot = parsedChannels
-                        .filter((channel: any) => channel.p1 === true)
-                        .map((channel: any) => ({
-                            channelName: channel.cn,
-                            backend: channel.be,
-                            datatype: channel.dt,
-                        }));
-                } catch (e) {
-                    console.error("Error parsing URL channels:", e);
+                const dashboardId = searchParams.get("dashboardId");
+                if (dashboardId) {
+                    try {
+                        const response = await axios.get<DashboardDto>(
+                            `${backendUrl}/dashboard/${dashboardId}`
+                        );
+                        const dashboard = response.data.dashboard;
+                        if (dashboard) {
+                            const maxPlotNumber = Math.max(
+                                ...dashboard.widgets.map(
+                                    (widget) =>
+                                        parseInt(widget.layout.i, 10) || 0
+                                )
+                            );
+                            newPlotNumberRef.current = maxPlotNumber + 1;
+                            setWidgets(dashboard.widgets);
+                        }
+                        return;
+                    } catch (e) {
+                        console.error("Error fetching stored dashboard: ", e);
+                    }
                 }
-            }
-
-            setWidgets([
-                {
-                    channels: channelsInFirstPlot,
-                    layout: {
-                        i: uniqueId(),
-                        x: 0,
-                        y: 0,
-                        w: 12,
-                        h: (window.innerHeight * 0.9) / (30 + 10) - 1,
+                // If no dashboard data could be fetched or parsed, create an initial dashboard
+                const plotNumber = newPlotNumberRef.current;
+                newPlotNumberRef.current++;
+                setWidgets([
+                    {
+                        channels: [],
+                        layout: {
+                            i: plotNumber.toString(),
+                            x: 0,
+                            y: 0,
+                            w: 12,
+                            h: (window.innerHeight * 0.9) / (30 + 10) - 1,
+                        },
                     },
-                },
-            ]);
-        }
+                ]);
+            }
+        };
+        initializeWidgets();
 
         return () => {
             window.removeEventListener("resize", handleResize);
         };
-    }, [searchParams]);
+    }, [searchParams, backendUrl]);
 
     const handleCreateDashboard = useCallback(async () => {
-        const response = await axios.post<Dashboard>(
+        const response = await axios.post<DashboardDto>(
             `${backendUrl}/dashboard`,
             {
-                params: {
-                    dashboard: { widgets: widgets },
-                },
+                dashboard: { widgets: widgets },
             }
         );
         const dashboardId = response.data.id;
@@ -309,7 +276,7 @@ const Content: React.FC = () => {
         const dashboardId = searchParams.get("dashboardId");
         if (dashboardId) {
             try {
-                await axios.patch<Dashboard>(
+                await axios.patch<DashboardDto>(
                     `${backendUrl}/dashboard/${dashboardId}`,
                     {
                         dashboard: { widgets: widgets },
@@ -320,6 +287,47 @@ const Content: React.FC = () => {
         }
         handleCreateDashboard();
     }, [backendUrl, handleCreateDashboard, searchParams, widgets]);
+
+    const handleDownloadDashboard = useCallback(async () => {
+        const dashboardData = { dashboard: { widgets: widgets } };
+        const jsonContent = JSON.stringify(dashboardData, null, 4);
+        const blob = new Blob([jsonContent], { type: "application/json" });
+        const fileName = `dashboard_${new Date().toISOString()}.json`;
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }, [widgets]);
+
+    const handleImportDashboard = useCallback(async () => {
+        try {
+            // Create an input element dynamically
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".json"; // Accept only JSON files
+
+            input.onchange = async (event) => {
+                const file = (event.target as HTMLInputElement)?.files?.[0];
+                if (!file) {
+                    throw new Error("No file selected");
+                }
+
+                const content = await file.text();
+                const dashboardData = JSON.parse(content) as {
+                    dashboard: { widgets: Widget[] };
+                };
+
+                setWidgets(dashboardData.dashboard.widgets);
+            };
+
+            input.click();
+        } catch (e) {
+            console.error("Error in handleImportWidgets:", e);
+            alert("Something went wrong while importing widgets.");
+        }
+    }, []);
 
     return (
         <Box sx={styles.contentContainerStyles}>
@@ -399,13 +407,25 @@ const Content: React.FC = () => {
                         variant="contained"
                         onClick={() => handleSaveDashboard()}
                     >
-                        Save Dasbhoard
+                        Save Layout
                     </Button>
                     <Button
                         variant="contained"
                         onClick={() => handleCreateDashboard()}
                     >
-                        Save as new Dashboard
+                        Save as new Layout
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => handleDownloadDashboard()}
+                    >
+                        Download Layout as JSON
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => handleImportDashboard()}
+                    >
+                        Import JSON Layout
                     </Button>
                 </Box>
             </Box>

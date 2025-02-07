@@ -17,11 +17,11 @@ export type TimeValues = {
     queryExpansion: boolean;
 };
 
-export type DashboardData = {
-    widgets: Widget[],
-}
-
 export type Dashboard = {
-    id: string,
-    data: DashboardData,
-}
+    widgets: Widget[];
+};
+
+export type DashboardDto = {
+    id: string;
+    dashboard: Dashboard;
+};

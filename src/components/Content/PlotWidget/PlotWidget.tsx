@@ -286,13 +286,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 curveEntries.forEach(([channel, timestamps]) => {
                     Object.entries(timestamps).forEach(([timestamp, value]) => {
                         rows.push(
-                            [backend, channel, timestamp, value].join(",")
+                            [backend, channel, timestamp, value].join(";")
                         );
                     });
                 });
             });
 
-            const csvContent = [headers.join(","), ...rows].join("\n");
+            const csvContent = [headers.join(";"), ...rows].join("\n");
             const blob = new Blob([csvContent], { type: "text/csv" });
 
             const fileName = `curves_${new Date().toISOString()}.csv`;
@@ -359,8 +359,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     range: zoomState.xaxisRange,
                     domain: [
                         // Specify the width of the X axis to leave enough room for all y axes
-                        0.01 + Math.ceil(curves.length / 2) /
-                            (40 * (window.innerWidth / 2560)),
+                        0.01 +
+                            Math.ceil(curves.length / 2) /
+                                (40 * (window.innerWidth / 2560)),
                         1.01 -
                             Math.floor(curves.length / 2) /
                                 (40 * 0.5 * (window.innerWidth / 2560)),
