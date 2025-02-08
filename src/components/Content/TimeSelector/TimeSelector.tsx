@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     Box,
     TextField,
@@ -8,12 +8,15 @@ import {
     Typography,
 } from "@mui/material";
 import {
-    AutoPlotOption,
+    AutoApplyOption,
     TimeSelectorProps,
     TimeSourceOption,
     QuickSelectOption,
 } from "./TimeSelector.types";
 import * as styles from "./TimeSelector.styles";
+import { useSearchParams } from "react-router-dom";
+import { DateTimePicker } from "@mui/x-date-pickers";
+import dayjs, { Dayjs } from "dayjs";
 
 const quickOptions = [
     { label: "Last 1m", value: 1 },
@@ -30,60 +33,19 @@ const quickOptions = [
     { label: "This Month", value: "this_month" },
 ];
 
-const formatDateForLocalInput = (date: Date): string => {
-    const year = date.getFullYear();
-    // The month is returned as a zero based index, so increment it once.
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    // getHours returns the local hours, so we can simply keep that.
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
-const getISOstringFromLocalInput = (localInput: string): string => {
-    if (localInput === "") {
-        return new Date().toISOString();
-    }
-    const [datePart, timePart] = localInput.split("T");
-    const [year, month, day] = datePart.split("-").map(Number);
-    const [hours, minutes] = timePart.split(":").map(Number);
-
-    // Convert month back to zero based index and treat local hours as input for iso hours (Which is why we don't need to change hours to adapt).
-    const date = new Date(year, month - 1, day, hours, minutes);
-    return date.toISOString();
-};
-
 const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
-    const [startTime, setStartTime] = useState("");
-    const [endTime, setEndTime] = useState("");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [isAutoApplyPressSimulated, setIsAutoApplyPressSimulated] =
+        useState(false);
+    const [startTime, setStartTime] = useState<Dayjs>(dayjs());
+    const [endTime, setEndTime] = useState<Dayjs>(dayjs());
     const [queryExpansion, setQueryExpansion] = useState(false);
-    const [timeSource, setTimeSource] =
-        useState<TimeSourceOption>("quickselect");
     const [selectedQuickOption, setSelectedQuickOption] =
         useState<QuickSelectOption>(quickOptions[1].value);
-    const [autoPlot, setAutoPlot] = useState<AutoPlotOption>("never");
-    const autoPlotInterval = useRef<NodeJS.Timeout | null>(null);
-
-    // Initialize start and end time
-    useEffect(() => {
-        setStartTime(
-            formatDateForLocalInput(
-                new Date(new Date().getTime() - 10 * 60 * 1000)
-            )
-        );
-        setEndTime(formatDateForLocalInput(new Date()));
-    }, []);
-
-    useEffect(() => {
-        onTimeChange({
-            startTime: new Date(
-                new Date().getTime() - 10 * 60 * 1000
-            ).toISOString(),
-            endTime: new Date().toISOString(),
-            queryExpansion: false,
-        });
-    }, [onTimeChange]);
+    const [autoApply, setAutoApply] = useState<AutoApplyOption>("never");
+    const autoApplyIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const timeSourceRef = useRef<TimeSourceOption>("quickselect");
+    const isUrlParsed = useRef(false);
 
     const convertQuickOptionToTimestamps = (option: QuickSelectOption) => {
         const now = new Date();
@@ -137,77 +99,186 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
     };
 
     const handleQuickSelect = (value: QuickSelectOption) => {
-        setTimeSource("quickselect");
+        timeSourceRef.current = "quickselect";
         setSelectedQuickOption(value);
 
         // Make the time fields also display the correct time
         const { start, end } = convertQuickOptionToTimestamps(value);
-        setStartTime(formatDateForLocalInput(start));
-        setEndTime(formatDateForLocalInput(end));
+        setStartTime(dayjs(start));
+        setEndTime(dayjs(end));
     };
 
-    const handleApply = () => {
-        let calculatedStartTime = startTime;
-        let calculatedEndTime = endTime;
+    const handleApply = useCallback(() => {
         // in case a quickselect option was selected last, recalculate the start and end times based on it
-        if (timeSource === "quickselect") {
+        if (timeSourceRef.current === "quickselect") {
             const { start, end } =
                 convertQuickOptionToTimestamps(selectedQuickOption);
-            calculatedStartTime = formatDateForLocalInput(start);
-            calculatedEndTime = formatDateForLocalInput(end);
-            setStartTime(calculatedStartTime);
-            setEndTime(calculatedEndTime);
+            setStartTime(dayjs(start));
+            setEndTime(dayjs(end));
         }
-        const startTimeISO = getISOstringFromLocalInput(calculatedStartTime);
-        const endTimeISO = getISOstringFromLocalInput(calculatedEndTime);
+        const startUnixTimeMs = startTime.valueOf();
+        const endUnixTimeMs = endTime.valueOf();
+
         onTimeChange({
-            startTime: startTimeISO,
-            endTime: endTimeISO,
+            startTime: startUnixTimeMs,
+            endTime: endUnixTimeMs,
             queryExpansion,
         });
+
+        const startParam = startUnixTimeMs.toString();
+        const endParam = endUnixTimeMs.toString();
+
+        setSearchParams((searchParams) => {
+            const newSearchParams = searchParams;
+            newSearchParams.set("startTime", startParam);
+            newSearchParams.set("endTime", endParam);
+            if (timeSourceRef.current === "quickselect") {
+                newSearchParams.set(
+                    "relativeTime",
+                    selectedQuickOption.toString()
+                );
+            } else {
+                newSearchParams.set("relativeTime", "false");
+            }
+            newSearchParams.set(
+                "queryExpansion",
+                queryExpansion ? "true" : "false"
+            );
+            newSearchParams.set("autoApply", autoApply);
+            return newSearchParams;
+        });
+    }, [
+        autoApply,
+        endTime,
+        onTimeChange,
+        queryExpansion,
+        selectedQuickOption,
+        setSearchParams,
+        startTime,
+    ]);
+
+    const simulateAutoApplyPress = () => {
+        setIsAutoApplyPressSimulated(true);
+        setTimeout(() => setIsAutoApplyPressSimulated(false), 200);
     };
 
-    const handleAutoPlotChange = (newAutoPlot: AutoPlotOption) => {
-        setAutoPlot(newAutoPlot);
+    const handleAutoApplyChange = useCallback(
+        (newAutoApply: AutoApplyOption) => {
+            setAutoApply(newAutoApply);
 
-        // Clear existing interval
-        if (autoPlotInterval.current) {
-            clearInterval(autoPlotInterval.current);
-        }
+            // Clear existing interval
+            if (autoApplyIntervalRef.current) {
+                clearInterval(autoApplyIntervalRef.current);
+            }
 
-        // Set interval if not 'never'
-        if (newAutoPlot !== "never") {
-            const interval = newAutoPlot === "1min" ? 60000 : 600000; // 1 minute or 10 minutes
-            autoPlotInterval.current = setInterval(() => {
-                handleApply();
-            }, interval);
-        }
+            // Set interval if not 'never'
+            if (newAutoApply !== "never") {
+                const interval = newAutoApply === "1min" ? 60000 : 600000; // 1 minute or 10 minutes
+                autoApplyIntervalRef.current = setInterval(() => {
+                    simulateAutoApplyPress();
+                    handleApply();
+                }, interval);
+            }
+        },
+        [handleApply]
+    );
+
+    const isValueInQuickSelectOptions = (value: string | number) => {
+        const possibleValues = quickOptions.map((option) => option.value);
+        return possibleValues.includes(value);
     };
+
+    // Initially, parse all relevant url parameters
+    useEffect(() => {
+        if (isUrlParsed.current) {
+            return;
+        }
+        isUrlParsed.current = true;
+
+        const startTimeParam = searchParams.get("startTime");
+        const endTimeParam = searchParams.get("endTime");
+        const quickSelectParam = searchParams.get("relativeTime");
+        const queryExpansionParam = searchParams.get("queryExpansion");
+        const autoApplyParam = searchParams.get("autoApply");
+
+        const startTime = Number(startTimeParam);
+        const endTime = Number(endTimeParam);
+        let start, end;
+        // If both time parameters are valid numbers, initialize the time to those
+        if (!isNaN(startTime) && !isNaN(endTime) && startTime * endTime) {
+            start = new Date(startTime);
+            end = new Date(endTime);
+        } else {
+            // Else, default to ten minutes ago
+            ({ start, end } = convertQuickOptionToTimestamps(10));
+        }
+
+        setStartTime(dayjs(start));
+        setEndTime(dayjs(end));
+
+        if (quickSelectParam) {
+            if (quickSelectParam === "false") {
+                timeSourceRef.current = "manual";
+            } else if (isValueInQuickSelectOptions(quickSelectParam)) {
+                timeSourceRef.current = "quickselect";
+                setSelectedQuickOption(quickSelectParam);
+            } else if (isValueInQuickSelectOptions(Number(quickSelectParam))) {
+                timeSourceRef.current = "quickselect";
+                setSelectedQuickOption(Number(quickSelectParam));
+            }
+        }
+
+        let newQueryExpansion = false;
+        if (queryExpansionParam) {
+            if (queryExpansionParam === "true") {
+                newQueryExpansion = true;
+                setQueryExpansion(newQueryExpansion);
+            } else if (queryExpansionParam === "false") {
+                setQueryExpansion(false);
+            }
+        }
+
+        if (autoApplyParam) {
+            if (
+                autoApplyParam === "never" ||
+                autoApplyParam === "1min" ||
+                autoApplyParam === "10min"
+            ) {
+                handleAutoApplyChange(autoApplyParam);
+            }
+        }
+
+        onTimeChange({
+            startTime: start.valueOf(),
+            endTime: end.valueOf(),
+            queryExpansion: newQueryExpansion,
+        });
+    }, [handleAutoApplyChange, onTimeChange, searchParams]);
 
     return (
         <Box sx={styles.timeSelectorContainerStyle}>
             <Box sx={styles.timeFieldStyle}>
-                <TextField
+                <DateTimePicker
                     label="Start Time"
-                    type="datetime-local"
+                    format="DD-MM-YYYY HH:mm:ss"
+                    ampm={false}
                     value={startTime}
-                    onChange={(e) => {
-                        setStartTime(e.target.value);
-                        setTimeSource("manual");
+                    onChange={(newTime) => {
+                        setStartTime(dayjs(newTime));
+                        timeSourceRef.current = "manual";
                     }}
-                    fullWidth
                 />
             </Box>
             <Box sx={styles.timeFieldStyle}>
-                <TextField
+                <DateTimePicker
                     label="End Time"
-                    type="datetime-local"
+                    format="DD-MM-YYYY HH:mm:ss"
+                    ampm={false}
                     value={endTime}
-                    onChange={(e) => {
-                        setEndTime(e.target.value);
-                        setTimeSource("manual");
+                    onChange={(newTime) => {
+                        setEndTime(dayjs(newTime));
+                        timeSourceRef.current = "manual";
                     }}
-                    fullWidth
                 />
             </Box>
             <TextField
@@ -235,9 +306,9 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
             <TextField
                 select
                 label="Auto Apply"
-                value={autoPlot}
+                value={autoApply}
                 onChange={(e) =>
-                    handleAutoPlotChange(e.target.value as AutoPlotOption)
+                    handleAutoApplyChange(e.target.value as AutoApplyOption)
                 }
             >
                 <MenuItem value="never">Never</MenuItem>
@@ -246,7 +317,12 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
             </TextField>
             <Button
                 variant="contained"
-                sx={styles.refreshButtonStyle}
+                sx={{
+                    ...styles.refreshButtonStyle,
+                    ...(isAutoApplyPressSimulated && {
+                        transform: "scale(0.95)",
+                    }),
+                }}
                 onClick={handleApply}
             >
                 Apply

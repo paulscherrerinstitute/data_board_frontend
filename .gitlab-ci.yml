@@ -27,3 +27,5 @@ deploy:
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
     exists:
       - Dockerfile
+  # Allow the pipeline to be triggered by other actions, such as manual triggers in gitlab web interface
+  - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && $CI_PIPELINE_SOURCE != "push"'

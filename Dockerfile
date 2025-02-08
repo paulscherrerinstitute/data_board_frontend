@@ -1,19 +1,33 @@
-FROM node:18
+FROM node:22 AS builder
 
 WORKDIR /app
 
-COPY . .
+COPY package.json .
+
+COPY package-lock.json .
 
 RUN npm install
 
+COPY . .
+
 RUN npm run build
 
-EXPOSE 8080
+FROM nginx:alpine
 
-RUN npm install -g serve
+RUN apk add --update --no-cache --virtual .tmp bash
 
-RUN chmod +x /app/start.sh
+EXPOSE 80
 
-ENTRYPOINT ["/app/start.sh"]
+WORKDIR /usr/share/nginx/html
 
-CMD ["serve", "-s", "build", "-l", "8080"]
+RUN rm -rf ./*
+
+COPY --from=builder /app/build .
+
+COPY --from=builder /app/start.sh .
+
+RUN chmod +x /usr/share/nginx/html/start.sh
+
+ENTRYPOINT ["/usr/share/nginx/html/start.sh"]
+
+CMD ["nginx", "-g", "daemon off;"]

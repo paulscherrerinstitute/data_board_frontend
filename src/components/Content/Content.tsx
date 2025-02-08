@@ -3,27 +3,33 @@ import { Box, Button, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
-import { Widget, Channel, TimeValues } from "./Content.types";
-import { uniqueId } from "lodash";
+import { Widget, Channel, TimeValues, DashboardDto } from "./Content.types";
 import ReactGridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import PlotWidget from "./PlotWidget/PlotWidget";
+import { useSearchParams } from "react-router-dom";
+import axios from "axios";
+import { useApiUrls } from "../ApiContext/ApiContext";
 
 const Content: React.FC = () => {
+    const { backendUrl } = useApiUrls();
     const [timeValues, setTimeValues] = useState<TimeValues>({
-        startTime: "",
-        endTime: "",
+        startTime: 0,
+        endTime: 0,
         queryExpansion: false,
     });
+    const [searchParams, setSearchParams] = useSearchParams();
     const [widgets, setWidgets] = useState<Widget[]>([]);
-    const isWidgetsInitialized  = useRef(false);
     const [draggedOverKey, setDraggedOverKey] = useState("");
     const [hoveredOverKey, setHoveredOverKey] = useState("");
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
-    const createWidgetButtonRef = useRef<HTMLButtonElement | null>(null);
+    const prevWidgetsLengthRef = useRef<number | null>(null);
+    const isWidgetsInitializedRef = useRef(false);
+    const gridContainerRef = useRef<HTMLElement | null>(null);
+    const newPlotNumberRef = useRef(1);
     const defaultWidgetWidth = 6;
     const defaultWidgetHeight = 12;
 
@@ -43,16 +49,15 @@ const Content: React.FC = () => {
                 if (key === "-1") {
                     handleCreateWidget([channel]);
                 } else {
-                    setWidgets((prevWidgets) =>
-                        prevWidgets.map((widget) =>
-                            widget.layout.i === key
-                                ? {
-                                      ...widget,
-                                      channels: [...widget.channels, channel],
-                                  }
-                                : widget
-                        )
+                    const newWidgets = widgets.map((widget) =>
+                        widget.layout.i === key
+                            ? {
+                                  ...widget,
+                                  channels: [...widget.channels, channel],
+                              }
+                            : widget
                     );
+                    setWidgets(newWidgets);
                 }
             } else {
                 console.error("Invalid channel structure.");
@@ -83,8 +88,8 @@ const Content: React.FC = () => {
     };
 
     const handleCreateWidget = (initialChannels: Channel[] = []) => {
-        if (!isWidgetsInitialized.current) {
-            isWidgetsInitialized.current = true;
+        if (!isWidgetsInitializedRef.current) {
+            isWidgetsInitializedRef.current = true;
         }
 
         const maxEndY = Math.max(
@@ -123,12 +128,14 @@ const Content: React.FC = () => {
             }
         }
 
+        const plotNumber = newPlotNumberRef.current;
+        newPlotNumberRef.current++;
         setWidgets((prevWidgets) => [
             ...prevWidgets,
             {
                 channels: initialChannels,
                 layout: {
-                    i: uniqueId(),
+                    i: plotNumber.toString(),
                     x: calculatedX,
                     y: Infinity,
                     w: defaultWidgetWidth,
@@ -136,32 +143,25 @@ const Content: React.FC = () => {
                 },
             },
         ]);
-
-        // Wait a bit until the new widget is rendered and then scroll such that the create widget button is in view.
-        setTimeout(() => {
-            const observer = new IntersectionObserver(
-                (entries, observer) => {
-                    entries.forEach((entry) => {
-                        if (entry.intersectionRatio < 0.999) {
-                            if (createWidgetButtonRef.current) {
-                                createWidgetButtonRef.current.focus();
-                                createWidgetButtonRef.current.scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "center",
-                                });
-                            }
-                        }
-                        observer.disconnect();
-                    });
-                },
-                { threshold: 0 }
-            );
-
-            if (createWidgetButtonRef.current) {
-                observer.observe(createWidgetButtonRef.current);
-            }
-        }, 200);
     };
+
+    useEffect(() => {
+        // In case widgets have been added, scroll to the bottom, but wait a bit for animation to finish
+        if (
+            prevWidgetsLengthRef.current &&
+            prevWidgetsLengthRef.current < widgets.length
+        ) {
+            setTimeout(() => {
+                if (gridContainerRef.current) {
+                    gridContainerRef.current.scrollTo({
+                        top: gridContainerRef.current.scrollHeight,
+                        behavior: "smooth",
+                    });
+                }
+            }, 250);
+        }
+        prevWidgetsLengthRef.current = widgets.length;
+    }, [widgets]);
 
     const handleMouseEnter = (key: string) => {
         setHoveredOverKey(key);
@@ -173,8 +173,8 @@ const Content: React.FC = () => {
 
     const handleTimeChange = useCallback(
         (values: {
-            startTime: string;
-            endTime: string;
+            startTime: number;
+            endTime: number;
             queryExpansion: boolean;
         }) => {
             setTimeValues(values);
@@ -205,25 +205,128 @@ const Content: React.FC = () => {
         };
 
         window.addEventListener("resize", handleResize);
-        if (!isWidgetsInitialized.current) {
-            isWidgetsInitialized.current = true;
-            setWidgets([
-                {
-                    channels: [],
-                    layout: {
-                        i: uniqueId(),
-                        x: 0,
-                        y: 0,
-                        w: 12,
-                        h: (window.innerHeight * 0.9) / (30 + 10) - 1,
+        const initializeWidgets = async () => {
+            if (!isWidgetsInitializedRef.current) {
+                isWidgetsInitializedRef.current = true;
+                // Make this not trigger a scroll to bottom
+                prevWidgetsLengthRef.current = null;
+
+                const dashboardId = searchParams.get("dashboardId");
+                if (dashboardId) {
+                    try {
+                        const response = await axios.get<DashboardDto>(
+                            `${backendUrl}/dashboard/${dashboardId}`
+                        );
+                        const dashboard = response.data.dashboard;
+                        if (dashboard) {
+                            const maxPlotNumber = Math.max(
+                                ...dashboard.widgets.map(
+                                    (widget) =>
+                                        parseInt(widget.layout.i, 10) || 0
+                                )
+                            );
+                            newPlotNumberRef.current = maxPlotNumber + 1;
+                            setWidgets(dashboard.widgets);
+                        }
+                        return;
+                    } catch (e) {
+                        console.error("Error fetching stored dashboard: ", e);
+                    }
+                }
+                // If no dashboard data could be fetched or parsed, create an initial dashboard
+                const plotNumber = newPlotNumberRef.current;
+                newPlotNumberRef.current++;
+                setWidgets([
+                    {
+                        channels: [],
+                        layout: {
+                            i: plotNumber.toString(),
+                            x: 0,
+                            y: 0,
+                            w: 12,
+                            h: (window.innerHeight * 0.9) / (30 + 10) - 1,
+                        },
                     },
-                },
-            ]);
-        }
+                ]);
+            }
+        };
+        initializeWidgets();
 
         return () => {
             window.removeEventListener("resize", handleResize);
         };
+    }, [searchParams, backendUrl]);
+
+    const handleCreateDashboard = useCallback(async () => {
+        const response = await axios.post<DashboardDto>(
+            `${backendUrl}/dashboard`,
+            {
+                dashboard: { widgets: widgets },
+            }
+        );
+        const dashboardId = response.data.id;
+        setSearchParams((searchParams) => {
+            const newSearchParams = searchParams;
+            newSearchParams.set("dashboardId", dashboardId);
+            return newSearchParams;
+        });
+    }, [backendUrl, setSearchParams, widgets]);
+
+    const handleSaveDashboard = useCallback(async () => {
+        const dashboardId = searchParams.get("dashboardId");
+        if (dashboardId) {
+            try {
+                await axios.patch<DashboardDto>(
+                    `${backendUrl}/dashboard/${dashboardId}`,
+                    {
+                        dashboard: { widgets: widgets },
+                    }
+                );
+                return;
+            } catch {}
+        }
+        handleCreateDashboard();
+    }, [backendUrl, handleCreateDashboard, searchParams, widgets]);
+
+    const handleDownloadDashboard = useCallback(async () => {
+        const dashboardData = { dashboard: { widgets: widgets } };
+        const jsonContent = JSON.stringify(dashboardData, null, 4);
+        const blob = new Blob([jsonContent], { type: "application/json" });
+        const fileName = `dashboard_${new Date().toISOString()}.json`;
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }, [widgets]);
+
+    const handleImportDashboard = useCallback(async () => {
+        try {
+            // Create an input element dynamically
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".json"; // Accept only JSON files
+
+            input.onchange = async (event) => {
+                const file = (event.target as HTMLInputElement)?.files?.[0];
+                if (!file) {
+                    throw new Error("No file selected");
+                }
+
+                const content = await file.text();
+                const dashboardData = JSON.parse(content) as {
+                    dashboard: { widgets: Widget[] };
+                };
+
+                setWidgets(dashboardData.dashboard.widgets);
+            };
+
+            input.click();
+        } catch (e) {
+            console.error("Error in handleImportWidgets:", e);
+            alert("Something went wrong while importing widgets.");
+        }
     }, []);
 
     return (
@@ -232,7 +335,7 @@ const Content: React.FC = () => {
                 <TimeSelector onTimeChange={handleTimeChange} />
             </Box>
 
-            <Box sx={styles.gridContainerStyles}>
+            <Box sx={styles.gridContainerStyles} ref={gridContainerRef}>
                 <div>
                     <ReactGridLayout
                         cols={12}
@@ -285,19 +388,46 @@ const Content: React.FC = () => {
                         ))}
                     </ReactGridLayout>
                 </div>
-                <Button
-                    onDrop={(event) => handleDrop(event, "-1")}
-                    onDragOver={(event) => handleDragOver(event, "-1")}
-                    onDragLeave={handleDragLeave}
-                    sx={{
-                        ...styles.CreateWidgetStyles,
-                        filter:
-                            draggedOverKey === "-1" ? "brightness(0.5)" : "",
-                    }}
-                    aria-label="Add new"
-                    onClick={() => handleCreateWidget()}
-                    ref={createWidgetButtonRef}
-                ></Button>
+                <Box sx={styles.actionButtonBoxStyles}>
+                    <Button
+                        onDrop={(event) => handleDrop(event, "-1")}
+                        onDragOver={(event) => handleDragOver(event, "-1")}
+                        onDragLeave={handleDragLeave}
+                        sx={{
+                            ...styles.CreateWidgetStyles,
+                            filter:
+                                draggedOverKey === "-1"
+                                    ? "brightness(0.5)"
+                                    : "",
+                        }}
+                        aria-label="Add new"
+                        onClick={() => handleCreateWidget()}
+                    ></Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => handleSaveDashboard()}
+                    >
+                        Save Layout
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => handleCreateDashboard()}
+                    >
+                        Save as new Layout
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => handleDownloadDashboard()}
+                    >
+                        Download Layout as JSON
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => handleImportDashboard()}
+                    >
+                        Import JSON Layout
+                    </Button>
+                </Box>
             </Box>
         </Box>
     );

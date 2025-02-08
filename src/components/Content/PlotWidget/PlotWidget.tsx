@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { Box } from "@mui/material";
 import {
     PlotWidgetProps,
@@ -14,10 +20,10 @@ import { Channel } from "../Content.types";
 import { debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { BackendChannel } from "../../Selector/Selector.types";
+import Plotly from "plotly.js";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({ channels, timeValues, index }) => {
-        const plotContainerRef = useRef<HTMLDivElement | null>(null);
         const { backendUrl } = useApiUrls();
         const [containerDimensions, setContainerDimensions] =
             useState<ContainerDimensions>({
@@ -30,6 +36,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             yaxisRange: undefined,
         });
         const [xAxisTitle, setXAxisTitle] = useState("Time");
+        const plotContainerRef = useRef<HTMLDivElement | null>(null);
+        const curvesRef = useRef(curves);
         const numBins = 64000;
 
         // Prevent event bubbling if its on a draggable surface so an event to drag the plot will not be handled by the grid layout to move the whole widget.
@@ -111,13 +119,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         (returnedChannel) =>
                             returnedChannel.backend === channel.backend &&
                             returnedChannel.name === channel.channelName &&
-                            channel.datatype === "[]" ? returnedChannel.type === "" : returnedChannel.type === channel.datatype
+                            channel.datatype === "[]"
+                                ? returnedChannel.type === ""
+                                : returnedChannel.type === channel.datatype
                     );
 
                     // Now we have our seriesId, if the channel still exists
                     if (filteredResults.length === 0) {
                         alert(
-                            `Channel: ${channel.channelName} does not exist anymore on backend: ${channel.backend} with datatype ${channel.datatype}`
+                            `Channel: ${channel.channelName} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.datatype}`
                         );
                         return;
                     }
@@ -130,14 +140,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         {
                             params: {
                                 channel_name: channel.channelName, // REPLACE WITH SERIESID AS SOON AS SUPPORTED BY DATAHUB
-                                begin_time: Math.floor(
-                                    new Date(timeValues.startTime).getTime() /
-                                        1000
-                                ),
-                                end_time: Math.floor(
-                                    new Date(timeValues.endTime).getTime() /
-                                        1000
-                                ),
+                                begin_time: timeValues.startTime,
+                                end_time: timeValues.endTime,
                                 backend: channel.backend,
                                 num_bins: numBins,
                                 query_expansion: timeValues.queryExpansion,
@@ -250,6 +254,54 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             }
         };
 
+        useEffect(() => {
+            curvesRef.current = curves;
+        }, [curves]);
+
+        const downloadBlob = useCallback((blob: Blob, fileName: string) => {
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }, []);
+
+        const downloadDataCSV = useCallback(() => {
+            const curvesData = curvesRef.current;
+
+            const headers = ["Backend", "Channel", "Timestamp", "Value"];
+            const rows: string[] = [];
+
+            curvesData.forEach((curve) => {
+                const backend = curve.backend;
+                const curveEntries = Object.entries(curve.curveData.curve);
+
+                curveEntries.forEach(([channel, timestamps]) => {
+                    Object.entries(timestamps).forEach(([timestamp, value]) => {
+                        rows.push(
+                            [backend, channel, timestamp, value].join(";")
+                        );
+                    });
+                });
+            });
+
+            const csvContent = [headers.join(";"), ...rows].join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv" });
+
+            const fileName = `curves_${new Date().toISOString()}.csv`;
+            downloadBlob(blob, fileName);
+        }, [downloadBlob]);
+
+        const downloadDataJSON = useCallback(() => {
+            const curvesData = curvesRef.current;
+            const jsonContent = JSON.stringify(curvesData, null, 4);
+            const blob = new Blob([jsonContent], { type: "application/json" });
+
+            const fileName = `curves_${new Date().toISOString()}.json`;
+            downloadBlob(blob, fileName);
+        }, [downloadBlob]);
+
         const data = useMemo(
             () =>
                 curves.flatMap(
@@ -270,26 +322,26 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const layout = useMemo(() => {
             // Define dynamic y-axes using channel names
-            const yAxes = curves.flatMap((curve, curveIndex) =>
-                Object.keys(curve.curveData.curve).map(
-                    (channelName, channelIndex) => ({
-                        [`yaxis${
-                            curveIndex === 0 && channelIndex === 0
-                                ? ""
-                                : `${curveIndex + channelIndex + 1}`
-                        }`]: {
-                            title: {
-                                text: `${channelName} - ${curve.backend}`,
-                            },
-                            overlaying:
-                                curveIndex === 0 && channelIndex === 0
-                                    ? undefined
-                                    : "y", // Overlay all except the first axis
-                            side: curveIndex % 2 === 0 ? "left" : "right", // Alternate sides for clarity, starting with left
+            const yAxes = curves.map((curve, curveIndex) => {
+                const channelName = Object.keys(curve.curveData.curve)[0];
+                return {
+                    [`yaxis${curveIndex === 0 ? "" : `${curveIndex + 1}`}`]: {
+                        title: {
+                            text: `${channelName} - ${curve.backend}`,
                         },
-                    })
-                )
-            );
+                        overlaying: curveIndex === 0 ? undefined : "y", // Overlay all except the first axis, this shows all grids
+                        side: curveIndex % 2 === 0 ? "left" : "right", // Alternate sides for clarity, starting with left
+                        anchor: "free",
+                        // Calculate the position based on the index, as plotly can't do this automatically...
+                        position:
+                            curveIndex % 2 === 0
+                                ? curveIndex / (40 * (window.innerWidth / 2560))
+                                : 1 -
+                                  curveIndex /
+                                      (40 * (window.innerWidth / 2560)),
+                    },
+                };
+            }, []);
 
             return {
                 title: { text: `Plot ${index}` },
@@ -299,6 +351,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 xaxis: {
                     title: { text: xAxisTitle },
                     range: zoomState.xaxisRange,
+                    domain: [
+                        // Specify the width of the X axis to leave enough room for all y axes
+                        0.01 +
+                            Math.ceil(curves.length / 2) /
+                                (40 * (window.innerWidth / 2560)),
+                        1.01 -
+                            Math.floor(curves.length / 2) /
+                                (40 * 0.5 * (window.innerWidth / 2560)),
+                    ],
                 },
                 yaxis: {
                     title: { text: "" }, // Remove the default "Click to add title"
@@ -307,6 +368,40 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 showlegend: true,
             } as Plotly.Layout;
         }, [curves, containerDimensions, zoomState, xAxisTitle, index]);
+
+        const config = useMemo(() => {
+            return {
+                edits: { axisTitleText: true },
+                displaylogo: false,
+                modeBarButtons: [
+                    [
+                        {
+                            name: "downloadCSV",
+                            title: "Download data as csv",
+                            icon: Plotly.Icons.disk,
+                            click: () => {
+                                downloadDataCSV();
+                            },
+                        },
+                        {
+                            name: "downloadJSON",
+                            title: "Download data as json",
+                            icon: Plotly.Icons.disk,
+                            click: () => {
+                                return downloadDataJSON();
+                            },
+                        },
+                    ],
+                    [
+                        "toImage",
+                        "zoomIn2d",
+                        "zoomOut2d",
+                        "autoScale2d",
+                        "resetScale2d",
+                    ],
+                ],
+            } as Plotly.Config;
+        }, [downloadDataCSV, downloadDataJSON]);
 
         return (
             <Box
@@ -323,10 +418,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 <Plot
                     data={data}
                     layout={layout}
-                    config={{
-                        edits: { titleText: true, axisTitleText: true },
-                        displaylogo: false,
-                    }}
+                    config={config}
                     style={{ width: "100%", height: "100%" }}
                     onRelayout={handleRelayout}
                     onDoubleClick={handleDoubleClick}

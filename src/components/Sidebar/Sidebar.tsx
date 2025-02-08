@@ -15,14 +15,13 @@ const Sidebar: React.FC<SidebarProps> = ({
     initialWidthPercent = 10,
     maxWidthPercent = 100,
 }) => {
-    const sidebarRef = useRef<HTMLDivElement>(null);
     const [isResizing, setIsResizing] = useState(false);
     const [sidebarWidth, setSidebarWidth] = useState(() => {
         const initialWidth = (window.innerWidth * initialWidthPercent) / 100;
         return initialWidth;
     });
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
+    const sidebarRef = useRef<HTMLDivElement>(null);
     const maxWidth = (windowWidth * maxWidthPercent) / 100;
     const minWidth = (windowWidth * 2.5) / 100;
 

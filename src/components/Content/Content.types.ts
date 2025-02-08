@@ -1,4 +1,3 @@
-import { UUID } from "crypto";
 import ReactGridLayout from "react-grid-layout";
 
 export type Channel = {
@@ -13,7 +12,16 @@ export type Widget = {
 };
 
 export type TimeValues = {
-    startTime: string;
-    endTime: string;
+    startTime: number;
+    endTime: number;
     queryExpansion: boolean;
+};
+
+export type Dashboard = {
+    widgets: Widget[];
+};
+
+export type DashboardDto = {
+    id: string;
+    dashboard: Dashboard;
 };
