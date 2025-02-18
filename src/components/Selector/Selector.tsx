@@ -51,21 +51,23 @@ const Selector: React.FC = () => {
         if (searchRegex) {
             try {
                 regex = new RegExp(searchRegex, "i");
-            } catch (e) { // ignore invalid regex
+            } catch (e) {
+                // ignore invalid regex
             }
         }
 
         return storedChannels.filter((channel) => {
             const [backend, , type] = channel.key.split("|");
             const matchesBackend =
-                selectedBackends.length === 0 || selectedBackends.includes(backend);
+                selectedBackends.length === 0 ||
+                selectedBackends.includes(backend);
             const matchesType =
                 selectedTypes.length === 0 || selectedTypes.includes(type);
-            const matchesSearch = !searchRegex || (regex && regex.test(channel.key));
+            const matchesSearch =
+                !searchRegex || (regex && regex.test(channel.key));
 
             return matchesBackend && matchesType && matchesSearch;
         });
-
     }, [storedChannels, selectedBackends, selectedTypes, searchRegex]);
 
     const selectedChannels = useMemo(() => {
@@ -207,7 +209,9 @@ const Selector: React.FC = () => {
 
                     const previousChannels = storedChannels;
 
-                    const channelKeys = new Set(previousChannels.map(channel => channel.key));
+                    const channelKeys = new Set(
+                        previousChannels.map((channel) => channel.key)
+                    );
 
                     const newStoredChannels = [
                         ...previousChannels,
@@ -216,7 +220,7 @@ const Selector: React.FC = () => {
                             .map((key: string) => ({
                                 key,
                                 selected: false,
-                            }))
+                            })),
                     ].sort((a, b) => a.key.localeCompare(b.key));
 
                     setStoredChannels(newStoredChannels);

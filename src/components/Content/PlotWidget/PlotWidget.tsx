@@ -59,7 +59,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 if (containerElement) {
                     const { width, height } =
                         containerElement.getBoundingClientRect();
-                    setContainerDimensions({ width, height });
+                    setContainerDimensions({
+                        width,
+                        height,
+                    });
                 }
             }, 100);
 
@@ -95,7 +98,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     backend: channel.backend,
                                     curveData: {
                                         curve: {
-                                            [channelName]: { undefined: NaN }, // Empty data initially
+                                            [channelName]: {
+                                                undefined: NaN,
+                                            }, // Empty data initially
                                         },
                                     },
                                 },
@@ -282,7 +287,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             });
 
             const csvContent = [headers.join(";"), ...rows].join("\n");
-            const blob = new Blob([csvContent], { type: "text/csv" });
+            const blob = new Blob([csvContent], {
+                type: "text/csv",
+            });
 
             const fileName = `curves_${new Date().toISOString()}.csv`;
             downloadBlob(blob, fileName);
@@ -291,7 +298,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const downloadDataJSON = useCallback(() => {
             const curvesData = curvesRef.current;
             const jsonContent = JSON.stringify(curvesData, null, 4);
-            const blob = new Blob([jsonContent], { type: "application/json" });
+            const blob = new Blob([jsonContent], {
+                type: "application/json",
+            });
 
             const fileName = `curves_${new Date().toISOString()}.json`;
             downloadBlob(blob, fileName);
@@ -440,7 +449,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     data={data}
                     layout={layout}
                     config={config}
-                    style={{ width: "100%", height: "100%" }}
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                    }}
                     onRelayout={handleRelayout}
                     onDoubleClick={handleDoubleClick}
                     onLegendClick={handleLegendClick}
