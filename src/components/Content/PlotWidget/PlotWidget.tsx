@@ -35,7 +35,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             xaxisRange: undefined,
             yaxisRange: undefined,
         });
-        const [xAxisTitle, setXAxisTitle] = useState("Time");
         const plotContainerRef = useRef<HTMLDivElement | null>(null);
         const curvesRef = useRef(curves);
         const numBins = 64000;
@@ -250,12 +249,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             });
         };
 
-        const handleUpdate = (eventData: any) => {
-            if (eventData?.layout?.xaxis?.title?.text) {
-                setXAxisTitle(eventData.layout.xaxis.title.text);
-            }
-        };
-
         useEffect(() => {
             curvesRef.current = curves;
         }, [curves]);
@@ -328,7 +321,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                 return false;
             },
-            []
+            [channels, onChannelsChange]
         );
 
         const data = useMemo(
@@ -378,7 +371,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 height: containerDimensions.height,
                 margin: { l: 70, r: 40, t: 50, b: 70 },
                 xaxis: {
-                    title: { text: xAxisTitle },
+                    title: { text: "Time" },
                     range: zoomState.xaxisRange,
                     domain: [
                         // Specify the width of the X axis to leave enough room for all y axes
@@ -391,16 +384,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     ],
                 },
                 yaxis: {
-                    title: { text: "" }, // Remove the default "Click to add title"
+                    title: { text: "Value" }, // Remove the default "Click to add title"
                 },
                 ...Object.assign({}, ...yAxes), // Merge all y-axis definitions into layout
                 showlegend: true,
             } as Plotly.Layout;
-        }, [curves, containerDimensions, zoomState, xAxisTitle, index]);
+        }, [curves, containerDimensions, zoomState, index]);
 
         const config = useMemo(() => {
             return {
-                edits: { axisTitleText: true },
                 displaylogo: false,
                 modeBarButtons: [
                     [
@@ -451,7 +443,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     style={{ width: "100%", height: "100%" }}
                     onRelayout={handleRelayout}
                     onDoubleClick={handleDoubleClick}
-                    onUpdate={handleUpdate}
                     onLegendClick={handleLegendClick}
                 />
             </Box>
