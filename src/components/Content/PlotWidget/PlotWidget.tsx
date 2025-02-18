@@ -162,10 +162,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 channelName in curve.curveData.curve
                         );
 
+                        const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
                         const convertTimestamp = (timestamp: string) => {
-                            return new Date(
-                                Number(timestamp) / 1e6 + 3600000
-                            ).toISOString(); // Adjusting the timestamp for UTC+1 offset at PSI
+                            return new Date(Number(timestamp) / 1e6 + timezoneOffsetMs).toISOString();
                         };
 
                         const updatedCurveData = Object.fromEntries(
