@@ -383,7 +383,20 @@ const Content: React.FC = () => {
                                     channels={channels}
                                     timeValues={timeValues}
                                     index={layout.i}
-                                ></PlotWidget>
+                                    onChannelsChange={(updatedChannels) => {
+                                        setWidgets((prevWidgets) =>
+                                            prevWidgets.map((widget) =>
+                                                widget.layout.i === layout.i
+                                                    ? {
+                                                          ...widget,
+                                                          channels:
+                                                              updatedChannels,
+                                                      }
+                                                    : widget
+                                            )
+                                        );
+                                    }}
+                                />
                             </Box>
                         ))}
                     </ReactGridLayout>

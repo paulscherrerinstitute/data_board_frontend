@@ -20,10 +20,10 @@ import { Channel } from "../Content.types";
 import { debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { BackendChannel } from "../../Selector/Selector.types";
-import Plotly from "plotly.js";
+import Plotly, { LegendClickEvent } from "plotly.js";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
-    ({ channels, timeValues, index }) => {
+    ({ channels, timeValues, index, onChannelsChange }) => {
         const { backendUrl } = useApiUrls();
         const [containerDimensions, setContainerDimensions] =
             useState<ContainerDimensions>({
@@ -162,9 +162,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 channelName in curve.curveData.curve
                         );
 
-                        const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
+                        const timezoneOffsetMs =
+                            new Date().getTimezoneOffset() * -60000;
                         const convertTimestamp = (timestamp: string) => {
-                            return new Date(Number(timestamp) / 1e6 + timezoneOffsetMs).toISOString();
+                            return new Date(
+                                Number(timestamp) / 1e6 + timezoneOffsetMs
+                            ).toISOString();
                         };
 
                         const updatedCurveData = Object.fromEntries(
@@ -301,6 +304,33 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             downloadBlob(blob, fileName);
         }, [downloadBlob]);
 
+        const handleLegendClick = useCallback(
+            (eventData: Readonly<LegendClickEvent>) => {
+                const curveName = eventData.data[eventData.curveNumber].name;
+                setCurves((prevCurves) => {
+                    const updatedCurves = prevCurves.filter(
+                        (curve) =>
+                            !Object.keys(curve.curveData.curve).some(
+                                (name) =>
+                                    `${name} - ${curve.backend}` === curveName
+                            )
+                    );
+
+                    const updatedChannels = channels.filter(
+                        (channel) =>
+                            `${channel.channelName} - ${channel.backend}` !==
+                            curveName
+                    );
+
+                    onChannelsChange(updatedChannels);
+                    return updatedCurves;
+                });
+
+                return false;
+            },
+            []
+        );
+
         const data = useMemo(
             () =>
                 curves.flatMap(
@@ -422,6 +452,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     onRelayout={handleRelayout}
                     onDoubleClick={handleDoubleClick}
                     onUpdate={handleUpdate}
+                    onLegendClick={handleLegendClick}
                 />
             </Box>
         );

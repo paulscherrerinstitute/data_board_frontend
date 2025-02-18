@@ -4,6 +4,7 @@ export interface PlotWidgetProps {
     channels: Channel[];
     timeValues: TimeValues;
     index: string;
+    onChannelsChange: (updatedChannels: Channel[]) => void;
 }
 
 export type CurveData = {
