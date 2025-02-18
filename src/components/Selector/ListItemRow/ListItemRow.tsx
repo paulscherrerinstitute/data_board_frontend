@@ -6,40 +6,29 @@ import {
     Checkbox,
     ListItemText,
     Box,
+    Tooltip,
 } from "@mui/material";
 import * as styles from "./ListItemRow.styles";
 import { ListItemRowProps } from "./ListItemRow.types";
-import { Channel } from "../../Content/Content.types";
 
 const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
-    const { items, onSelect, onDeselect, isDraggable } = data;
+    const { items, onSelect, onDeselect, onDragStart, isDraggable } = data;
     const key = items[index].key;
     const isSelected = items[index].selected;
     const [backend, name, type] = key.split("|");
 
-    const handleDragStart = (event: React.DragEvent) => {
-        const channel: Channel = { channelName: name, backend, datatype: type };
-        event.dataTransfer.setData("text", JSON.stringify(channel));
-
-        const dragPreview = document.createElement("div");
-        dragPreview.style.cssText = `
-            display: flex; align-items: center; padding: 10px; width: 300px; 
-            background: #333; border-radius: 5px; color: white; font-weight: bold;
-        `;
-        dragPreview.innerText = `${name} (${backend} - ${type})`;
-
-        document.body.appendChild(dragPreview);
-        event.dataTransfer.setDragImage(dragPreview, 0, 0);
-        setTimeout(() => dragPreview.remove(), 0);
-    };
-
     return (
         <ListItem
-            style={style}
+            style={{
+                ...style,
+                background: index % 2 === 0 ? "#505355" : "#3E4142",
+            }}
             key={key}
-            disablePadding
             {...(isDraggable
-                ? { draggable: true, onDragStart: handleDragStart }
+                ? {
+                      draggable: true,
+                      onDragStart: (e: React.DragEvent) => onDragStart(e, key),
+                  }
                 : {})}
         >
             <Box sx={styles.boxStyle}>
@@ -50,10 +39,15 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
                     }
                 >
                     <ListItemIcon>
-                        <Checkbox
-                            checked={isSelected}
-                            sx={styles.checkboxStyle}
-                        />
+                        <Tooltip
+                            title="Select multiple channels and drag them all at once!"
+                            arrow
+                        >
+                            <Checkbox
+                                checked={isSelected}
+                                sx={styles.checkboxStyle}
+                            />
+                        </Tooltip>
                     </ListItemIcon>
                 </ListItemButton>
                 <ListItemText

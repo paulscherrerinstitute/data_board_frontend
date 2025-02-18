@@ -37,23 +37,28 @@ const Content: React.FC = () => {
         event.preventDefault();
         setDraggedOverKey("");
         setHoveredOverKey("");
+
         const data = event.dataTransfer.getData("text");
+
         try {
-            const channel: Channel = JSON.parse(data);
+            const channels: Channel[] = JSON.parse(data);
+
             if (
-                channel &&
-                channel.channelName &&
-                channel.backend &&
-                channel.datatype
+                channels.every(
+                    (channel) =>
+                        channel.backend &&
+                        channel.channelName &&
+                        channel.datatype
+                )
             ) {
                 if (key === "-1") {
-                    handleCreateWidget([channel]);
+                    handleCreateWidget(channels);
                 } else {
                     const newWidgets = widgets.map((widget) =>
                         widget.layout.i === key
                             ? {
                                   ...widget,
-                                  channels: [...widget.channels, channel],
+                                  channels: [...widget.channels, ...channels],
                               }
                             : widget
                     );

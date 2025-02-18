@@ -7,6 +7,7 @@ export interface ListItemRowProps {
         items: StoredChannel[];
         onSelect: (key: string) => void;
         onDeselect: (key: string) => void;
+        onDragStart: (event: React.DragEvent, key: string) => void;
         isDraggable: boolean;
     };
 }
