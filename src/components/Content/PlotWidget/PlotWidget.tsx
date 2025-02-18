@@ -23,7 +23,7 @@ import { BackendChannel } from "../../Selector/Selector.types";
 import Plotly, { LegendClickEvent } from "plotly.js";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
-    ({ channels, timeValues, index, onChannelsChange }) => {
+    ({ channels, timeValues, index, onChannelsChange, onZoomTimeRangeChange }) => {
         const { backendUrl } = useApiUrls();
         const [containerDimensions, setContainerDimensions] =
             useState<ContainerDimensions>({
@@ -36,6 +36,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             yaxisRange: undefined,
         });
         const [xAxisTitle, setXAxisTitle] = useState("Time");
+        const isCtrlPressed = useRef(false);
         const plotContainerRef = useRef<HTMLDivElement | null>(null);
         const curvesRef = useRef(curves);
         const numBins = 64000;
@@ -51,6 +52,31 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 e.stopPropagation();
             }
         };
+
+
+        useEffect(() => {
+            const handleKeyDown = (event: KeyboardEvent) => {
+                if (event.key === 'Control') {
+                    isCtrlPressed.current = true;
+                    console.log('ctrl pressed');
+                }
+            };
+
+            const handleKeyUp = (event: KeyboardEvent) => {
+                if (event.key === 'Control') {
+                    isCtrlPressed.current = false;
+                    console.log('ctrl released');
+                }
+            };
+
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+
+            return () => {
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('keyup', handleKeyUp);
+            };
+        }, []);
 
         // Because "autosize" is very slow, we manually update the dimensions
         useEffect(() => {
@@ -118,8 +144,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     const filteredResults = searchResults.data.channels.filter(
                         (returnedChannel) =>
                             returnedChannel.backend === channel.backend &&
-                            returnedChannel.name === channel.channelName &&
-                            channel.datatype === "[]"
+                                returnedChannel.name === channel.channelName &&
+                                channel.datatype === "[]"
                                 ? returnedChannel.type === ""
                                 : returnedChannel.type === channel.datatype
                     );
@@ -216,6 +242,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const handleRelayout = (e: any) => {
             // Save the zoom state when the user zooms or pans the plot
             const updatedZoomState = zoomState;
+
+            if (isCtrlPressed.current) {
+                // If ctrl is pressed update the time range to the new range
+                if (e["xaxis.range[0]"] && e["xaxis.range[1]"]) {
+                    timeValues.startTime = e["xaxis.range[0]"];
+                    timeValues.endTime = e["xaxis.range[1]"];
+                    let startUnix = new Date(timeValues.startTime).getTime();
+                    let endUnix = new Date(timeValues.endTime).getTime();
+                    onZoomTimeRangeChange(startUnix, endUnix);
+                    return;
+                }
+            }
 
             if (e["xaxis.range[0]"] && e["xaxis.range[1]"]) {
                 updatedZoomState.xaxisRange = [
@@ -366,8 +404,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             curveIndex % 2 === 0
                                 ? curveIndex / (40 * (window.innerWidth / 2560))
                                 : 1 -
-                                  curveIndex /
-                                      (40 * (window.innerWidth / 2560)),
+                                curveIndex /
+                                (40 * (window.innerWidth / 2560)),
                     },
                 };
             }, []);
@@ -383,11 +421,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     domain: [
                         // Specify the width of the X axis to leave enough room for all y axes
                         0.01 +
-                            Math.ceil(curves.length / 2) /
-                                (40 * (window.innerWidth / 2560)),
+                        Math.ceil(curves.length / 2) /
+                        (40 * (window.innerWidth / 2560)),
                         1.01 -
-                            Math.floor(curves.length / 2) /
-                                (40 * 0.5 * (window.innerWidth / 2560)),
+                        Math.floor(curves.length / 2) /
+                        (40 * 0.5 * (window.innerWidth / 2560)),
                     ],
                 },
                 yaxis: {

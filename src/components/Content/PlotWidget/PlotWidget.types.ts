@@ -5,6 +5,7 @@ export interface PlotWidgetProps {
     timeValues: TimeValues;
     index: string;
     onChannelsChange: (updatedChannels: Channel[]) => void;
+    onZoomTimeRangeChange: (startTime: number, endTime: number) => void;
 }
 
 export type CurveData = {

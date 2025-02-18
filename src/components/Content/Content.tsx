@@ -11,6 +11,7 @@ import PlotWidget from "./PlotWidget/PlotWidget";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useApiUrls } from "../ApiContext/ApiContext";
+import { SetTimeRange } from "./TimeSelector/TimeSelector.types";
 
 const Content: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -26,6 +27,7 @@ const Content: React.FC = () => {
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
+    const [changeTimeRange, setChangeTimeRange] = useState<SetTimeRange | null>(null);
     const prevWidgetsLengthRef = useRef<number | null>(null);
     const isWidgetsInitializedRef = useRef(false);
     const gridContainerRef = useRef<HTMLElement | null>(null);
@@ -52,9 +54,9 @@ const Content: React.FC = () => {
                     const newWidgets = widgets.map((widget) =>
                         widget.layout.i === key
                             ? {
-                                  ...widget,
-                                  channels: [...widget.channels, channel],
-                              }
+                                ...widget,
+                                channels: [...widget.channels, channel],
+                            }
                             : widget
                     );
                     setWidgets(newWidgets);
@@ -144,6 +146,23 @@ const Content: React.FC = () => {
             },
         ]);
     };
+
+    const interceptMouseDown = (e: MouseEvent) => {
+        // Create a new event with modified properties
+        Object.defineProperty(e, 'ctrlKey', {
+            get: () => false,
+            configurable: true
+        });
+    };
+    
+    useEffect(() => {
+        document.addEventListener('mousedown', interceptMouseDown, true); // true for capture phase
+
+        return () => {
+            document.removeEventListener('mousedown', interceptMouseDown, true);
+        };
+    }, []);
+
 
     useEffect(() => {
         // In case widgets have been added, scroll to the bottom, but wait a bit for animation to finish
@@ -283,7 +302,7 @@ const Content: React.FC = () => {
                     }
                 );
                 return;
-            } catch {}
+            } catch { }
         }
         handleCreateDashboard();
     }, [backendUrl, handleCreateDashboard, searchParams, widgets]);
@@ -329,10 +348,14 @@ const Content: React.FC = () => {
         }
     }, []);
 
+    const setTimeRef = (method: SetTimeRange) => {
+        setChangeTimeRange(() => method);
+    };
+
     return (
         <Box sx={styles.contentContainerStyles}>
             <Box sx={styles.topBarStyles}>
-                <TimeSelector onTimeChange={handleTimeChange} />
+                <TimeSelector onTimeChange={handleTimeChange} onZoomTimeRangeChange={setTimeRef} />
             </Box>
 
             <Box sx={styles.gridContainerStyles} ref={gridContainerRef}>
@@ -388,13 +411,18 @@ const Content: React.FC = () => {
                                             prevWidgets.map((widget) =>
                                                 widget.layout.i === layout.i
                                                     ? {
-                                                          ...widget,
-                                                          channels:
-                                                              updatedChannels,
-                                                      }
+                                                        ...widget,
+                                                        channels:
+                                                            updatedChannels,
+                                                    }
                                                     : widget
                                             )
                                         );
+                                    }}
+                                    onZoomTimeRangeChange={(startTime, endTime) => {
+                                        if (changeTimeRange) {
+                                            changeTimeRange(startTime, endTime);
+                                        }
                                     }}
                                 />
                             </Box>

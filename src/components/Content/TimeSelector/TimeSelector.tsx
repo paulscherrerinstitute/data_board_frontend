@@ -33,7 +33,7 @@ const quickOptions = [
     { label: "This Month", value: "this_month" },
 ];
 
-const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
+const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange, onZoomTimeRangeChange }) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [isAutoApplyPressSimulated, setIsAutoApplyPressSimulated] =
         useState(false);
@@ -254,6 +254,23 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange }) => {
             queryExpansion: newQueryExpansion,
         });
     }, [handleAutoApplyChange, onTimeChange, searchParams]);
+
+
+    const setTimeRange = (startTime: number, endTime: number) => {
+        if (!startTime || !endTime) return;
+        setStartTime(dayjs(startTime));
+        setEndTime(dayjs(endTime));
+        timeSourceRef.current = "manual";
+        onTimeChange({
+            startTime: startTime,
+            endTime: endTime,
+            queryExpansion: queryExpansion,
+        });
+    }
+
+    useEffect(() => {
+        onZoomTimeRangeChange(setTimeRange);
+    }, [onZoomTimeRangeChange, setTimeRange]);
 
     return (
         <Box sx={styles.timeSelectorContainerStyle}>
