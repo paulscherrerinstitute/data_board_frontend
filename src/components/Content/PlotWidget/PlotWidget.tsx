@@ -86,7 +86,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 if (containerElement) {
                     const { width, height } =
                         containerElement.getBoundingClientRect();
-                    setContainerDimensions({ width, height });
+                    setContainerDimensions({
+                        width,
+                        height,
+                    });
                 }
             }, 100);
 
@@ -122,7 +125,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     backend: channel.backend,
                                     curveData: {
                                         curve: {
-                                            [channelName]: { undefined: NaN }, // Empty data initially
+                                            [channelName]: {
+                                                undefined: NaN,
+                                            }, // Empty data initially
                                         },
                                     },
                                 },
@@ -288,12 +293,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             });
         };
 
-        const handleUpdate = (eventData: any) => {
-            if (eventData?.layout?.xaxis?.title?.text) {
-                setXAxisTitle(eventData.layout.xaxis.title.text);
-            }
-        };
-
         useEffect(() => {
             curvesRef.current = curves;
         }, [curves]);
@@ -327,7 +326,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             });
 
             const csvContent = [headers.join(";"), ...rows].join("\n");
-            const blob = new Blob([csvContent], { type: "text/csv" });
+            const blob = new Blob([csvContent], {
+                type: "text/csv",
+            });
 
             const fileName = `curves_${new Date().toISOString()}.csv`;
             downloadBlob(blob, fileName);
@@ -336,7 +337,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const downloadDataJSON = useCallback(() => {
             const curvesData = curvesRef.current;
             const jsonContent = JSON.stringify(curvesData, null, 4);
-            const blob = new Blob([jsonContent], { type: "application/json" });
+            const blob = new Blob([jsonContent], {
+                type: "application/json",
+            });
 
             const fileName = `curves_${new Date().toISOString()}.json`;
             downloadBlob(blob, fileName);
@@ -366,7 +369,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                 return false;
             },
-            []
+            [channels, onChannelsChange]
         );
 
         const data = useMemo(
@@ -416,7 +419,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 height: containerDimensions.height,
                 margin: { l: 70, r: 40, t: 50, b: 70 },
                 xaxis: {
-                    title: { text: xAxisTitle },
+                    title: { text: "Time" },
                     range: zoomState.xaxisRange,
                     domain: [
                         // Specify the width of the X axis to leave enough room for all y axes
@@ -429,16 +432,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     ],
                 },
                 yaxis: {
-                    title: { text: "" }, // Remove the default "Click to add title"
+                    title: { text: "Value" }, // Remove the default "Click to add title"
                 },
                 ...Object.assign({}, ...yAxes), // Merge all y-axis definitions into layout
                 showlegend: true,
             } as Plotly.Layout;
-        }, [curves, containerDimensions, zoomState, xAxisTitle, index]);
+        }, [curves, containerDimensions, zoomState, index]);
 
         const config = useMemo(() => {
             return {
-                edits: { axisTitleText: true },
                 displaylogo: false,
                 modeBarButtons: [
                     [
@@ -486,10 +488,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     data={data}
                     layout={layout}
                     config={config}
-                    style={{ width: "100%", height: "100%" }}
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                    }}
                     onRelayout={handleRelayout}
                     onDoubleClick={handleDoubleClick}
-                    onUpdate={handleUpdate}
                     onLegendClick={handleLegendClick}
                 />
             </Box>
