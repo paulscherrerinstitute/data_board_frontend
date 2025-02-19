@@ -4,10 +4,11 @@ export interface TimeSelectorProps {
         endTime: number;
         queryExpansion: boolean;
     }) => void;
-    onZoomTimeRangeChange: (method: SetTimeRange) => void;
 }
 
-export type SetTimeRange = (startTime: number, endTime: number) => void;
+export type TimeSelectorHandle = {
+    setTimeRange: (startTime: number, endTime: number) => void;
+};
 
 export type TimeSourceOption = "quickselect" | "manual";
 

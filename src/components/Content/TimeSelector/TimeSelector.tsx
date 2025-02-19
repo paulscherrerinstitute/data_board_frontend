@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import {
     Box,
     TextField,
@@ -12,6 +12,7 @@ import {
     TimeSelectorProps,
     TimeSourceOption,
     QuickSelectOption,
+    TimeSelectorHandle,
 } from "./TimeSelector.types";
 import * as styles from "./TimeSelector.styles";
 import { useSearchParams } from "react-router-dom";
@@ -33,7 +34,7 @@ const quickOptions = [
     { label: "This Month", value: "this_month" },
 ];
 
-const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange, onZoomTimeRangeChange }) => {
+const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(({ onTimeChange }, ref) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [isAutoApplyPressSimulated, setIsAutoApplyPressSimulated] =
         useState(false);
@@ -125,28 +126,15 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange, onZoomTimeRan
             queryExpansion,
         });
 
-        const startParam = startUnixTimeMs.toString();
-        const endParam = endUnixTimeMs.toString();
-
-        setSearchParams((searchParams) => {
-            const newSearchParams = searchParams;
-            newSearchParams.set("startTime", startParam);
-            newSearchParams.set("endTime", endParam);
-            if (timeSourceRef.current === "quickselect") {
-                newSearchParams.set(
-                    "relativeTime",
-                    selectedQuickOption.toString()
-                );
-            } else {
-                newSearchParams.set("relativeTime", "false");
-            }
-            newSearchParams.set(
-                "queryExpansion",
-                queryExpansion ? "true" : "false"
-            );
-            newSearchParams.set("autoApply", autoApply);
-            return newSearchParams;
-        });
+        setTimeSearchParams(
+            setSearchParams,
+            startUnixTimeMs,
+            endUnixTimeMs,
+            timeSourceRef,
+            selectedQuickOption,
+            queryExpansion,
+            autoApply
+        );
     }, [
         autoApply,
         endTime,
@@ -156,6 +144,33 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange, onZoomTimeRan
         setSearchParams,
         startTime,
     ]);
+
+    const setTimeSearchParams = (
+        setSearchParams: ReturnType<typeof useSearchParams>[1],
+        startUnixTimeMs: number,
+        endUnixTimeMs: number,
+        timeSourceRef: React.MutableRefObject<TimeSourceOption>,
+        selectedQuickOption: QuickSelectOption,
+        queryExpansion: boolean,
+        autoApply: AutoApplyOption
+    ) => {
+        const startParam = startUnixTimeMs.toString();
+        const endParam = endUnixTimeMs.toString();
+    
+        setSearchParams((searchParams) => {
+            const newSearchParams = searchParams;
+            newSearchParams.set("startTime", startParam);
+            newSearchParams.set("endTime", endParam);
+            if (timeSourceRef.current === "quickselect") {
+                newSearchParams.set("relativeTime", selectedQuickOption.toString());
+            } else {
+                newSearchParams.set("relativeTime", "false");
+            }
+            newSearchParams.set("queryExpansion", queryExpansion ? "true" : "false");
+            newSearchParams.set("autoApply", autoApply);
+            return newSearchParams;
+        });
+    };
 
     const simulateAutoApplyPress = () => {
         setIsAutoApplyPressSimulated(true);
@@ -266,12 +281,25 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange, onZoomTimeRan
             endTime: endTime,
             queryExpansion: queryExpansion,
         });
+        setTimeSearchParams(
+            setSearchParams,
+            startTime,
+            endTime,
+            timeSourceRef,
+            selectedQuickOption,
+            queryExpansion,
+            autoApply
+        );
     }
 
-    useEffect(() => {
-        onZoomTimeRangeChange(setTimeRange);
-    }, [onZoomTimeRangeChange, setTimeRange]);
-
+    useImperativeHandle(
+        ref,
+        () => ({
+            setTimeRange,
+        }),
+        [setTimeRange]
+    );
+    
     return (
         <Box sx={styles.timeSelectorContainerStyle}>
             <Box sx={styles.timeFieldStyle}>
@@ -346,6 +374,6 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onTimeChange, onZoomTimeRan
             </Button>
         </Box>
     );
-};
+});
 
 export default TimeSelector;

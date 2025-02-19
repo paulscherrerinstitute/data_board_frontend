@@ -11,7 +11,7 @@ import PlotWidget from "./PlotWidget/PlotWidget";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useApiUrls } from "../ApiContext/ApiContext";
-import { SetTimeRange } from "./TimeSelector/TimeSelector.types";
+import { TimeSelectorHandle } from "./TimeSelector/TimeSelector.types";
 
 const Content: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -27,7 +27,7 @@ const Content: React.FC = () => {
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
-    const [changeTimeRange, setChangeTimeRange] = useState<SetTimeRange | null>(null);
+    const timeSelectorRef = useRef<TimeSelectorHandle | null>(null);
     const prevWidgetsLengthRef = useRef<number | null>(null);
     const isWidgetsInitializedRef = useRef(false);
     const gridContainerRef = useRef<HTMLElement | null>(null);
@@ -348,14 +348,10 @@ const Content: React.FC = () => {
         }
     }, []);
 
-    const setTimeRef = (method: SetTimeRange) => {
-        setChangeTimeRange(() => method);
-    };
-
     return (
         <Box sx={styles.contentContainerStyles}>
             <Box sx={styles.topBarStyles}>
-                <TimeSelector onTimeChange={handleTimeChange} onZoomTimeRangeChange={setTimeRef} />
+                <TimeSelector ref={timeSelectorRef} onTimeChange={handleTimeChange} />
             </Box>
 
             <Box sx={styles.gridContainerStyles} ref={gridContainerRef}>
@@ -420,9 +416,10 @@ const Content: React.FC = () => {
                                         );
                                     }}
                                     onZoomTimeRangeChange={(startTime, endTime) => {
-                                        if (changeTimeRange) {
-                                            changeTimeRange(startTime, endTime);
-                                        }
+                                        timeSelectorRef.current?.setTimeRange(
+                                            startTime,
+                                            endTime
+                                        );
                                     }}
                                 />
                             </Box>

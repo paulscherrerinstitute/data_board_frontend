@@ -248,8 +248,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 if (e["xaxis.range[0]"] && e["xaxis.range[1]"]) {
                     timeValues.startTime = e["xaxis.range[0]"];
                     timeValues.endTime = e["xaxis.range[1]"];
-                    let startUnix = new Date(timeValues.startTime).getTime();
-                    let endUnix = new Date(timeValues.endTime).getTime();
+                    const startUnix = new Date(timeValues.startTime).getTime();
+                    const endUnix = new Date(timeValues.endTime).getTime();
                     onZoomTimeRangeChange(startUnix, endUnix);
                     return;
                 }
