@@ -11,6 +11,7 @@ import PlotWidget from "./PlotWidget/PlotWidget";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useApiUrls } from "../ApiContext/ApiContext";
+import { TimeSelectorHandle } from "./TimeSelector/TimeSelector.types";
 
 const Content: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -26,6 +27,7 @@ const Content: React.FC = () => {
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
+    const timeSelectorRef = useRef<TimeSelectorHandle | null>(null);
     const prevWidgetsLengthRef = useRef<number | null>(null);
     const isWidgetsInitializedRef = useRef(false);
     const gridContainerRef = useRef<HTMLElement | null>(null);
@@ -37,23 +39,28 @@ const Content: React.FC = () => {
         event.preventDefault();
         setDraggedOverKey("");
         setHoveredOverKey("");
+
         const data = event.dataTransfer.getData("text");
+
         try {
-            const channel: Channel = JSON.parse(data);
+            const channels: Channel[] = JSON.parse(data);
+
             if (
-                channel &&
-                channel.channelName &&
-                channel.backend &&
-                channel.datatype
+                channels.every(
+                    (channel) =>
+                        channel.backend &&
+                        channel.channelName &&
+                        channel.datatype
+                )
             ) {
                 if (key === "-1") {
-                    handleCreateWidget([channel]);
+                    handleCreateWidget(channels);
                 } else {
                     const newWidgets = widgets.map((widget) =>
                         widget.layout.i === key
                             ? {
                                   ...widget,
-                                  channels: [...widget.channels, channel],
+                                  channels: [...widget.channels, ...channels],
                               }
                             : widget
                     );
@@ -144,6 +151,22 @@ const Content: React.FC = () => {
             },
         ]);
     };
+
+    const interceptMouseDown = (e: MouseEvent) => {
+        // Create a new event with modified properties
+        Object.defineProperty(e, "ctrlKey", {
+            get: () => false,
+            configurable: true,
+        });
+    };
+
+    useEffect(() => {
+        document.addEventListener("mousedown", interceptMouseDown, true); // true for capture phase
+
+        return () => {
+            document.removeEventListener("mousedown", interceptMouseDown, true);
+        };
+    }, []);
 
     useEffect(() => {
         // In case widgets have been added, scroll to the bottom, but wait a bit for animation to finish
@@ -332,7 +355,10 @@ const Content: React.FC = () => {
     return (
         <Box sx={styles.contentContainerStyles}>
             <Box sx={styles.topBarStyles}>
-                <TimeSelector onTimeChange={handleTimeChange} />
+                <TimeSelector
+                    ref={timeSelectorRef}
+                    onTimeChange={handleTimeChange}
+                />
             </Box>
 
             <Box sx={styles.gridContainerStyles} ref={gridContainerRef}>
@@ -383,7 +409,29 @@ const Content: React.FC = () => {
                                     channels={channels}
                                     timeValues={timeValues}
                                     index={layout.i}
-                                ></PlotWidget>
+                                    onChannelsChange={(updatedChannels) => {
+                                        setWidgets((prevWidgets) =>
+                                            prevWidgets.map((widget) =>
+                                                widget.layout.i === layout.i
+                                                    ? {
+                                                          ...widget,
+                                                          channels:
+                                                              updatedChannels,
+                                                      }
+                                                    : widget
+                                            )
+                                        );
+                                    }}
+                                    onZoomTimeRangeChange={(
+                                        startTime,
+                                        endTime
+                                    ) => {
+                                        timeSelectorRef.current?.setTimeRange(
+                                            startTime,
+                                            endTime
+                                        );
+                                    }}
+                                />
                             </Box>
                         ))}
                     </ReactGridLayout>

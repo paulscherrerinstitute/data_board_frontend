@@ -24,6 +24,7 @@ export const listItemTextStyle: SxProps<Theme> = {
 
 export const boxStyle: SxProps<Theme> = {
     display: "flex",
+    alignItems: "center",
     width: "100%",
 };
 
@@ -32,4 +33,10 @@ export const listItemButtonStyle: SxProps<Theme> = {
     paddingRight: 5,
     flexShrink: 1,
     maxWidth: 10,
+};
+
+export const dragIconStyle: SxProps<Theme> = {
+    cursor: "grab",
+    color: "white",
+    minWidth: 40,
 };
