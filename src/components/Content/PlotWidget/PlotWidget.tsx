@@ -23,7 +23,13 @@ import { BackendChannel } from "../../Selector/Selector.types";
 import Plotly, { LegendClickEvent } from "plotly.js";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
-    ({ channels, timeValues, index, onChannelsChange, onZoomTimeRangeChange }) => {
+    ({
+        channels,
+        timeValues,
+        index,
+        onChannelsChange,
+        onZoomTimeRangeChange,
+    }) => {
         const { backendUrl } = useApiUrls();
         const [containerDimensions, setContainerDimensions] =
             useState<ContainerDimensions>({
@@ -52,28 +58,25 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             }
         };
 
-
         useEffect(() => {
             const handleKeyDown = (event: KeyboardEvent) => {
-                if (event.key === 'Control') {
+                if (event.key === "Control") {
                     isCtrlPressed.current = true;
-                    console.log('ctrl pressed');
                 }
             };
 
             const handleKeyUp = (event: KeyboardEvent) => {
-                if (event.key === 'Control') {
+                if (event.key === "Control") {
                     isCtrlPressed.current = false;
-                    console.log('ctrl released');
                 }
             };
 
-            window.addEventListener('keydown', handleKeyDown);
-            window.addEventListener('keyup', handleKeyUp);
+            window.addEventListener("keydown", handleKeyDown);
+            window.addEventListener("keyup", handleKeyUp);
 
             return () => {
-                window.removeEventListener('keydown', handleKeyDown);
-                window.removeEventListener('keyup', handleKeyUp);
+                window.removeEventListener("keydown", handleKeyDown);
+                window.removeEventListener("keyup", handleKeyUp);
             };
         }, []);
 
@@ -148,8 +151,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     const filteredResults = searchResults.data.channels.filter(
                         (returnedChannel) =>
                             returnedChannel.backend === channel.backend &&
-                                returnedChannel.name === channel.channelName &&
-                                channel.datatype === "[]"
+                            returnedChannel.name === channel.channelName &&
+                            channel.datatype === "[]"
                                 ? returnedChannel.type === ""
                                 : returnedChannel.type === channel.datatype
                     );
@@ -406,8 +409,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             curveIndex % 2 === 0
                                 ? curveIndex / (40 * (window.innerWidth / 2560))
                                 : 1 -
-                                curveIndex /
-                                (40 * (window.innerWidth / 2560)),
+                                  curveIndex /
+                                      (40 * (window.innerWidth / 2560)),
                     },
                 };
             }, []);
@@ -423,11 +426,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     domain: [
                         // Specify the width of the X axis to leave enough room for all y axes
                         0.01 +
-                        Math.ceil(curves.length / 2) /
-                        (40 * (window.innerWidth / 2560)),
+                            Math.ceil(curves.length / 2) /
+                                (40 * (window.innerWidth / 2560)),
                         1.01 -
-                        Math.floor(curves.length / 2) /
-                        (40 * 0.5 * (window.innerWidth / 2560)),
+                            Math.floor(curves.length / 2) /
+                                (40 * 0.5 * (window.innerWidth / 2560)),
                     ],
                 },
                 yaxis: {

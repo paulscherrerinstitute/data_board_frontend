@@ -39,24 +39,29 @@ const Content: React.FC = () => {
         event.preventDefault();
         setDraggedOverKey("");
         setHoveredOverKey("");
+
         const data = event.dataTransfer.getData("text");
+
         try {
-            const channel: Channel = JSON.parse(data);
+            const channels: Channel[] = JSON.parse(data);
+
             if (
-                channel &&
-                channel.channelName &&
-                channel.backend &&
-                channel.datatype
+                channels.every(
+                    (channel) =>
+                        channel.backend &&
+                        channel.channelName &&
+                        channel.datatype
+                )
             ) {
                 if (key === "-1") {
-                    handleCreateWidget([channel]);
+                    handleCreateWidget(channels);
                 } else {
                     const newWidgets = widgets.map((widget) =>
                         widget.layout.i === key
                             ? {
-                                ...widget,
-                                channels: [...widget.channels, channel],
-                            }
+                                  ...widget,
+                                  channels: [...widget.channels, ...channels],
+                              }
                             : widget
                     );
                     setWidgets(newWidgets);
@@ -149,20 +154,19 @@ const Content: React.FC = () => {
 
     const interceptMouseDown = (e: MouseEvent) => {
         // Create a new event with modified properties
-        Object.defineProperty(e, 'ctrlKey', {
+        Object.defineProperty(e, "ctrlKey", {
             get: () => false,
-            configurable: true
+            configurable: true,
         });
     };
-    
+
     useEffect(() => {
-        document.addEventListener('mousedown', interceptMouseDown, true); // true for capture phase
+        document.addEventListener("mousedown", interceptMouseDown, true); // true for capture phase
 
         return () => {
-            document.removeEventListener('mousedown', interceptMouseDown, true);
+            document.removeEventListener("mousedown", interceptMouseDown, true);
         };
     }, []);
-
 
     useEffect(() => {
         // In case widgets have been added, scroll to the bottom, but wait a bit for animation to finish
@@ -302,7 +306,7 @@ const Content: React.FC = () => {
                     }
                 );
                 return;
-            } catch { }
+            } catch {}
         }
         handleCreateDashboard();
     }, [backendUrl, handleCreateDashboard, searchParams, widgets]);
@@ -351,7 +355,10 @@ const Content: React.FC = () => {
     return (
         <Box sx={styles.contentContainerStyles}>
             <Box sx={styles.topBarStyles}>
-                <TimeSelector ref={timeSelectorRef} onTimeChange={handleTimeChange} />
+                <TimeSelector
+                    ref={timeSelectorRef}
+                    onTimeChange={handleTimeChange}
+                />
             </Box>
 
             <Box sx={styles.gridContainerStyles} ref={gridContainerRef}>
@@ -407,15 +414,18 @@ const Content: React.FC = () => {
                                             prevWidgets.map((widget) =>
                                                 widget.layout.i === layout.i
                                                     ? {
-                                                        ...widget,
-                                                        channels:
-                                                            updatedChannels,
-                                                    }
+                                                          ...widget,
+                                                          channels:
+                                                              updatedChannels,
+                                                      }
                                                     : widget
                                             )
                                         );
                                     }}
-                                    onZoomTimeRangeChange={(startTime, endTime) => {
+                                    onZoomTimeRangeChange={(
+                                        startTime,
+                                        endTime
+                                    ) => {
                                         timeSelectorRef.current?.setTimeRange(
                                             startTime,
                                             endTime

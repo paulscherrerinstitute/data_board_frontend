@@ -89,3 +89,24 @@ export const statusSymbolStyle: SxProps<Theme> = {
     justifySelf: "center",
     alignSelf: "center",
 };
+
+export const selectAllStyle: SxProps<Theme> = {
+    display: "flex",
+    alignItems: "center",
+    gap: 1,
+    color: "#fff",
+    padding: 1,
+};
+
+export const checkboxStyle: SxProps<Theme> = {
+    "&.MuiCheckbox-root": {
+        color: "black",
+        background: "white",
+        borderRadius: 0,
+        padding: 0,
+    },
+    ".MuiSvgIcon-root": {
+        padding: 0,
+        margin: -0.3 - 0.3,
+    },
+};
