@@ -8,6 +8,7 @@ import {
     Box,
     Tooltip,
 } from "@mui/material";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import * as styles from "./ListItemRow.styles";
 import { ListItemRowProps } from "./ListItemRow.types";
 
@@ -24,12 +25,6 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
                 background: index % 2 === 0 ? "#505355" : "#3E4142",
             }}
             key={key}
-            {...(isDraggable
-                ? {
-                      draggable: true,
-                      onDragStart: (e: React.DragEvent) => onDragStart(e, key),
-                  }
-                : {})}
         >
             <Box sx={styles.boxStyle}>
                 <ListItemButton
@@ -59,6 +54,17 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
                     primary={name}
                     secondary={`${backend} - ${type}`}
                 />
+                {isDraggable && (
+                    <ListItemIcon
+                        sx={styles.dragIconStyle}
+                        draggable={true}
+                        onDragStart={(e: React.DragEvent) =>
+                            onDragStart(e, key)
+                        }
+                    >
+                        <DragIndicatorIcon />
+                    </ListItemIcon>
+                )}
             </Box>
         </ListItem>
     );
