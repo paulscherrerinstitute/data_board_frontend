@@ -77,5 +77,5 @@ export const actionButtonBoxStyles: SxProps<Theme> = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    gap: "50px"
+    gap: "50px",
 };

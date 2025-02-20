@@ -6,6 +6,10 @@ export interface TimeSelectorProps {
     }) => void;
 }
 
+export type TimeSelectorHandle = {
+    setTimeRange: (startTime: number, endTime: number) => void;
+};
+
 export type TimeSourceOption = "quickselect" | "manual";
 
 export type AutoApplyOption = "never" | "1min" | "10min";
