@@ -35,7 +35,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             xaxisRange: undefined,
             yaxisRange: undefined,
         });
-        const [xAxisTitle, setXAxisTitle] = useState("Time");
         const isCtrlPressed = useRef(false);
         const plotContainerRef = useRef<HTMLDivElement | null>(null);
         const curvesRef = useRef(curves);

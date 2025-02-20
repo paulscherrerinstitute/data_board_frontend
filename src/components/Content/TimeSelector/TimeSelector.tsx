@@ -156,7 +156,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(({ onTime
     ) => {
         const startParam = startUnixTimeMs.toString();
         const endParam = endUnixTimeMs.toString();
-    
+
         setSearchParams((searchParams) => {
             const newSearchParams = searchParams;
             newSearchParams.set("startTime", startParam);
@@ -271,7 +271,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(({ onTime
     }, [handleAutoApplyChange, onTimeChange, searchParams]);
 
 
-    const setTimeRange = (startTime: number, endTime: number) => {
+    const setTimeRange = useCallback((startTime: number, endTime: number) => {
         if (!startTime || !endTime) return;
         setStartTime(dayjs(startTime));
         setEndTime(dayjs(endTime));
@@ -290,7 +290,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(({ onTime
             queryExpansion,
             autoApply
         );
-    }
+    }, [onTimeChange, setSearchParams, queryExpansion, selectedQuickOption, autoApply]);
 
     useImperativeHandle(
         ref,
@@ -299,7 +299,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(({ onTime
         }),
         [setTimeRange]
     );
-    
+
     return (
         <Box sx={styles.timeSelectorContainerStyle}>
             <Box sx={styles.timeFieldStyle}>
