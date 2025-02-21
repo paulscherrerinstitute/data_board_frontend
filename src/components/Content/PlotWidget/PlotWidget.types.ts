@@ -12,7 +12,7 @@ export interface PlotWidgetProps {
 export type CurveData = {
     curve: {
         [channel: string]: {
-            [timestamp: string]: number | string;
+            [timestamp: string]: number;
         };
     };
 };
@@ -25,9 +25,4 @@ export type Curve = {
 export type ContainerDimensions = {
     height: number;
     width: number;
-};
-
-export type ZoomState = {
-    xaxisRange: undefined | [number, number];
-    yaxisRange: undefined | [number, number];
 };

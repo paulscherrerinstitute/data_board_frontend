@@ -39,6 +39,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const plotContainerRef = useRef<HTMLDivElement | null>(null);
         const curvesRef = useRef(curves);
         const numBins = 64000;
+        const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
+
+        const convertTimestamp = useCallback(
+            (timestamp: string) => {
+                return new Date(
+                    Number(timestamp) / 1e6 + timezoneOffsetMs
+                ).toISOString();
+            },
+            [timezoneOffsetMs]
+        );
 
         // Prevent event bubbling if its on a draggable surface so an event to drag the plot will not be handled by the grid layout to move the whole widget.
         const handleEventPropagation = (e: React.SyntheticEvent) => {
@@ -105,6 +115,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         useEffect(() => {
             const fetchData = async (channel: Channel) => {
                 try {
+                    const beginTimestamp = convertTimestamp(
+                        (timeValues.startTime * 1e6).toString()
+                    );
+                    const endTimeStamp = convertTimestamp(
+                        (timeValues.endTime * 1e6).toString()
+                    );
+
                     // Add the new channel with empty data first so it appears in the legend
                     setCurves((prevCurves) => {
                         const channelName = channel.name;
@@ -122,8 +139,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     curveData: {
                                         curve: {
                                             [channelName]: {
-                                                undefined: NaN,
-                                            }, // Empty data initially
+                                                [beginTimestamp]: NaN,
+                                                [endTimeStamp]: NaN,
+                                            },
+                                            // Empty data initially, only showing range
                                         },
                                     },
                                 },
@@ -185,46 +204,42 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 channelName in curve.curveData.curve
                         );
 
-                        const timezoneOffsetMs =
-                            new Date().getTimezoneOffset() * -60000;
-                        const convertTimestamp = (timestamp: string) => {
-                            return new Date(
-                                Number(timestamp) / 1e6 + timezoneOffsetMs
-                            ).toISOString();
-                        };
+                        const convertedDataPoints = Object.entries(
+                            response.data.curve[channelName]
+                        )
+                            .map(([timestamp, data]) => {
+                                const convertedTimestamp =
+                                    convertTimestamp(timestamp);
+                                return { convertedTimestamp, data };
+                            })
+                            .filter(
+                                ({ convertedTimestamp }) =>
+                                    convertedTimestamp >= beginTimestamp &&
+                                    convertedTimestamp <= endTimeStamp
+                            );
 
-                        const updatedCurveData = Object.fromEntries(
-                            Object.entries(
-                                response.data.curve[channelName]
-                            ).map(([timestamp, value]) => [
-                                convertTimestamp(timestamp),
-                                value,
-                            ])
+                        const newDataPoints = convertedDataPoints.reduce(
+                            (acc, { convertedTimestamp, data }) => {
+                                acc[convertedTimestamp] = data;
+                                return acc;
+                            },
+                            {} as { [timestamp: string]: number }
                         );
 
-                        if (existingCurveIndex !== -1) {
-                            const updatedCurves = [...prevCurves];
-                            updatedCurves[existingCurveIndex].curveData = {
-                                ...updatedCurves[existingCurveIndex].curveData,
-                                curve: {
-                                    [channelName]: updatedCurveData,
+                        const updatedCurveData: CurveData = {
+                            curve: {
+                                [channelName]: {
+                                    [beginTimestamp]: NaN,
+                                    ...newDataPoints,
+                                    [endTimeStamp]: NaN,
                                 },
-                            };
-                            return updatedCurves;
-                        } else {
-                            return [
-                                ...prevCurves,
-                                {
-                                    backend: channel.backend,
-                                    curveData: {
-                                        ...response.data,
-                                        curve: {
-                                            [channelName]: updatedCurveData,
-                                        },
-                                    },
-                                },
-                            ];
-                        }
+                            },
+                        };
+
+                        const updatedCurves = [...prevCurves];
+                        updatedCurves[existingCurveIndex].curveData =
+                            updatedCurveData;
+                        return updatedCurves;
                     });
                 } catch (error) {
                     console.log(error);
@@ -234,7 +249,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             for (const channel of channels) {
                 fetchData(channel);
             }
-        }, [channels, timeValues, backendUrl]);
+        }, [
+            channels,
+            timeValues,
+            timezoneOffsetMs,
+            backendUrl,
+            convertTimestamp,
+        ]);
 
         const handleRelayout = (e: Readonly<Plotly.PlotRelayoutEvent>) => {
             if (isCtrlPressed.current) {
@@ -272,13 +293,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             curvesData.forEach((curve) => {
                 const backend = curve.backend;
                 const curveEntries = Object.entries(curve.curveData.curve);
-
                 curveEntries.forEach(([channel, timestamps]) => {
-                    Object.entries(timestamps).forEach(([timestamp, value]) => {
-                        rows.push(
-                            [backend, channel, timestamp, value].join(";")
-                        );
-                    });
+                    const timestampEntries = Object.entries(timestamps);
+                    timestampEntries
+                        .slice(1, timestampEntries.length - 1) // Exclude first and last entries since their our NaN placeholders for the range
+                        .forEach(([timestamp, value]) => {
+                            rows.push(
+                                [backend, channel, timestamp, value].join(";")
+                            );
+                        });
                 });
             });
 
@@ -292,8 +315,35 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         }, [downloadBlob]);
 
         const downloadDataJSON = useCallback(() => {
-            const curvesData = curvesRef.current;
-            const jsonContent = JSON.stringify(curvesData, null, 4);
+            const curves = curvesRef.current;
+            const trimmedCurves = curves.map((curve) => {
+                const trimmedCurveData: CurveData = {
+                    curve: Object.fromEntries(
+                        Object.entries(curve.curveData.curve).map(
+                            ([channel, dataPoints]) => {
+                                const timestamps =
+                                    Object.keys(dataPoints).sort();
+                                if (timestamps.length <= 2) {
+                                    return [channel, {}]; // If only 1 or 2 points exist, remove all
+                                }
+                                // Else take all points except for the first and last ones, them being the range placeholders
+                                const trimmedDataPoints = Object.fromEntries(
+                                    timestamps
+                                        .slice(1, -1)
+                                        .map((timestamp) => [
+                                            timestamp,
+                                            dataPoints[timestamp],
+                                        ])
+                                );
+                                return [channel, trimmedDataPoints];
+                            }
+                        )
+                    ),
+                };
+
+                return { ...curve, curveData: trimmedCurveData };
+            });
+            const jsonContent = JSON.stringify(trimmedCurves, null, 4);
             const blob = new Blob([jsonContent], {
                 type: "application/json",
             });
