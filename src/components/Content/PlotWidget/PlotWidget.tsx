@@ -11,7 +11,6 @@ import {
     CurveData,
     Curve,
     ContainerDimensions,
-    ZoomState,
 } from "./PlotWidget.types";
 import Plot from "react-plotly.js";
 import { useApiUrls } from "../../ApiContext/ApiContext";
@@ -19,7 +18,7 @@ import axios from "axios";
 import { debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
-import Plotly, { LegendClickEvent } from "plotly.js";
+import Plotly from "plotly.js";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -36,10 +35,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 height: 0,
             });
         const [curves, setCurves] = useState<Curve[]>([]);
-        const [zoomState, setZoomState] = useState<ZoomState>({
-            xaxisRange: undefined,
-            yaxisRange: undefined,
-        });
         const isCtrlPressed = useRef(false);
         const plotContainerRef = useRef<HTMLDivElement | null>(null);
         const curvesRef = useRef(curves);
@@ -241,10 +236,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             }
         }, [channels, timeValues, backendUrl]);
 
-        const handleRelayout = (e: any) => {
-            // Save the zoom state when the user zooms or pans the plot
-            const updatedZoomState = zoomState;
-
+        const handleRelayout = (e: Readonly<Plotly.PlotRelayoutEvent>) => {
             if (isCtrlPressed.current) {
                 // If ctrl is pressed update the time range to the new range
                 if (e["xaxis.range[0]"] && e["xaxis.range[1]"]) {
@@ -256,38 +248,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     return;
                 }
             }
-
-            if (e["xaxis.range[0]"] && e["xaxis.range[1]"]) {
-                updatedZoomState.xaxisRange = [
-                    e["xaxis.range[0]"],
-                    e["xaxis.range[1]"],
-                ];
-            }
-
-            if (e["yaxis.range[0]"] && e["yaxis.range[1]"]) {
-                updatedZoomState.yaxisRange = [
-                    e["yaxis.range[0]"],
-                    e["yaxis.range[1]"],
-                ];
-            }
-
-            // If neither key is present, unset both ranges
-            if (!e["xaxis.range[0]"] && !e["yaxis.range[0]"]) {
-                setZoomState({
-                    xaxisRange: undefined,
-                    yaxisRange: undefined,
-                });
-            } else {
-                setZoomState(updatedZoomState);
-            }
-        };
-
-        const handleDoubleClick = () => {
-            // Zoom is reset, so unset zoomState
-            setZoomState({
-                xaxisRange: undefined,
-                yaxisRange: undefined,
-            });
         };
 
         useEffect(() => {
@@ -343,7 +303,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         }, [downloadBlob]);
 
         const handleLegendClick = useCallback(
-            (eventData: Readonly<LegendClickEvent>) => {
+            (eventData: Readonly<Plotly.LegendClickEvent>) => {
                 const curveName = eventData.data[eventData.curveNumber].name;
                 setCurves((prevCurves) => {
                     const updatedCurves = prevCurves.filter(
@@ -416,7 +376,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 margin: { l: 70, r: 40, t: 50, b: 70 },
                 xaxis: {
                     title: { text: "Time" },
-                    range: zoomState.xaxisRange,
                     domain: [
                         // Specify the width of the X axis to leave enough room for all y axes
                         0.01 +
@@ -432,8 +391,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 },
                 ...Object.assign({}, ...yAxes), // Merge all y-axis definitions into layout
                 showlegend: true,
+                uirevision: "time",
             } as Plotly.Layout;
-        }, [curves, containerDimensions, zoomState, index]);
+        }, [curves, containerDimensions, index]);
 
         const config = useMemo(() => {
             return {
@@ -489,7 +449,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         height: "100%",
                     }}
                     onRelayout={handleRelayout}
-                    onDoubleClick={handleDoubleClick}
                     onLegendClick={handleLegendClick}
                 />
             </Box>
