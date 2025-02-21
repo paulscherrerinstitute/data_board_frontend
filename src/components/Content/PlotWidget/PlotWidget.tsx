@@ -16,10 +16,9 @@ import {
 import Plot from "react-plotly.js";
 import { useApiUrls } from "../../ApiContext/ApiContext";
 import axios from "axios";
-import { Channel } from "../Content.types";
 import { debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
-import { BackendChannel } from "../../Selector/Selector.types";
+import { Channel } from "../../Selector/Selector.types";
 import Plotly, { LegendClickEvent } from "plotly.js";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
@@ -113,7 +112,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 try {
                     // Add the new channel with empty data first so it appears in the legend
                     setCurves((prevCurves) => {
-                        const channelName = channel.channelName;
+                        const channelName = channel.name;
                         const existingCurveIndex = prevCurves.findIndex(
                             (curve) =>
                                 curve.backend === channel.backend &&
@@ -141,38 +140,34 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     // Fetch data after adding the new channel
                     // First, get the seriesId by searching for the channel and filtering our values
                     const searchResults = await axios.get<{
-                        channels: BackendChannel[];
+                        channels: Channel[];
                     }>(`${backendUrl}/channels/search`, {
                         params: {
-                            search_text: `^${channel.channelName}$`,
+                            search_text: `^${channel.name}$`,
                         },
                     });
 
                     const filteredResults = searchResults.data.channels.filter(
                         (returnedChannel) =>
                             returnedChannel.backend === channel.backend &&
-                            returnedChannel.name === channel.channelName &&
-                            channel.datatype === "[]"
-                                ? returnedChannel.type === ""
-                                : returnedChannel.type === channel.datatype
+                            returnedChannel.name === channel.name &&
+                            returnedChannel.type === channel.type
                     );
 
                     // Now we have our seriesId, if the channel still exists
                     if (filteredResults.length === 0) {
                         alert(
-                            `Channel: ${channel.channelName} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.datatype}`
+                            `Channel: ${channel.name} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.type}`
                         );
                         return;
                     }
-                    const seriesId = filteredResults[0].seriesId;
-                    // Use seriesId as soon as datahub supports it
 
                     // Now, fetch the actual data
                     const response = await axios.get<CurveData>(
                         `${backendUrl}/channels/curve`,
                         {
                             params: {
-                                channel_name: channel.channelName, // REPLACE WITH SERIESID AS SOON AS SUPPORTED BY DATAHUB
+                                channel_name: channel.name, // REPLACE WITH SERIESID AS SOON AS SUPPORTED BY DATAHUB
                                 begin_time: timeValues.startTime,
                                 end_time: timeValues.endTime,
                                 backend: channel.backend,
@@ -185,7 +180,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     // Now update the data after it is fetched
                     setCurves((prevCurves) => {
                         if (!response.data.curve) {
-                            alert("No data for curve: " + channel.channelName);
+                            alert("No data for curve: " + channel.name);
                             return prevCurves;
                         }
                         const channelName = Object.keys(response.data.curve)[0];
@@ -361,8 +356,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     const updatedChannels = channels.filter(
                         (channel) =>
-                            `${channel.channelName} - ${channel.backend}` !==
-                            curveName
+                            `${channel.name} - ${channel.backend}` !== curveName
                     );
 
                     onChannelsChange(updatedChannels);

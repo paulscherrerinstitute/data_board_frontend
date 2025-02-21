@@ -1,4 +1,5 @@
-import { Channel, TimeValues } from "../Content.types";
+import { Channel } from "../../Selector/Selector.types";
+import { TimeValues } from "../Content.types";
 
 export interface PlotWidgetProps {
     channels: Channel[];

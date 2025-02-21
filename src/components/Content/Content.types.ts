@@ -1,10 +1,5 @@
 import ReactGridLayout from "react-grid-layout";
-
-export type Channel = {
-    channelName: string;
-    backend: string;
-    datatype: string;
-};
+import { Channel } from "../Selector/Selector.types";
 
 export type Widget = {
     channels: Channel[];

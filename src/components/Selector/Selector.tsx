@@ -24,7 +24,7 @@ import ListItemRow from "./ListItemRow/ListItemRow";
 import { useApiUrls } from "../ApiContext/ApiContext";
 import * as styles from "./Selector.styles";
 import { throttle } from "lodash";
-import { BackendChannel, StoredChannel } from "./Selector.types";
+import { Channel, StoredChannel } from "./Selector.types";
 
 const Selector: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -56,14 +56,14 @@ const Selector: React.FC = () => {
         }
 
         return storedChannels.filter((channel) => {
-            const [backend, , type] = channel.key.split("|");
             const matchesBackend =
                 selectedBackends.length === 0 ||
-                selectedBackends.includes(backend);
+                selectedBackends.includes(channel.attributes.backend);
             const matchesType =
-                selectedTypes.length === 0 || selectedTypes.includes(type);
+                selectedTypes.length === 0 ||
+                selectedTypes.includes(channel.attributes.type);
             const matchesSearch =
-                !searchRegex || (regex && regex.test(channel.key));
+                !searchRegex || (regex && regex.test(channel.attributes.name));
 
             return matchesBackend && matchesType && matchesSearch;
         });
@@ -92,34 +92,36 @@ const Selector: React.FC = () => {
     const fetchRecent = useCallback(async () => {
         try {
             const response = await axios.get<{
-                channels: BackendChannel[];
+                channels: Channel[];
             }>(`${backendUrl}/channels/recent`);
 
-            const joinedData = response.data.channels.map((channel) =>
-                [channel.backend, channel.name, channel.type].join("|")
-            );
-
             const newStoredChannels = [
-                ...joinedData.map((key: string) => ({
-                    key,
+                ...response.data.channels.map((channel) => ({
+                    attributes: channel,
                     selected: false,
                 })),
-            ].sort((a, b) => a.key.localeCompare(b.key));
+            ].sort((a, b) =>
+                (
+                    a.attributes.backend +
+                    a.attributes.name +
+                    a.attributes.type
+                ).localeCompare(
+                    b.attributes.backend + b.attributes.name + b.attributes.type
+                )
+            );
             setStoredChannels(newStoredChannels);
 
             // Extract unique backends and data types, used for filtering
             const backends = Array.from(
                 new Set(
                     newStoredChannels.map(
-                        (channel) => channel.key.split("|")[0]
+                        (channel) => channel.attributes.backend
                     )
                 )
             );
             const types = Array.from(
                 new Set(
-                    newStoredChannels.map(
-                        (channel) => channel.key.split("|")[2]
-                    )
+                    newStoredChannels.map((channel) => channel.attributes.type)
                 )
             );
 
@@ -153,37 +155,41 @@ const Selector: React.FC = () => {
                     setSearchRegex(term);
 
                     const response = await axios.get<{
-                        channels: BackendChannel[];
+                        channels: Channel[];
                     }>(`${backendUrl}/channels/search`, {
                         params: {
                             search_text: term,
                         },
                     });
 
-                    // Take backend, channelname and datatype (if no datatype, show [])
-                    const joinedData = response.data.channels.map((channel) =>
-                        [
-                            channel.backend,
-                            channel.name,
-                            channel.type ? channel.type : "[]",
-                        ].join("|")
-                    );
-
-                    const previousChannels = storedChannels;
-
-                    const channelKeys = new Set(
-                        previousChannels.map((channel) => channel.key)
+                    const previousSelectedKeys = new Set(
+                        storedChannels
+                            .filter((channel) => channel.selected)
+                            .map((channel) => channel.attributes.seriesId)
                     );
 
                     const newStoredChannels = [
-                        ...previousChannels,
-                        ...joinedData
-                            .filter((key: string) => !channelKeys.has(key))
-                            .map((key: string) => ({
-                                key,
-                                selected: false,
-                            })),
-                    ].sort((a, b) => a.key.localeCompare(b.key));
+                        ...response.data.channels.map((channel) => ({
+                            attributes: channel,
+                            selected: previousSelectedKeys.has(channel.seriesId)
+                                ? true
+                                : false,
+                        })),
+                    ].sort((a, b) =>
+                        (
+                            a.attributes.backend +
+                            a.attributes.name +
+                            a.attributes.type
+                        ).localeCompare(
+                            b.attributes.backend +
+                                b.attributes.name +
+                                b.attributes.type
+                        )
+                    );
+
+                    setSelectAll(
+                        newStoredChannels.every((channel) => channel.selected)
+                    );
 
                     setStoredChannels(newStoredChannels);
 
@@ -191,14 +197,14 @@ const Selector: React.FC = () => {
                     const backends = Array.from(
                         new Set(
                             newStoredChannels.map(
-                                (channel) => channel.key.split("|")[0]
+                                (channel) => channel.attributes.backend
                             )
                         )
                     );
                     const types = Array.from(
                         new Set(
                             newStoredChannels.map(
-                                (channel) => channel.key.split("|")[2]
+                                (channel) => channel.attributes.type
                             )
                         )
                     );
@@ -253,9 +259,11 @@ const Selector: React.FC = () => {
     );
 
     const handleSelectChannel = useCallback(
-        (key: string) => {
+        (seriesId: number) => {
             const newStoredChannels = storedChannels.map((channel) =>
-                channel.key === key ? { ...channel, selected: true } : channel
+                channel.attributes.seriesId === seriesId
+                    ? { ...channel, selected: true }
+                    : channel
             );
             setStoredChannels(newStoredChannels);
             if (newStoredChannels.every((channel) => channel.selected)) {
@@ -266,10 +274,12 @@ const Selector: React.FC = () => {
     );
 
     const handleDeselectChannel = useCallback(
-        (key: string) => {
+        (seriesId: number) => {
             setSelectAll(false);
             const newStoredChannels = storedChannels.map((channel) =>
-                channel.key === key ? { ...channel, selected: false } : channel
+                channel.attributes.seriesId === seriesId
+                    ? { ...channel, selected: false }
+                    : channel
             );
             setStoredChannels(newStoredChannels);
         },
@@ -277,10 +287,10 @@ const Selector: React.FC = () => {
     );
 
     const handleDragStart = useCallback(
-        (event: React.DragEvent, initiator: string) => {
+        (event: React.DragEvent, initiatorSeriesId: number) => {
             // Mark the initiator as selected
             const newStoredChannels = storedChannels.map((channel) =>
-                channel.key === initiator
+                channel.attributes.seriesId === initiatorSeriesId
                     ? { ...channel, selected: true }
                     : channel
             );
@@ -291,10 +301,9 @@ const Selector: React.FC = () => {
                 (channel) => channel.selected
             );
 
-            const channelsToTransfer = selectedChannels.map((channel) => {
-                const [backend, channelName, datatype] = channel.key.split("|");
-                return { channelName, backend, datatype };
-            });
+            const channelsToTransfer = selectedChannels.map(
+                (channel) => channel.attributes
+            );
 
             // Set the data for drag event
             event.dataTransfer.setData(
@@ -310,9 +319,7 @@ const Selector: React.FC = () => {
             `;
 
             if (selectedChannels.length === 1) {
-                const [backend, name, type] =
-                    selectedChannels[0].key.split("|");
-                dragPreview.innerText = `${name} (${backend} - ${type})`;
+                dragPreview.innerText = `${channelsToTransfer[0].name} (${channelsToTransfer[0].backend} - ${channelsToTransfer[0].type})`;
             } else {
                 dragPreview.innerText = `Multiple Channels`;
             }

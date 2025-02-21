@@ -3,7 +3,7 @@ import { Box, Button, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
-import { Widget, Channel, TimeValues, DashboardDto } from "./Content.types";
+import { Widget, TimeValues, DashboardDto } from "./Content.types";
 import ReactGridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -12,6 +12,7 @@ import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useApiUrls } from "../ApiContext/ApiContext";
 import { TimeSelectorHandle } from "./TimeSelector/TimeSelector.types";
+import { Channel } from "../Selector/Selector.types";
 
 const Content: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -46,11 +47,10 @@ const Content: React.FC = () => {
             const channels: Channel[] = JSON.parse(data);
 
             if (
-                channels.every(
-                    (channel) =>
-                        channel.backend &&
-                        channel.channelName &&
-                        channel.datatype
+                channels.every((channel) =>
+                    [channel.backend, channel.name, channel.type].every(
+                        (attribute) => attribute !== undefined
+                    )
                 )
             ) {
                 if (key === "-1") {
