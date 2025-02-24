@@ -181,7 +181,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         `${backendUrl}/channels/curve`,
                         {
                             params: {
-                                channel_name: channel.name, // REPLACE WITH SERIESID AS SOON AS SUPPORTED BY DATAHUB
+                                channel_name: channel.seriesId,
                                 begin_time: timeValues.startTime,
                                 end_time: timeValues.endTime,
                                 backend: channel.backend,
@@ -191,13 +191,24 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         }
                     );
 
+                    const responseCurveData: CurveData = {
+                        curve: {
+                            [channel.name]:
+                                response.data.curve[
+                                    channel.seriesId.toString()
+                                ],
+                        },
+                    };
+
                     // Now update the data after it is fetched
                     setCurves((prevCurves) => {
-                        if (!response.data.curve) {
-                            alert("No data for curve: " + channel.name);
+                        if (!responseCurveData.curve[channel.name]) {
+                            console.log("No data for curve: " + channel.name);
                             return prevCurves;
                         }
-                        const channelName = Object.keys(response.data.curve)[0];
+                        const channelName = Object.keys(
+                            responseCurveData.curve
+                        )[0];
                         const existingCurveIndex = prevCurves.findIndex(
                             (curve) =>
                                 curve.backend === channel.backend &&
@@ -205,7 +216,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         );
 
                         const convertedDataPoints = Object.entries(
-                            response.data.curve[channelName]
+                            responseCurveData.curve[channelName]
                         )
                             .map(([timestamp, data]) => {
                                 const convertedTimestamp =
