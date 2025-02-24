@@ -259,7 +259,7 @@ const Selector: React.FC = () => {
     );
 
     const handleSelectChannel = useCallback(
-        (seriesId: number) => {
+        (seriesId: string) => {
             const newStoredChannels = storedChannels.map((channel) =>
                 channel.attributes.seriesId === seriesId
                     ? { ...channel, selected: true }
@@ -274,7 +274,7 @@ const Selector: React.FC = () => {
     );
 
     const handleDeselectChannel = useCallback(
-        (seriesId: number) => {
+        (seriesId: string) => {
             setSelectAll(false);
             const newStoredChannels = storedChannels.map((channel) =>
                 channel.attributes.seriesId === seriesId
@@ -287,7 +287,7 @@ const Selector: React.FC = () => {
     );
 
     const handleDragStart = useCallback(
-        (event: React.DragEvent, initiatorSeriesId: number) => {
+        (event: React.DragEvent, initiatorSeriesId: string) => {
             // Mark the initiator as selected
             const newStoredChannels = storedChannels.map((channel) =>
                 channel.attributes.seriesId === initiatorSeriesId

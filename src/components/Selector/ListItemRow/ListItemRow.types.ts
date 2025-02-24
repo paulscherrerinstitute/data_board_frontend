@@ -5,9 +5,9 @@ export interface ListItemRowProps {
     style: React.CSSProperties;
     data: {
         items: StoredChannel[];
-        onSelect: (seriesId: number) => void;
-        onDeselect: (seriesId: number) => void;
-        onDragStart: (event: React.DragEvent, seriesId: number) => void;
+        onSelect: (seriesId: string) => void;
+        onDeselect: (seriesId: string) => void;
+        onDragStart: (event: React.DragEvent, seriesId: string) => void;
         isDraggable: boolean;
     };
 }

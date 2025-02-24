@@ -6,7 +6,7 @@ export type StoredChannel = {
 export type Channel = {
     backend: string;
     name: string;
-    seriesId: number;
+    seriesId: string;
     source: string;
     type: string;
     shape: string;

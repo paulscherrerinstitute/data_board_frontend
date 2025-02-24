@@ -5,7 +5,7 @@ import React, {
     useRef,
     useState,
 } from "react";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import {
     PlotWidgetProps,
     CurveData,
@@ -19,6 +19,7 @@ import { debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
 import Plotly from "plotly.js";
+import { fileURLToPath } from "url";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -36,10 +37,42 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             });
         const [curves, setCurves] = useState<Curve[]>([]);
         const isCtrlPressed = useRef(false);
-        const plotContainerRef = useRef<HTMLDivElement | null>(null);
+        const containerRef = useRef<HTMLDivElement | null>(null);
         const curvesRef = useRef(curves);
         const numBins = 64000;
         const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
+
+        const colorList = useMemo(
+            () => [
+                "#1f77b4",
+                "#ff7f0e",
+                "#2ca02c",
+                "#d62728",
+                "#9467bd",
+                "#8c564b",
+                "#e377c2",
+                "#7f7f7f",
+                "#bcbd22",
+                "#17becf",
+            ],
+            []
+        );
+
+        const colorMap = useRef<Map<string, string>>(new Map());
+
+        const getColorForCurve = useCallback(
+            (curve: Curve) => {
+                const curveKey = `${curve.backend}-${Object.keys(curve.curveData.curve)[0]}`;
+                if (!colorMap.current.has(curveKey)) {
+                    // Assign a color if not already assigned
+                    const color =
+                        colorList[colorMap.current.size % colorList.length];
+                    colorMap.current.set(curveKey, color);
+                }
+                return colorMap.current.get(curveKey)!; // Ensure it has a value
+            },
+            [colorList]
+        );
 
         const convertTimestamp = useCallback(
             (timestamp: string) => {
@@ -58,6 +91,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 plotCanvas.classList.contains("drag") &&
                 plotCanvas.closest(".plotly")
             ) {
+                e.stopPropagation();
+            }
+
+            if (plotCanvas.closest(".legendEntry")) {
                 e.stopPropagation();
             }
         };
@@ -86,7 +123,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         // Because "autosize" is very slow, we manually update the dimensions
         useEffect(() => {
-            const containerElement = plotContainerRef.current;
+            const containerElement = containerRef.current;
 
             const resizeHandler = debounce(() => {
                 if (containerElement) {
@@ -158,6 +195,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     }>(`${backendUrl}/channels/search`, {
                         params: {
                             search_text: `^${channel.name}$`,
+                            allow_cached_response: false,
                         },
                     });
 
@@ -176,12 +214,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         return;
                     }
 
+                    const seriesId = filteredResults[0].seriesId;
+
                     // Now, fetch the actual data
                     const response = await axios.get<CurveData>(
                         `${backendUrl}/channels/curve`,
                         {
                             params: {
-                                channel_name: channel.seriesId,
+                                channel_name: seriesId,
                                 begin_time: timeValues.startTime,
                                 end_time: timeValues.endTime,
                                 backend: channel.backend,
@@ -363,32 +403,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             downloadBlob(blob, fileName);
         }, [downloadBlob]);
 
-        const handleLegendClick = useCallback(
-            (eventData: Readonly<Plotly.LegendClickEvent>) => {
-                const curveName = eventData.data[eventData.curveNumber].name;
-                setCurves((prevCurves) => {
-                    const updatedCurves = prevCurves.filter(
-                        (curve) =>
-                            !Object.keys(curve.curveData.curve).some(
-                                (name) =>
-                                    `${name} - ${curve.backend}` === curveName
-                            )
-                    );
-
-                    const updatedChannels = channels.filter(
-                        (channel) =>
-                            `${channel.name} - ${channel.backend}` !== curveName
-                    );
-
-                    onChannelsChange(updatedChannels);
-                    return updatedCurves;
-                });
-
-                return false;
-            },
-            [channels, onChannelsChange]
-        );
-
         const data = useMemo(
             () =>
                 curves.flatMap(
@@ -399,12 +413,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 y: data ? Object.values(data) : {},
                                 type: "scattergl",
                                 mode: "lines+markers",
-                                name: `${channelName} - ${curve.backend}`,
+                                name: `${channelName} | ${curve.backend}`,
                                 yaxis: index === 0 ? "y" : `y${index + 1}`, // Assign y-axis dynamically, such that each curve has its own axis
+                                line: { color: getColorForCurve(curve) },
                             })
                         ) as Plotly.Data[]
                 ),
-            [curves]
+            [curves, getColorForCurve]
         );
 
         const layout = useMemo(() => {
@@ -414,7 +429,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 return {
                     [`yaxis${curveIndex === 0 ? "" : `${curveIndex + 1}`}`]: {
                         title: {
-                            text: `${channelName} - ${curve.backend}`,
+                            text: `${channelName} | ${curve.backend}`,
                         },
                         overlaying: curveIndex === 0 ? undefined : "y", // Overlay all except the first axis, this shows all grids
                         side: curveIndex % 2 === 0 ? "left" : "right", // Alternate sides for clarity, starting with left
@@ -451,7 +466,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     title: { text: "Value" }, // Remove the default "Click to add title"
                 },
                 ...Object.assign({}, ...yAxes), // Merge all y-axis definitions into layout
-                showlegend: true,
+                showlegend: false,
                 uirevision: "time",
             } as Plotly.Layout;
         }, [curves, containerDimensions, index]);
@@ -489,9 +504,26 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             } as Plotly.Config;
         }, [downloadDataCSV, downloadDataJSON]);
 
+        const handleRemoveCurve = (curveName: string) => {
+            setCurves((prevCurves) =>
+                prevCurves.filter(
+                    (curve) =>
+                        !Object.keys(curve.curveData.curve).some(
+                            (name) => `${name} | ${curve.backend}` === curveName
+                        )
+                )
+            );
+
+            const updatedChannels = channels.filter(
+                (channel) =>
+                    `${channel.name} | ${channel.backend}` !== curveName
+            );
+
+            onChannelsChange(updatedChannels);
+        };
+
         return (
             <Box
-                ref={plotContainerRef}
                 sx={styles.containerStyles}
                 onClick={handleEventPropagation}
                 onMouseDown={handleEventPropagation}
@@ -501,17 +533,60 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 onTouchMove={handleEventPropagation}
                 onTouchEnd={handleEventPropagation}
             >
-                <Plot
-                    data={data}
-                    layout={layout}
-                    config={config}
-                    style={{
-                        width: "100%",
-                        height: "100%",
-                    }}
-                    onRelayout={handleRelayout}
-                    onLegendClick={handleLegendClick}
-                />
+                <Box ref={containerRef} sx={styles.plotContainerStyles}>
+                    <Plot
+                        data={data}
+                        layout={layout}
+                        config={config}
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                        }}
+                        onRelayout={handleRelayout}
+                    />
+                </Box>
+                <Box sx={styles.legendStyles}>
+                    <Typography variant="h5" sx={styles.legendTitleStyles}>
+                        Legend
+                    </Typography>
+                    {curves.map((curve) => {
+                        const channelName = Object.keys(
+                            curve.curveData.curve
+                        )[0];
+                        const color = getColorForCurve(curve);
+                        const label = `${channelName} | ${curve.backend}`;
+                        return (
+                            <Box
+                                key={label}
+                                className="legendEntry"
+                                sx={styles.legendEntryStyles}
+                            >
+                                <span
+                                    style={{
+                                        display: "inline-block",
+                                        width: "16px",
+                                        height: "16px",
+                                        backgroundColor: color,
+                                        marginRight: "8px",
+                                    }}
+                                ></span>
+                                <span>{label}</span>
+                                <button
+                                    style={{
+                                        background: "none",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        color: "red",
+                                        fontWeight: "bold",
+                                    }}
+                                    onClick={() => handleRemoveCurve(label)}
+                                >
+                                    ✖
+                                </button>
+                            </Box>
+                        );
+                    })}
+                </Box>
             </Box>
         );
     }
