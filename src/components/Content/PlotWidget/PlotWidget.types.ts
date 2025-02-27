@@ -19,6 +19,7 @@ export type CurveData = {
 
 export type Curve = {
     backend: string;
+    type: string;
     curveData: CurveData;
 };
 

@@ -19,7 +19,6 @@ import { debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
 import Plotly from "plotly.js";
-import { fileURLToPath } from "url";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -39,7 +38,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const isCtrlPressed = useRef(false);
         const containerRef = useRef<HTMLDivElement | null>(null);
         const curvesRef = useRef(curves);
-        const numBins = 64000;
+        const numBins = 3200;
         const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
 
         const colorList = useMemo(
@@ -62,7 +61,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const getColorForCurve = useCallback(
             (curve: Curve) => {
-                const curveKey = `${curve.backend}-${Object.keys(curve.curveData.curve)[0]}`;
+                const curveKey = `${curve.backend}-${Object.keys(curve.curveData.curve)[0]}-${curve.type}`;
                 if (!colorMap.current.has(curveKey)) {
                     // Assign a color if not already assigned
                     const color =
@@ -165,6 +164,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const existingCurveIndex = prevCurves.findIndex(
                             (curve) =>
                                 curve.backend === channel.backend &&
+                                channel.type === curve.type &&
                                 channelName in curve.curveData.curve
                         );
 
@@ -173,6 +173,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 ...prevCurves,
                                 {
                                     backend: channel.backend,
+                                    type: channel.type,
                                     curveData: {
                                         curve: {
                                             [channelName]: {
@@ -216,6 +217,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     const seriesId = filteredResults[0].seriesId;
 
+                    const newNumBins = (window.innerWidth ?? numBins) * 4;
+
                     // Now, fetch the actual data
                     const response = await axios.get<CurveData>(
                         `${backendUrl}/channels/curve`,
@@ -225,7 +228,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 begin_time: timeValues.startTime,
                                 end_time: timeValues.endTime,
                                 backend: channel.backend,
-                                num_bins: numBins,
+                                num_bins: newNumBins,
                                 query_expansion: timeValues.queryExpansion,
                             },
                         }
@@ -235,7 +238,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         curve: {
                             [channel.name]:
                                 response.data.curve[
-                                    channel.seriesId.toString()
+                                seriesId
+                                ],
+                            [channel.name + "_min"]:
+                                response.data.curve[
+                                seriesId + "_min"
+                                ],
+                            [channel.name + "_max"]:
+                                response.data.curve[
+                                seriesId + "_max"
                                 ],
                         },
                     };
@@ -282,6 +293,42 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 [channelName]: {
                                     [beginTimestamp]: NaN,
                                     ...newDataPoints,
+                                    [endTimeStamp]: NaN,
+                                },
+                                [channelName + "_min"]: {
+                                    [beginTimestamp]: NaN,
+                                    ...Object.entries(
+                                        responseCurveData.curve[channelName + "_min"]
+                                    )
+                                        .map(([timestamp, data]) => [
+                                            convertTimestamp(timestamp),
+                                            data,
+                                        ])
+                                        .reduce(
+                                            (acc, [convertedTimestamp, data]) => {
+                                                acc[convertedTimestamp] = Number(data);
+                                                return acc;
+                                            },
+                                            {} as { [timestamp: string]: number }
+                                        ),
+                                    [endTimeStamp]: NaN,
+                                },
+                                [channelName + "_max"]: {
+                                    [beginTimestamp]: NaN,
+                                    ...Object.entries(
+                                        responseCurveData.curve[channelName + "_max"]
+                                    )
+                                        .map(([timestamp, data]) => [
+                                            convertTimestamp(timestamp),
+                                            data,
+                                        ])
+                                        .reduce(
+                                            (acc, [convertedTimestamp, data]) => {
+                                                acc[convertedTimestamp] = Number(data);
+                                                return acc;
+                                            },
+                                            {} as { [timestamp: string]: number }
+                                        ),
                                     [endTimeStamp]: NaN,
                                 },
                             },
@@ -439,8 +486,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             curveIndex % 2 === 0
                                 ? curveIndex / (40 * (window.innerWidth / 2560))
                                 : 1 -
-                                  curveIndex /
-                                      (40 * (window.innerWidth / 2560)),
+                                curveIndex /
+                                (40 * (window.innerWidth / 2560)),
                     },
                 };
             }, []);
@@ -455,11 +502,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     domain: [
                         // Specify the width of the X axis to leave enough room for all y axes
                         0.01 +
-                            Math.ceil(curves.length / 2) /
-                                (40 * (window.innerWidth / 2560)),
+                        Math.ceil(curves.length / 2) /
+                        (40 * (window.innerWidth / 2560)),
                         1.01 -
-                            Math.floor(curves.length / 2) /
-                                (40 * 0.5 * (window.innerWidth / 2560)),
+                        Math.floor(curves.length / 2) /
+                        (40 * 0.5 * (window.innerWidth / 2560)),
                     ],
                 },
                 yaxis: {
@@ -467,7 +514,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 },
                 ...Object.assign({}, ...yAxes), // Merge all y-axis definitions into layout
                 showlegend: false,
-                uirevision: "time",
+                uirevision: "time"
             } as Plotly.Layout;
         }, [curves, containerDimensions, index]);
 
@@ -509,14 +556,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 prevCurves.filter(
                     (curve) =>
                         !Object.keys(curve.curveData.curve).some(
-                            (name) => `${name} | ${curve.backend}` === curveName
+                            (name) => `${name} | ${curve.backend} | ${curve.type === "" ? "[]" : curve.type}` === curveName
                         )
                 )
             );
 
             const updatedChannels = channels.filter(
                 (channel) =>
-                    `${channel.name} | ${channel.backend}` !== curveName
+                    `${channel.name} | ${channel.backend} | ${channel.type === "" ? "[]" : channel.type}` !== curveName
             );
 
             onChannelsChange(updatedChannels);
@@ -554,7 +601,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             curve.curveData.curve
                         )[0];
                         const color = getColorForCurve(curve);
-                        const label = `${channelName} | ${curve.backend}`;
+                        const label = `${channelName} | ${curve.backend} | ${curve.type === "" ? "[]" : curve.type}`;
                         return (
                             <Box
                                 key={label}
