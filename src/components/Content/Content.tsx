@@ -56,12 +56,36 @@ const Content: React.FC = () => {
                 if (key === "-1") {
                     handleCreateWidget(channels);
                 } else {
+                    // check if target widget contains the same channel
+                    const existingChannel = widgets
+                        .find((widget) => widget.layout.i === key)
+                        ?.channels.find(
+                            (channel) =>
+                                channels.find(
+                                    (newChannel) =>
+                                        newChannel.backend === channel.backend &&
+                                        newChannel.name === channel.name &&
+                                        newChannel.type === channel.type
+                                )
+                        );
+
+                    if (existingChannel) {
+                        console.error(
+                            "Widget already contains the channel:",
+                            existingChannel
+                        );
+                        alert(
+                            `Widget already contains the channel: ${existingChannel.name}`
+                        );
+                        return;
+                    }
+
                     const newWidgets = widgets.map((widget) =>
                         widget.layout.i === key
                             ? {
-                                  ...widget,
-                                  channels: [...widget.channels, ...channels],
-                              }
+                                ...widget,
+                                channels: [...widget.channels, ...channels],
+                            }
                             : widget
                     );
                     setWidgets(newWidgets);
@@ -306,7 +330,7 @@ const Content: React.FC = () => {
                     }
                 );
                 return;
-            } catch {}
+            } catch { }
         }
         handleCreateDashboard();
     }, [backendUrl, handleCreateDashboard, searchParams, widgets]);
@@ -414,10 +438,10 @@ const Content: React.FC = () => {
                                             prevWidgets.map((widget) =>
                                                 widget.layout.i === layout.i
                                                     ? {
-                                                          ...widget,
-                                                          channels:
-                                                              updatedChannels,
-                                                      }
+                                                        ...widget,
+                                                        channels:
+                                                            updatedChannels,
+                                                    }
                                                     : widget
                                             )
                                         );
