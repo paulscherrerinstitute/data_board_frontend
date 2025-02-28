@@ -480,6 +480,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const data = useMemo(() => {
             const result: Plotly.Data[] = [];
 
+            // If there are more than 4 curves, put everything on one axis.
+            const useMultipleAxes = curves.length <= 4;
             for (let index = 0; index < curves.length; index++) {
                 const curve = curves[index];
                 const channelName = Object.keys(curve.curveData.curve)[0];
@@ -502,7 +504,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 const yMin = Object.values(minData);
                 const yMax = Object.values(maxData);
 
-                const yAxis = index === 0 ? "y" : `y${index + 1}`;
+                const yAxis =
+                    index === 0 || !useMultipleAxes ? "y" : `y${index + 1}`;
                 const color = getColorForCurve(curve);
                 const label = getLabelForCurve(curve);
 
@@ -547,25 +550,34 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const layout = useMemo(() => {
             // Define dynamic y-axes using channel names
-            const yAxes = curves.map((curve, curveIndex) => {
-                return {
-                    [`yaxis${curveIndex === 0 ? "" : `${curveIndex + 1}`}`]: {
-                        title: {
-                            text: getLabelForCurve(curve),
-                        },
-                        overlaying: curveIndex === 0 ? undefined : "y", // Overlay all except the first axis, this shows all grids
-                        side: curveIndex % 2 === 0 ? "left" : "right", // Alternate sides for clarity, starting with left
-                        anchor: "free",
-                        // Calculate the position based on the index, as plotly can't do this automatically...
-                        position:
-                            curveIndex % 2 === 0
-                                ? curveIndex / (40 * (window.innerWidth / 2560))
-                                : 1 -
-                                  curveIndex /
-                                      (40 * (window.innerWidth / 2560)),
-                    },
-                };
-            }, []);
+            // If more than 4 channels are used, put everything on the same axis
+            const useMultipleAxes = curves.length <= 4;
+
+            const yAxes = useMultipleAxes
+                ? curves.map((curve, curveIndex) => {
+                      return {
+                          [`yaxis${curveIndex === 0 ? "" : `${curveIndex + 1}`}`]:
+                              {
+                                  title: {
+                                      text: getLabelForCurve(curve),
+                                  },
+                                  overlaying:
+                                      curveIndex === 0 ? undefined : "y", // Overlay all except the first axis, this shows all grids
+                                  side: curveIndex % 2 === 0 ? "left" : "right", // Alternate sides for clarity, starting with left
+                                  anchor: "free",
+                                  // Calculate the position based on the index, as plotly can't do this automatically...
+                                  position:
+                                      curveIndex % 2 === 0
+                                          ? curveIndex /
+                                            (40 * (window.innerWidth / 2560))
+                                          : 1 -
+                                            curveIndex /
+                                                (40 *
+                                                    (window.innerWidth / 2560)),
+                              },
+                      };
+                  }, [])
+                : [];
 
             return {
                 title: {
