@@ -289,13 +289,20 @@ const Selector: React.FC = () => {
     const handleDragStart = useCallback(
         (event: React.DragEvent, initiatorSeriesId: string) => {
             // Mark the initiator as selected
-            const newStoredChannels = storedChannels.map((channel) =>
-                channel.attributes.seriesId === initiatorSeriesId
-                    ? { ...channel, selected: true }
-                    : channel
-            );
-            setStoredChannels(newStoredChannels);
-
+            let newStoredChannels = storedChannels;
+            const initiatorIsSelected =
+                storedChannels.find(
+                    (channel) =>
+                        channel.attributes.seriesId === initiatorSeriesId
+                )?.selected || false;
+            if (!initiatorIsSelected) {
+                newStoredChannels = storedChannels.map((channel) =>
+                    channel.attributes.seriesId === initiatorSeriesId
+                        ? { ...channel, selected: true }
+                        : channel
+                );
+                setStoredChannels(newStoredChannels);
+            }
             // Collect the selected channels
             const selectedChannels = newStoredChannels.filter(
                 (channel) => channel.selected
@@ -329,6 +336,21 @@ const Selector: React.FC = () => {
 
             // Remove the preview after the drag starts
             setTimeout(() => dragPreview.remove(), 0);
+
+            // Unselect the channel if it was previously unselected once the drag ends
+            if (!initiatorIsSelected) {
+                const onDragEnd = () => {
+                    newStoredChannels = newStoredChannels.map((channel) =>
+                        channel.attributes.seriesId === initiatorSeriesId
+                            ? { ...channel, selected: false }
+                            : channel
+                    );
+                    setStoredChannels(newStoredChannels);
+                    document.removeEventListener("dragend", onDragEnd);
+                };
+
+                document.addEventListener("dragend", onDragEnd);
+            }
         },
         [storedChannels]
     );
