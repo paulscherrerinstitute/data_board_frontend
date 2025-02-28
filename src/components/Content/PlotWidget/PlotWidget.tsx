@@ -327,14 +327,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     [endTimeStamp]: NaN,
                                 },
                                 [channelName + "_min"]: {
-                                    [beginTimestamp]: NaN,
                                     ...newMins,
-                                    [endTimeStamp]: NaN,
                                 },
                                 [channelName + "_max"]: {
-                                    [beginTimestamp]: NaN,
                                     ...newMaxs,
-                                    [endTimeStamp]: NaN,
                                 },
                             },
                         };
@@ -493,6 +489,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     continue; // Skip processing if it's a min/max entry itself
                 }
 
+                const yAxis =
+                    index === 0 || !useMultipleAxes ? "y" : `y${index + 1}`;
+                const color = getColorForCurve(curve);
+                const label = getLabelForCurve(curve);
+
                 const baseData = curve.curveData.curve[channelName] || {};
                 const minData =
                     curve.curveData.curve[`${channelName}_min`] || {};
@@ -504,31 +505,23 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 const yMin = Object.values(minData);
                 const yMax = Object.values(maxData);
 
-                const yAxis =
-                    index === 0 || !useMultipleAxes ? "y" : `y${index + 1}`;
-                const color = getColorForCurve(curve);
-                const label = getLabelForCurve(curve);
+                // Build a polygon to enclose the area between min and max
+                // Then, plotly can render the area filled using scattergl. It breaks when filling tonexty while using scattergl
+                // Because the x values contain two NaNs (one to mark the begin, and one for the end), slice them away, otherwise the polygon would break.
+                const xPolygon = xValues
+                    .slice(1, -1)
+                    .concat(xValues.slice(1, -1).reverse());
+                const yPolygon = yMax.concat(yMin.reverse());
 
                 result.push(
                     {
-                        x: xValues,
-                        y: yMax,
-                        type: "scatter",
+                        x: xPolygon,
+                        y: yPolygon,
+                        type: "scattergl",
                         mode: "lines",
-                        line: { color: "transparent" },
-                        fill: "none",
-                        showlegend: false,
-                        showscale: false,
-                        yaxis: yAxis,
-                    },
-                    {
-                        x: xValues,
-                        y: yMin,
-                        type: "scatter",
-                        mode: "lines",
-                        fill: "tonexty",
-                        line: { color: "transparent" },
+                        fill: "toself",
                         fillcolor: "rgba(0, 0, 0, 0.14)",
+                        line: { color: "transparent" },
                         showlegend: false,
                         showscale: false,
                         yaxis: yAxis,
