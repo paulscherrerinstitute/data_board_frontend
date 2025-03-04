@@ -473,7 +473,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             downloadBlob(blob, fileName);
         }, [downloadBlob]);
 
+        const hexToRgba = (hex: string, alpha: number) => {
+            const bigint = parseInt(hex.slice(1), 16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
+
         const data = useMemo(() => {
+            const values: Plotly.Data[] = [];
             const result: Plotly.Data[] = [];
 
             // If there are more than 4 curves, put everything on one axis.
@@ -513,30 +522,31 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     .concat(xValues.slice(1, -1).reverse());
                 const yPolygon = yMax.concat(yMin.reverse());
 
-                result.push(
-                    {
-                        x: xPolygon,
-                        y: yPolygon,
-                        type: "scattergl",
-                        mode: "lines",
-                        fill: "toself",
-                        fillcolor: "rgba(0, 0, 0, 0.14)",
-                        line: { color: "transparent" },
-                        showlegend: false,
-                        showscale: false,
-                        yaxis: yAxis,
-                    },
-                    {
-                        name: label,
-                        x: xValues,
-                        y: yBase,
-                        type: "scattergl",
-                        mode: "lines+markers",
-                        yaxis: yAxis,
-                        line: { color },
-                    }
-                );
+                values.push({
+                    name: label,
+                    x: xValues,
+                    y: yBase,
+                    type: "scattergl",
+                    mode: "lines+markers",
+                    yaxis: yAxis,
+                    line: { color },
+                });
+                result.push({
+                    x: xPolygon,
+                    y: yPolygon,
+                    type: "scattergl",
+                    mode: "lines",
+                    fill: "toself",
+                    fillcolor: hexToRgba(color, 0.3),
+                    line: { color: "transparent" },
+                    showlegend: false,
+                    showscale: false,
+                    yaxis: yAxis,
+                    hoverinfo: "skip",
+                });
             }
+
+            result.push(...values);
 
             return result;
         }, [curves, getColorForCurve, getLabelForCurve]);
