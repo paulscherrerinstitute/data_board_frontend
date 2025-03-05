@@ -75,14 +75,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const getLabelForChannelAttributes = useCallback(
             (name: string, backend: string, type: string) => {
-                return `${name} | ${backend} | ${type === "" ? "[]" : type}`;
+                return `${name.split("|")[0].trim()} | ${backend} | ${type === "" ? "[]" : type}`;
             },
             []
         );
 
         const getLabelForCurve = useCallback(
             (curve: Curve) => {
-                const channelName = Object.keys(curve.curveData.curve)[0];
+                const channelName = Object.keys(curve.curveData.curve)[0]
+                    .split("|")[0]
+                    .trim();
                 return getLabelForChannelAttributes(
                     channelName,
                     curve.backend,
@@ -184,7 +186,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             (curve) =>
                                 curve.backend === channel.backend &&
                                 channel.type === curve.type &&
-                                channelName in curve.curveData.curve
+                                getLabelForChannelAttributes(
+                                    channel.name,
+                                    channel.backend,
+                                    channel.type
+                                ) in curve.curveData.curve
                         );
 
                         if (existingCurveIndex === -1) {
@@ -195,7 +201,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     type: channel.type,
                                     curveData: {
                                         curve: {
-                                            [channelName]: {
+                                            [getLabelForChannelAttributes(
+                                                channel.name,
+                                                channel.backend,
+                                                channel.type
+                                            )]: {
                                                 [beginTimestamp]: NaN,
                                                 [endTimeStamp]: NaN,
                                             },
@@ -280,10 +290,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const channelName = Object.keys(
                             responseCurveData.curve
                         )[0];
+                        const keyName = getLabelForChannelAttributes(
+                            channelName,
+                            channel.backend,
+                            channel.type
+                        );
                         const existingCurveIndex = prevCurves.findIndex(
                             (curve) =>
                                 curve.backend === channel.backend &&
-                                channelName in curve.curveData.curve
+                                keyName in curve.curveData.curve
                         );
 
                         const convertAndFilter = (key: string) =>
@@ -329,15 +344,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                         const updatedCurveData: CurveData = {
                             curve: {
-                                [channelName]: {
+                                [keyName]: {
                                     [beginTimestamp]: NaN,
                                     ...newMeans,
                                     [endTimeStamp]: NaN,
                                 },
-                                [channelName + "_min"]: {
+                                [keyName + "_min"]: {
                                     ...newMins,
                                 },
-                                [channelName + "_max"]: {
+                                [keyName + "_max"]: {
                                     ...newMaxs,
                                 },
                             },
@@ -405,16 +420,17 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             const rows: string[] = [];
 
             curvesData.forEach((curve) => {
-                const channelName = Object.keys(curve.curveData.curve)[0];
+                const channelKey = Object.keys(curve.curveData.curve)[0];
+                const channelName = channelKey.split("|")[0].trim();
                 const baseData =
-                    Object.entries(curve.curveData.curve[channelName]) || {};
+                    Object.entries(curve.curveData.curve[channelKey]) || {};
                 const minData =
                     Object.entries(
-                        curve.curveData.curve[`${channelName}_min`]
+                        curve.curveData.curve[`${channelKey}_min`]
                     ) || {};
                 const maxData =
                     Object.entries(
-                        curve.curveData.curve[`${channelName}_max`]
+                        curve.curveData.curve[`${channelKey}_max`]
                     ) || {};
                 // Exclude first and last entries since their our NaN placeholders for the range
                 for (let i = 1; i < baseData.length - 1; i++) {
@@ -422,10 +438,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         [
                             curve.backend,
                             channelName,
-                            baseData[i][0],
-                            baseData[i][1],
-                            minData[i][1],
-                            maxData[i][1],
+                            baseData[i] === undefined
+                                ? 0
+                                : (baseData[i][0] ?? 0),
+                            baseData[i] === undefined
+                                ? 0
+                                : (baseData[i][1] ?? 0),
+                            minData[i] === undefined ? 0 : (minData[i][1] ?? 0),
+                            maxData[i] === undefined ? 0 : (maxData[i][1] ?? 0),
                         ].join(";")
                     );
                 }
@@ -497,12 +517,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             const useMultipleAxes = curves.length <= 4;
             for (let index = 0; index < curves.length; index++) {
                 const curve = curves[index];
-                const channelName = Object.keys(curve.curveData.curve)[0];
+                const keyName = Object.keys(curve.curveData.curve)[0];
 
-                if (
-                    channelName.endsWith("_min") ||
-                    channelName.endsWith("_max")
-                ) {
+                if (keyName.endsWith("_min") || keyName.endsWith("_max")) {
                     continue; // Skip processing if it's a min/max entry itself
                 }
 
@@ -511,11 +528,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 const color = getColorForCurve(curve);
                 const label = getLabelForCurve(curve);
 
-                const baseData = curve.curveData.curve[channelName] || {};
-                const minData =
-                    curve.curveData.curve[`${channelName}_min`] || {};
-                const maxData =
-                    curve.curveData.curve[`${channelName}_max`] || {};
+                const baseData = curve.curveData.curve[keyName] || {};
+                const minData = curve.curveData.curve[`${keyName}_min`] || {};
+                const maxData = curve.curveData.curve[`${keyName}_max`] || {};
 
                 const xValues = Object.keys(baseData);
                 const yBase = Object.values(baseData);
