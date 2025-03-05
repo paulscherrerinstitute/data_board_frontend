@@ -263,6 +263,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         },
                     };
 
+                    // If min and max are missing or undefined, set them to empty objects to avoid errors
+                    if (!responseCurveData.curve[channel.name + "_min"]) {
+                        responseCurveData.curve[channel.name + "_min"] = {};
+                    }
+                    if (!responseCurveData.curve[channel.name + "_max"]) {
+                        responseCurveData.curve[channel.name + "_max"] = {};
+                    }
+
                     // Now update the data after it is fetched
                     setCurves((prevCurves) => {
                         if (!responseCurveData.curve[channel.name]) {
