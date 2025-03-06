@@ -257,7 +257,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 end_time: timeValues.endTime,
                                 backend: channel.backend,
                                 num_bins: newNumBins,
-                                query_expansion: timeValues.queryExpansion,
+                                useEventsIfBinCountTooLarge:
+                                    timeValues.rawWhenSparse,
+                                removeEmptyBins: timeValues.removeEmptyBins,
                             },
                         }
                     );
@@ -552,7 +554,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     type: "scattergl",
                     mode: "lines+markers",
                     yaxis: yAxis,
-                    line: { color, shape: "vh" },
+                    line: { color: color },
                 } as Plotly.Data);
                 result.push({
                     x: xPolygon,
