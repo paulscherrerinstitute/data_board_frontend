@@ -588,15 +588,21 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     title: {
                         text: "Time",
                     },
-                    domain: [
-                        // Specify the width of the X axis to leave enough room for all y axes
-                        0.01 +
-                            Math.ceil(curves.length / 2) /
-                                (40 * (window.innerWidth / 2560)),
-                        1.01 -
-                            Math.floor(curves.length / 2) /
-                                (40 * 0.5 * (window.innerWidth / 2560)),
-                    ],
+                    ...(curves.length <= 4
+                        ? {
+                              // Specify the width of the X axis to leave enough room for all y axes
+                              domain: [
+                                  0.01 +
+                                      Math.ceil(curves.length / 2) /
+                                          (40 * (window.innerWidth / 2560)),
+                                  1.01 -
+                                      Math.floor(curves.length / 2) /
+                                          (40 *
+                                              0.5 *
+                                              (window.innerWidth / 2560)),
+                              ],
+                          }
+                        : {}),
                 },
                 yaxis: {
                     title: {
