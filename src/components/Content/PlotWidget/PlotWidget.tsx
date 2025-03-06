@@ -181,7 +181,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     // Add the new channel with empty data first so it appears in the legend
                     setCurves((prevCurves) => {
-                        const channelName = channel.name;
                         const existingCurveIndex = prevCurves.findIndex(
                             (curve) =>
                                 curve.backend === channel.backend &&
@@ -377,6 +376,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             timezoneOffsetMs,
             backendUrl,
             convertTimestamp,
+            getLabelForChannelAttributes,
         ]);
 
         const handleRelayout = (e: Readonly<Plotly.PlotRelayoutEvent>) => {
@@ -501,11 +501,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             downloadBlob(blob, fileName);
         }, [downloadBlob]);
 
-        const hexToRgba = (hex: string, alpha: number) => {
-            const bigint = parseInt(hex.slice(1), 16);
-            const r = (bigint >> 16) & 255;
-            const g = (bigint >> 8) & 255;
-            const b = bigint & 255;
+        const hexToRgba = (hexString: string, alpha: number) => {
+            const hexValue = parseInt(hexString.slice(1), 16);
+            const r = (hexValue >> 16) & 255;
+            const g = (hexValue >> 8) & 255;
+            const b = hexValue & 255;
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         };
 
@@ -552,8 +552,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     type: "scattergl",
                     mode: "lines+markers",
                     yaxis: yAxis,
-                    line: { color },
-                });
+                    line: { color, shape: "vh" },
+                } as Plotly.Data);
                 result.push({
                     x: xPolygon,
                     y: yPolygon,
@@ -561,12 +561,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     mode: "lines",
                     fill: "toself",
                     fillcolor: hexToRgba(color, 0.3),
-                    line: { color: "transparent" },
+                    line: { color: "transparent", shape: "vh" },
                     showlegend: false,
                     showscale: false,
                     yaxis: yAxis,
                     hoverinfo: "skip",
-                });
+                } as Plotly.Data);
             }
 
             result.push(...values);
