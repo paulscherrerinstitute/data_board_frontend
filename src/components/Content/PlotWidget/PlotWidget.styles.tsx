@@ -48,3 +48,9 @@ export const legendEntryStyles: SxProps<Theme> = {
         boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
     },
 };
+
+export const statusSymbolStyle: SxProps<Theme> = {
+    display: "flex",
+    justifySelf: "center",
+    alignSelf: "center",
+};

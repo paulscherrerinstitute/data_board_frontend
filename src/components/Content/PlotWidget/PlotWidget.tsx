@@ -5,7 +5,7 @@ import React, {
     useRef,
     useState,
 } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import {
     PlotWidgetProps,
     CurveData,
@@ -211,8 +211,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                             // Empty data initially, only showing range
                                         },
                                     },
+                                    isLoading: true,
                                 },
                             ];
+                        } else {
+                            prevCurves[existingCurveIndex].isLoading = true;
                         }
                         return prevCurves;
                     });
@@ -363,6 +366,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         if (existingCurveIndex === -1) {
                             return updatedCurves;
                         }
+                        updatedCurves[existingCurveIndex].isLoading = false;
                         updatedCurves[existingCurveIndex].curveData =
                             updatedCurveData;
                         return updatedCurves;
@@ -472,6 +476,20 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     curve: Object.fromEntries(
                         Object.entries(curve.curveData.curve).map(
                             ([channel, dataPoints]) => {
+                                const isMin = channel.endsWith("_min");
+                                const isMax = channel.endsWith("_max");
+
+                                if (channel.includes(" | ")) {
+                                    channel = channel.split(" | ")[0].trim();
+
+                                    if (isMin) {
+                                        channel += "_min";
+                                    }
+                                    if (isMax) {
+                                        channel += "_max";
+                                    }
+                                }
+
                                 const timestamps =
                                     Object.keys(dataPoints).sort();
                                 if (timestamps.length <= 2) {
@@ -493,7 +511,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 };
 
                 return {
-                    ...curve,
+                    backend: curve.backend,
+                    type: curve.type,
                     curveData: trimmedCurveData,
                 };
             });
@@ -739,15 +758,23 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 className="legendEntry"
                                 sx={styles.legendEntryStyles}
                             >
-                                <span
-                                    style={{
-                                        display: "inline-block",
-                                        width: "16px",
-                                        height: "16px",
-                                        backgroundColor: color,
-                                        marginRight: "8px",
-                                    }}
-                                ></span>
+                                {curve.isLoading ? (
+                                    <CircularProgress
+                                        size="1rem"
+                                        disableShrink={true}
+                                        sx={styles.statusSymbolStyle}
+                                    />
+                                ) : (
+                                    <span
+                                        style={{
+                                            display: "inline-block",
+                                            width: "16px",
+                                            height: "16px",
+                                            backgroundColor: color,
+                                            marginRight: "8px",
+                                        }}
+                                    ></span>
+                                )}
                                 <span>{label}</span>
                                 <button
                                     style={{
