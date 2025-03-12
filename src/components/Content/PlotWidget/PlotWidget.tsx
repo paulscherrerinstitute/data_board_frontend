@@ -360,6 +360,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         };
 
                         const updatedCurves = [...prevCurves];
+                        if (existingCurveIndex === -1) {
+                            return updatedCurves;
+                        }
                         updatedCurves[existingCurveIndex].curveData =
                             updatedCurveData;
                         return updatedCurves;
