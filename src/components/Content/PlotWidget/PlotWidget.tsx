@@ -5,7 +5,8 @@ import React, {
     useRef,
     useState,
 } from "react";
-import { Box, CircularProgress, Typography } from "@mui/material";
+import { Box, CircularProgress, Tooltip, Typography } from "@mui/material";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import {
     PlotWidgetProps,
     CurveData,
@@ -14,7 +15,7 @@ import {
 } from "./PlotWidget.types";
 import Plot from "react-plotly.js";
 import { useApiUrls } from "../../ApiContext/ApiContext";
-import axios from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import { debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
@@ -169,6 +170,47 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             };
         }, []);
 
+        const setErrorCurve = useCallback(
+            (error: string, channel: Channel) => {
+                setCurves((prevCurves) => {
+                    const errorCurve = prevCurves.find(
+                        (curve) =>
+                            curve.backend === channel.backend &&
+                            curve.type === channel.type &&
+                            getLabelForChannelAttributes(
+                                channel.name,
+                                channel.backend,
+                                channel.type
+                            ) in curve.curveData.curve
+                    );
+                    if (errorCurve) {
+                        errorCurve.isLoading = false;
+                        errorCurve.error = error;
+                    }
+                    return prevCurves;
+                });
+            },
+            [setCurves, getLabelForChannelAttributes]
+        );
+
+        const handleResponseError = useCallback(
+            (error: AxiosError | any, channel: Channel) => {
+                console.error(error);
+                let errorMsg = error.response?.data?.detail;
+                if (!errorMsg) {
+                    errorMsg = error.code;
+                }
+                if (!errorMsg) {
+                    errorMsg = error.message;
+                }
+                if (errorMsg) {
+                    setErrorCurve(errorMsg, channel);
+                    return;
+                }
+            },
+            [setErrorCurve]
+        );
+
         useEffect(() => {
             const fetchData = async (channel: Channel) => {
                 try {
@@ -212,24 +254,35 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         },
                                     },
                                     isLoading: true,
+                                    error: null,
                                 },
                             ];
                         } else {
                             prevCurves[existingCurveIndex].isLoading = true;
+                            prevCurves[existingCurveIndex].error = null;
                         }
                         return prevCurves;
                     });
 
                     // Fetch data after adding the new channel
                     // First, get the seriesId by searching for the channel and filtering our values
-                    const searchResults = await axios.get<{
+                    let searchResults: AxiosResponse<{
                         channels: Channel[];
-                    }>(`${backendUrl}/channels/search`, {
-                        params: {
-                            search_text: `^${channel.name}$`,
-                            allow_cached_response: false,
-                        },
-                    });
+                    }>;
+
+                    try {
+                        searchResults = await axios.get<{
+                            channels: Channel[];
+                        }>(`${backendUrl}/channels/search`, {
+                            params: {
+                                search_text: `^${channel.name}$`,
+                                allow_cached_response: false,
+                            },
+                        });
+                    } catch (error: AxiosError | any) {
+                        handleResponseError(error, channel);
+                        return;
+                    }
 
                     const filteredResults = searchResults.data.channels.filter(
                         (returnedChannel) =>
@@ -251,31 +304,49 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     const newNumBins = window.innerWidth ?? numBins;
 
                     // Now, fetch the actual data
-                    const response = await axios.get<CurveData>(
-                        `${backendUrl}/channels/curve`,
-                        {
-                            params: {
-                                channel_name: seriesId,
-                                begin_time: timeValues.startTime,
-                                end_time: timeValues.endTime,
-                                backend: channel.backend,
-                                num_bins: newNumBins,
-                                useEventsIfBinCountTooLarge:
-                                    timeValues.rawWhenSparse,
-                                removeEmptyBins: timeValues.removeEmptyBins,
-                            },
-                        }
-                    );
+                    let response: AxiosResponse | undefined;
+                    try {
+                        response = await axios.get<CurveData>(
+                            `${backendUrl}/channels/curve`,
+                            {
+                                params: {
+                                    channel_name: seriesId,
+                                    begin_time: timeValues.startTime,
+                                    end_time: timeValues.endTime,
+                                    backend: channel.backend,
+                                    num_bins: newNumBins,
+                                    useEventsIfBinCountTooLarge:
+                                        timeValues.rawWhenSparse,
+                                    removeEmptyBins: timeValues.removeEmptyBins,
+                                },
+                            }
+                        );
+                    } catch (error: AxiosError | any) {
+                        handleResponseError(error, channel);
+                        return;
+                    }
 
                     const responseCurveData: CurveData = {
                         curve: {
-                            [channel.name]: response.data.curve[seriesId],
+                            [channel.name]: response?.data.curve[seriesId],
                             [channel.name + "_min"]:
-                                response.data.curve[seriesId + "_min"],
+                                response?.data.curve[seriesId + "_min"],
                             [channel.name + "_max"]:
-                                response.data.curve[seriesId + "_max"],
+                                response?.data.curve[seriesId + "_max"],
                         },
                     };
+
+                    if (
+                        !responseCurveData.curve[channel.name] ||
+                        Object.keys(responseCurveData.curve[channel.name])
+                            .length === 0
+                    ) {
+                        setErrorCurve(
+                            "No data in the requested time frame",
+                            channel
+                        );
+                        return;
+                    }
 
                     // If min and max are missing or undefined, set them to empty objects to avoid errors
                     if (!responseCurveData.curve[channel.name + "_min"]) {
@@ -287,10 +358,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     // Now update the data after it is fetched
                     setCurves((prevCurves) => {
-                        if (!responseCurveData.curve[channel.name]) {
-                            console.log("No data for curve: " + channel.name);
-                            return prevCurves;
-                        }
                         const channelName = Object.keys(
                             responseCurveData.curve
                         )[0];
@@ -386,6 +453,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             backendUrl,
             convertTimestamp,
             getLabelForChannelAttributes,
+            setErrorCurve,
+            handleResponseError,
         ]);
 
         const handleRelayout = (e: Readonly<Plotly.PlotRelayoutEvent>) => {
@@ -764,6 +833,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         disableShrink={true}
                                         sx={styles.statusSymbolStyle}
                                     />
+                                ) : curve.error ? (
+                                    <Tooltip title={curve.error} arrow>
+                                        <ErrorOutlineIcon color="error" />
+                                    </Tooltip>
                                 ) : (
                                     <span
                                         style={{
