@@ -2,7 +2,8 @@ export interface TimeSelectorProps {
     onTimeChange: (values: {
         startTime: number;
         endTime: number;
-        queryExpansion: boolean;
+        rawWhenSparse: boolean;
+        removeEmptyBins: boolean;
     }) => void;
 }
 
