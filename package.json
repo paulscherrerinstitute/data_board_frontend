@@ -17,7 +17,7 @@
     "@types/plotly.js": "^2.35.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "axios": "^0.21.4",
+    "axios": "^1.8.2",
     "dayjs": "^1.11.13",
     "lodash": "^4.17.21",
     "nth-check": "^2.1.1",
