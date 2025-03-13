@@ -1,4 +1,5 @@
-import { Channel, TimeValues } from "../Content.types";
+import { Channel } from "../../Selector/Selector.types";
+import { TimeValues } from "../Content.types";
 
 export interface PlotWidgetProps {
     channels: Channel[];
@@ -11,22 +12,18 @@ export interface PlotWidgetProps {
 export type CurveData = {
     curve: {
         [channel: string]: {
-            [timestamp: string]: number | string;
+            [timestamp: string]: number;
         };
     };
 };
 
 export type Curve = {
     backend: string;
+    type: string;
     curveData: CurveData;
 };
 
 export type ContainerDimensions = {
     height: number;
     width: number;
-};
-
-export type ZoomState = {
-    xaxisRange: undefined | [number, number];
-    yaxisRange: undefined | [number, number];
 };

@@ -333,7 +333,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 <Box sx={styles.timeFieldStyle}>
                     <DateTimePicker
                         label="Start Time"
-                        format="DD-MM-YYYY HH:mm:ss"
+                        format="YYYY-MM-DD HH:mm:ss"
                         ampm={false}
                         value={startTime}
                         onChange={(newTime) => {
@@ -345,7 +345,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 <Box sx={styles.timeFieldStyle}>
                     <DateTimePicker
                         label="End Time"
-                        format="DD-MM-YYYY HH:mm:ss"
+                        format="YYYY-MM-DD HH:mm:ss"
                         ampm={false}
                         value={endTime}
                         onChange={(newTime) => {

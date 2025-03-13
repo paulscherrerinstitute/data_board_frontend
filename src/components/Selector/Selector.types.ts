@@ -1,12 +1,12 @@
 export type StoredChannel = {
-    key: string;
+    attributes: Channel;
     selected: boolean;
 };
 
-export type BackendChannel = {
+export type Channel = {
     backend: string;
     name: string;
-    seriesId: number;
+    seriesId: string;
     source: string;
     type: string;
     shape: string;

@@ -3,7 +3,7 @@ import { Box, Button, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
-import { Widget, Channel, TimeValues, DashboardDto } from "./Content.types";
+import { Widget, TimeValues, DashboardDto } from "./Content.types";
 import ReactGridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -12,6 +12,7 @@ import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useApiUrls } from "../ApiContext/ApiContext";
 import { TimeSelectorHandle } from "./TimeSelector/TimeSelector.types";
+import { Channel } from "../Selector/Selector.types";
 
 const Content: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -46,22 +47,45 @@ const Content: React.FC = () => {
             const channels: Channel[] = JSON.parse(data);
 
             if (
-                channels.every(
-                    (channel) =>
-                        channel.backend &&
-                        channel.channelName &&
-                        channel.datatype
+                channels.every((channel) =>
+                    [channel.backend, channel.name, channel.type].every(
+                        (attribute) => attribute !== undefined
+                    )
                 )
             ) {
                 if (key === "-1") {
                     handleCreateWidget(channels);
                 } else {
+                    // check if target widget contains the same channel
+                    const existingChannel = widgets
+                        .find((widget) => widget.layout.i === key)
+                        ?.channels.find(
+                            (channel) =>
+                                channels.find(
+                                    (newChannel) =>
+                                        newChannel.backend === channel.backend &&
+                                        newChannel.name === channel.name &&
+                                        newChannel.type === channel.type
+                                )
+                        );
+
+                    if (existingChannel) {
+                        console.error(
+                            "Widget already contains the channel:",
+                            existingChannel
+                        );
+                        alert(
+                            `Widget already contains the channel: ${existingChannel.name}`
+                        );
+                        return;
+                    }
+
                     const newWidgets = widgets.map((widget) =>
                         widget.layout.i === key
                             ? {
-                                  ...widget,
-                                  channels: [...widget.channels, ...channels],
-                              }
+                                ...widget,
+                                channels: [...widget.channels, ...channels],
+                            }
                             : widget
                     );
                     setWidgets(newWidgets);
@@ -306,7 +330,7 @@ const Content: React.FC = () => {
                     }
                 );
                 return;
-            } catch {}
+            } catch { }
         }
         handleCreateDashboard();
     }, [backendUrl, handleCreateDashboard, searchParams, widgets]);
@@ -414,10 +438,10 @@ const Content: React.FC = () => {
                                             prevWidgets.map((widget) =>
                                                 widget.layout.i === layout.i
                                                     ? {
-                                                          ...widget,
-                                                          channels:
-                                                              updatedChannels,
-                                                      }
+                                                        ...widget,
+                                                        channels:
+                                                            updatedChannels,
+                                                    }
                                                     : widget
                                             )
                                         );
