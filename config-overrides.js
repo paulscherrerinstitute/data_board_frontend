@@ -1,26 +1,25 @@
-// This file is used to fix some issues arising with the use of plotly.js in this typescript project. It modifies some webpack settings.
 const { override } = require("customize-cra");
 const webpack = require("webpack");
-const path = require("path");
 
 module.exports = override((config) => {
+    config.resolve.alias = {
+        ...(config.resolve.alias || {}),
+        "process/browser": require.resolve("process/browser.js"),
+    };
+
     config.resolve.fallback = {
         ...config.resolve.fallback,
-        process: require.resolve("process/browser"),
         buffer: require.resolve("buffer/"),
         stream: require.resolve("stream-browserify"),
         assert: require.resolve("assert/"),
     };
 
-    config.resolve.extensions = [...config.resolve.extensions, ".mjs"];
-
-    config.plugins = [
-        ...config.plugins,
+    config.plugins.push(
         new webpack.ProvidePlugin({
-            Buffer: ["buffer", "Buffer"],
             process: "process/browser",
-        }),
-    ];
+            Buffer: ["buffer", "Buffer"],
+        })
+    );
 
     config.ignoreWarnings = [
         (warning) => warning.message.includes("Failed to parse source map"),
