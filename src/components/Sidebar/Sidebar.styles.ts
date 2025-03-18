@@ -6,6 +6,7 @@ export const sidebarStyle: SxProps<Theme> = {
     position: "relative",
     height: "100%",
     background: "#353839",
+    zIndex: 10,
 };
 
 export const resizerStyle: SxProps<Theme> = {

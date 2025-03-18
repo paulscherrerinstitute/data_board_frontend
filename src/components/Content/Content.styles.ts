@@ -26,12 +26,13 @@ export const topBarStyle: SxProps<Theme> = {
 
 export const gridContainerStyle: SxProps<Theme> = {
     width: "100%",
-    height: "100%",
-
+    height: "90vh",
+    position: "absolute",
+    left: "2.5vw",
+    top: "10vh",
     display: "flex",
     flexDirection: "column",
     padding: "16px",
-    flexGrow: 1,
     overflowY: "auto",
 };
 
