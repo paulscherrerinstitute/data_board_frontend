@@ -1,13 +1,13 @@
 import { SxProps, Theme } from "@mui/material";
 
-export const containerStyles: SxProps<Theme> = {
+export const containerStyle: SxProps<Theme> = {
     display: "flex",
     flexDirection: "row",
     height: "100%",
     width: "100%",
 };
 
-export const plotContainerStyles: SxProps<Theme> = {
+export const plotContainerStyle: SxProps<Theme> = {
     height: "100%",
     width: "80%",
     ".modebar-container": {
@@ -18,7 +18,7 @@ export const plotContainerStyles: SxProps<Theme> = {
     },
 };
 
-export const legendStyles: SxProps<Theme> = {
+export const legendStyle: SxProps<Theme> = {
     background: "#f4f4f4",
     paddingTop: "30px",
     width: "20%",
@@ -26,14 +26,14 @@ export const legendStyles: SxProps<Theme> = {
     overflowY: "auto",
 };
 
-export const legendTitleStyles: SxProps<Theme> = {
+export const legendTitleStyle: SxProps<Theme> = {
     width: "100%",
     textAlign: "center",
     fontWeight: "bold",
     marginBottom: "10px",
 };
 
-export const legendEntryStyles: SxProps<Theme> = {
+export const legendEntryStyle: SxProps<Theme> = {
     display: "flex",
     alignItems: "center",
     gap: 1,

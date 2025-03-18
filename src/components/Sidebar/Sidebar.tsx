@@ -80,7 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 {sidebarWidth <= minWidth ? ( // Either only show expand button (if sidebar is fully collapsed)
                     <Button
                         onClick={() => setSidebarWidth(maxWidth)}
-                        sx={styles.toggleButtonStyles}
+                        sx={styles.toggleButtonStyle}
                         variant="contained"
                         size="small"
                         aria-label="Expand Sidebar"
@@ -90,7 +90,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 ) : sidebarWidth >= maxWidth ? ( // Or only show collapse button (if sidebar is fully expanded)
                     <Button
                         onClick={() => setSidebarWidth(minWidth)}
-                        sx={styles.toggleButtonStyles}
+                        sx={styles.toggleButtonStyle}
                         variant="contained"
                         size="small"
                         aria-label="Collapse Sidebar"
@@ -136,7 +136,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <Box
             ref={sidebarRef}
             sx={{
-                ...styles.sidebarStyles,
+                ...styles.sidebarStyle,
                 width: sidebarWidth,
                 transition: "width 0.1s ease",
                 userSelect: isResizing ? "none" : "auto", // Prevent text selection while resizing
@@ -160,7 +160,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </Box>
 
             {/* Resizer Handle */}
-            <Box sx={styles.resizerStyles} onMouseDown={startResizing} />
+            <Box sx={styles.resizerStyle} onMouseDown={startResizing} />
         </Box>
     );
 };

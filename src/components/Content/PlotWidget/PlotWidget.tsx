@@ -793,7 +793,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         return (
             <Box
-                sx={styles.containerStyles}
+                sx={styles.containerStyle}
                 onClick={handleEventPropagation}
                 onMouseDown={handleEventPropagation}
                 onMouseUp={handleEventPropagation}
@@ -802,7 +802,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 onTouchMove={handleEventPropagation}
                 onTouchEnd={handleEventPropagation}
             >
-                <Box ref={containerRef} sx={styles.plotContainerStyles}>
+                <Box ref={containerRef} sx={styles.plotContainerStyle}>
                     <Plot
                         data={data}
                         layout={layout}
@@ -814,8 +814,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         onRelayout={handleRelayout}
                     />
                 </Box>
-                <Box sx={styles.legendStyles}>
-                    <Typography variant="h5" sx={styles.legendTitleStyles}>
+                <Box sx={styles.legendStyle}>
+                    <Typography variant="h5" sx={styles.legendTitleStyle}>
                         Legend
                     </Typography>
                     {curves.map((curve) => {
@@ -825,7 +825,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             <Box
                                 key={label}
                                 className="legendEntry"
-                                sx={styles.legendEntryStyles}
+                                sx={styles.legendEntryStyle}
                             >
                                 {curve.isLoading ? (
                                     <CircularProgress
