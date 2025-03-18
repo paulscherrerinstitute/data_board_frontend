@@ -13,6 +13,7 @@ import {
     Switch,
     Button,
     Typography,
+    Tooltip,
 } from "@mui/material";
 import {
     AutoApplyOption,
@@ -393,32 +394,52 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                         </MenuItem>
                     ))}
                 </TextField>
-                <Box sx={styles.toggleContainerStyle}>
-                    <Typography>Raw when sparse</Typography>
-                    <Switch
-                        checked={rawWhenSparse}
-                        onChange={(e) => setRawWhenSparse(e.target.checked)}
-                    />
-                </Box>
-                <Box sx={styles.toggleContainerStyle}>
-                    <Typography>Remove empty bins</Typography>
-                    <Switch
-                        checked={removeEmptyBins}
-                        onChange={(e) => setRemoveEmptyBins(e.target.checked)}
-                    />
-                </Box>
-                <TextField
-                    select
-                    label="Auto Apply"
-                    value={autoApply}
-                    onChange={(e) =>
-                        handleAutoApplyChange(e.target.value as AutoApplyOption)
-                    }
+                <Tooltip
+                    title="When little data is available, raw data is plotted instead of binned data"
+                    arrow
                 >
-                    <MenuItem value="never">Never</MenuItem>
-                    <MenuItem value="1min">1 min</MenuItem>
-                    <MenuItem value="10min">10 min</MenuItem>
-                </TextField>
+                    <Box sx={styles.toggleContainerStyle}>
+                        <Typography>Raw when sparse</Typography>
+                        <Switch
+                            checked={rawWhenSparse}
+                            onChange={(e) => setRawWhenSparse(e.target.checked)}
+                        />
+                    </Box>
+                </Tooltip>
+
+                <Tooltip
+                    title="Bins containing no events are discarded, as opposed to being rendered with the previous value"
+                    arrow
+                >
+                    <Box sx={styles.toggleContainerStyle}>
+                        <Typography>Remove empty bins</Typography>
+                        <Switch
+                            checked={removeEmptyBins}
+                            onChange={(e) =>
+                                setRemoveEmptyBins(e.target.checked)
+                            }
+                        />
+                    </Box>
+                </Tooltip>
+                <Tooltip
+                    title="Automatically applies the configuration, includes updating relative times from Quick Select"
+                    arrow
+                >
+                    <TextField
+                        select
+                        label="Auto Apply"
+                        value={autoApply}
+                        onChange={(e) =>
+                            handleAutoApplyChange(
+                                e.target.value as AutoApplyOption
+                            )
+                        }
+                    >
+                        <MenuItem value="never">Never</MenuItem>
+                        <MenuItem value="1min">1 min</MenuItem>
+                        <MenuItem value="10min">10 min</MenuItem>
+                    </TextField>
+                </Tooltip>
                 <Button
                     variant="contained"
                     sx={{

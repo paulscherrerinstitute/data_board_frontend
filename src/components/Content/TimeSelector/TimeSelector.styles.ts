@@ -27,7 +27,10 @@ export const toggleContainerStyle: SxProps<Theme> = {
     display: "flex",
     alignItems: "center",
     flex: 1,
-    justifyContent: "space-between",
+    justifyContent: "center",
+    border: "solid 1px #B8B8B8",
+    borderRadius: "4px",
+    padding: "4px",
 };
 
 export const refreshButtonStyle: SxProps<Theme> = {
