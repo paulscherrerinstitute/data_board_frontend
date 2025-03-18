@@ -19,7 +19,8 @@ const Content: React.FC = () => {
     const [timeValues, setTimeValues] = useState<TimeValues>({
         startTime: 0,
         endTime: 0,
-        queryExpansion: false,
+        rawWhenSparse: true,
+        removeEmptyBins: true,
     });
     const [searchParams, setSearchParams] = useSearchParams();
     const [widgets, setWidgets] = useState<Widget[]>([]);
@@ -59,14 +60,13 @@ const Content: React.FC = () => {
                     // check if target widget contains the same channel
                     const existingChannel = widgets
                         .find((widget) => widget.layout.i === key)
-                        ?.channels.find(
-                            (channel) =>
-                                channels.find(
-                                    (newChannel) =>
-                                        newChannel.backend === channel.backend &&
-                                        newChannel.name === channel.name &&
-                                        newChannel.type === channel.type
-                                )
+                        ?.channels.find((channel) =>
+                            channels.find(
+                                (newChannel) =>
+                                    newChannel.backend === channel.backend &&
+                                    newChannel.name === channel.name &&
+                                    newChannel.type === channel.type
+                            )
                         );
 
                     if (existingChannel) {
@@ -83,9 +83,9 @@ const Content: React.FC = () => {
                     const newWidgets = widgets.map((widget) =>
                         widget.layout.i === key
                             ? {
-                                ...widget,
-                                channels: [...widget.channels, ...channels],
-                            }
+                                  ...widget,
+                                  channels: [...widget.channels, ...channels],
+                              }
                             : widget
                     );
                     setWidgets(newWidgets);
@@ -222,7 +222,8 @@ const Content: React.FC = () => {
         (values: {
             startTime: number;
             endTime: number;
-            queryExpansion: boolean;
+            rawWhenSparse: boolean;
+            removeEmptyBins: boolean;
         }) => {
             setTimeValues(values);
         },
@@ -330,7 +331,7 @@ const Content: React.FC = () => {
                     }
                 );
                 return;
-            } catch { }
+            } catch {}
         }
         handleCreateDashboard();
     }, [backendUrl, handleCreateDashboard, searchParams, widgets]);
@@ -438,10 +439,10 @@ const Content: React.FC = () => {
                                             prevWidgets.map((widget) =>
                                                 widget.layout.i === layout.i
                                                     ? {
-                                                        ...widget,
-                                                        channels:
-                                                            updatedChannels,
-                                                    }
+                                                          ...widget,
+                                                          channels:
+                                                              updatedChannels,
+                                                      }
                                                     : widget
                                             )
                                         );

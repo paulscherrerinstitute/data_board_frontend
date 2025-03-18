@@ -9,7 +9,8 @@ export type Widget = {
 export type TimeValues = {
     startTime: number;
     endTime: number;
-    queryExpansion: boolean;
+    rawWhenSparse: boolean;
+    removeEmptyBins: boolean;
 };
 
 export type Dashboard = {

@@ -48,7 +48,8 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             useState(false);
         const [startTime, setStartTime] = useState<Dayjs>(dayjs());
         const [endTime, setEndTime] = useState<Dayjs>(dayjs());
-        const [queryExpansion, setQueryExpansion] = useState(false);
+        const [rawWhenSparse, setRawWhenSparse] = useState(true);
+        const [removeEmptyBins, setRemoveEmptyBins] = useState(true);
         const [selectedQuickOption, setSelectedQuickOption] =
             useState<QuickSelectOption>(quickOptions[1].value);
         const [autoApply, setAutoApply] = useState<AutoApplyOption>("never");
@@ -135,7 +136,8 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             onTimeChange({
                 startTime: startUnixTimeMs,
                 endTime: endUnixTimeMs,
-                queryExpansion,
+                rawWhenSparse,
+                removeEmptyBins,
             });
 
             setTimeSearchParams(
@@ -144,14 +146,16 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 endUnixTimeMs,
                 timeSourceRef,
                 selectedQuickOption,
-                queryExpansion,
+                rawWhenSparse,
+                removeEmptyBins,
                 autoApply
             );
         }, [
             autoApply,
             endTime,
             onTimeChange,
-            queryExpansion,
+            rawWhenSparse,
+            removeEmptyBins,
             selectedQuickOption,
             setSearchParams,
             startTime,
@@ -163,7 +167,8 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             endUnixTimeMs: number,
             timeSourceRef: React.MutableRefObject<TimeSourceOption>,
             selectedQuickOption: QuickSelectOption,
-            queryExpansion: boolean,
+            rawWhenSparse: boolean,
+            removeEmptyBins: boolean,
             autoApply: AutoApplyOption
         ) => {
             const startParam = startUnixTimeMs.toString();
@@ -182,8 +187,12 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     newSearchParams.set("relativeTime", "false");
                 }
                 newSearchParams.set(
-                    "queryExpansion",
-                    queryExpansion ? "true" : "false"
+                    "rawWhenSparse",
+                    rawWhenSparse ? "true" : "false"
+                );
+                newSearchParams.set(
+                    "removeEmptyBins",
+                    removeEmptyBins ? "true" : "false"
                 );
                 newSearchParams.set("autoApply", autoApply);
                 return newSearchParams;
@@ -231,7 +240,8 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             const startTimeParam = searchParams.get("startTime");
             const endTimeParam = searchParams.get("endTime");
             const quickSelectParam = searchParams.get("relativeTime");
-            const queryExpansionParam = searchParams.get("queryExpansion");
+            const rawWhenSparse = searchParams.get("rawWhenSparse");
+            const removeEmptyBins = searchParams.get("removeEmptyBins");
             const autoApplyParam = searchParams.get("autoApply");
 
             const startTime = Number(startTimeParam);
@@ -263,13 +273,23 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 }
             }
 
-            let newQueryExpansion = false;
-            if (queryExpansionParam) {
-                if (queryExpansionParam === "true") {
-                    newQueryExpansion = true;
-                    setQueryExpansion(newQueryExpansion);
-                } else if (queryExpansionParam === "false") {
-                    setQueryExpansion(false);
+            let newRawWhenSparse = false;
+            if (rawWhenSparse) {
+                if (rawWhenSparse === "true") {
+                    newRawWhenSparse = true;
+                    setRawWhenSparse(newRawWhenSparse);
+                } else if (rawWhenSparse === "false") {
+                    setRawWhenSparse(false);
+                }
+            }
+
+            let newRemoveEmptyBins = false;
+            if (removeEmptyBins) {
+                if (removeEmptyBins === "true") {
+                    newRemoveEmptyBins = true;
+                    setRemoveEmptyBins(newRemoveEmptyBins);
+                } else if (removeEmptyBins === "false") {
+                    setRemoveEmptyBins(false);
                 }
             }
 
@@ -286,7 +306,8 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             onTimeChange({
                 startTime: start.valueOf(),
                 endTime: end.valueOf(),
-                queryExpansion: newQueryExpansion,
+                rawWhenSparse: newRawWhenSparse,
+                removeEmptyBins: newRemoveEmptyBins,
             });
         }, [handleAutoApplyChange, onTimeChange, searchParams]);
 
@@ -299,7 +320,8 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 onTimeChange({
                     startTime: startTime,
                     endTime: endTime,
-                    queryExpansion: queryExpansion,
+                    rawWhenSparse: rawWhenSparse,
+                    removeEmptyBins: removeEmptyBins,
                 });
                 setTimeSearchParams(
                     setSearchParams,
@@ -307,14 +329,16 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     endTime,
                     timeSourceRef,
                     selectedQuickOption,
-                    queryExpansion,
+                    rawWhenSparse,
+                    removeEmptyBins,
                     autoApply
                 );
             },
             [
                 onTimeChange,
                 setSearchParams,
-                queryExpansion,
+                rawWhenSparse,
+                removeEmptyBins,
                 selectedQuickOption,
                 autoApply,
             ]
@@ -370,10 +394,17 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     ))}
                 </TextField>
                 <Box sx={styles.toggleContainerStyle}>
-                    <Typography>Query Expansion</Typography>
+                    <Typography>Raw when sparse</Typography>
                     <Switch
-                        checked={queryExpansion}
-                        onChange={(e) => setQueryExpansion(e.target.checked)}
+                        checked={rawWhenSparse}
+                        onChange={(e) => setRawWhenSparse(e.target.checked)}
+                    />
+                </Box>
+                <Box sx={styles.toggleContainerStyle}>
+                    <Typography>Remove empty bins</Typography>
+                    <Switch
+                        checked={removeEmptyBins}
+                        onChange={(e) => setRemoveEmptyBins(e.target.checked)}
                     />
                 </Box>
                 <TextField

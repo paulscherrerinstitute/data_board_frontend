@@ -21,6 +21,8 @@ export type Curve = {
     backend: string;
     type: string;
     curveData: CurveData;
+    isLoading: boolean;
+    error: string | null;
 };
 
 export type ContainerDimensions = {
