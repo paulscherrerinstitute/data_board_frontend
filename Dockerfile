@@ -8,9 +8,12 @@ COPY package.json .
 RUN npm install
 
 COPY tsconfig.json .
+COPY tsconfig.app.json .
+COPY tsconfig.node.json .
+COPY index.html .
+COPY vite.config.ts .
 COPY src ./src
 COPY public ./public
-COPY config-overrides.js .
 
 RUN npm run build
 
