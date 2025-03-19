@@ -1,14 +1,19 @@
 import { SxProps, Theme } from "@mui/material";
 
-export const sidebarStyles: SxProps<Theme> = {
+export const sidebarStyle: SxProps<Theme> = {
     display: "flex",
     flexDirection: "column",
     position: "relative",
     height: "100%",
     background: "#353839",
+    zIndex: 10,
+    borderRight: "5px solid rgba(0, 0, 0, 0.4)",
+    "&:hover": {
+        borderRight: "5px solid rgba(0, 0, 0, 0.6)", // Hover effect
+    },
 };
 
-export const resizerStyles: SxProps<Theme> = {
+export const resizerStyle: SxProps<Theme> = {
     width: "5px",
     cursor: "ew-resize",
     position: "absolute",
@@ -36,7 +41,7 @@ export const buttonContainerStyle: SxProps<Theme> = {
     borderRadius: 1,
 };
 
-export const toggleButtonStyles: SxProps<Theme> = {
+export const toggleButtonStyle: SxProps<Theme> = {
     flex: 1,
     minWidth: "100%",
     width: "100%",

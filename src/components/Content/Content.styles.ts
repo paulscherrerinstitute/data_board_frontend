@@ -1,7 +1,7 @@
 import { SxProps, Theme } from "@mui/material";
 import Background from "../../media/plus.svg";
 
-export const contentContainerStyles: SxProps<Theme> = {
+export const contentContainerStyle: SxProps<Theme> = {
     flexGrow: 1,
     display: "flex",
     flexDirection: "column",
@@ -12,7 +12,7 @@ export const contentContainerStyles: SxProps<Theme> = {
     width: 0,
 };
 
-export const topBarStyles: SxProps<Theme> = {
+export const topBarStyle: SxProps<Theme> = {
     width: "100%",
     height: "10vh",
     display: "flex",
@@ -24,17 +24,19 @@ export const topBarStyles: SxProps<Theme> = {
     overflowY: "hidden",
 };
 
-export const gridContainerStyles: SxProps<Theme> = {
+export const gridContainerStyle: SxProps<Theme> = {
     width: "100%",
-    height: "100%",
+    height: "90vh",
+    position: "absolute",
+    left: "2.5vw",
+    top: "10vh",
     display: "flex",
     flexDirection: "column",
     padding: "16px",
-    flexGrow: 1,
     overflowY: "auto",
 };
 
-export const gridItemStyles: SxProps<Theme> = {
+export const gridItemStyle: SxProps<Theme> = {
     width: "max(40vw, 280px)",
     height: "40vh",
     display: "flex",
@@ -50,8 +52,8 @@ export const gridItemStyles: SxProps<Theme> = {
     },
 };
 
-export const CreateWidgetStyles: SxProps<Theme> = {
-    ...gridItemStyles,
+export const CreateWidgetStyle: SxProps<Theme> = {
+    ...gridItemStyle,
     height: "5vh",
     minHeight: "5vh",
     width: "10vw",
@@ -61,7 +63,7 @@ export const CreateWidgetStyles: SxProps<Theme> = {
     backgroundRepeat: "no-repeat",
 };
 
-export const removeWidgetButtonStyles: SxProps<Theme> = {
+export const removeWidgetButtonStyle: SxProps<Theme> = {
     position: "absolute",
     top: 0,
     right: 0,
@@ -73,7 +75,7 @@ export const removeWidgetButtonStyles: SxProps<Theme> = {
     zIndex: 99999,
 };
 
-export const actionButtonBoxStyles: SxProps<Theme> = {
+export const actionButtonBoxStyle: SxProps<Theme> = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",

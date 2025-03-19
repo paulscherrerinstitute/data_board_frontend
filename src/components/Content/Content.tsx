@@ -19,7 +19,8 @@ const Content: React.FC = () => {
     const [timeValues, setTimeValues] = useState<TimeValues>({
         startTime: 0,
         endTime: 0,
-        queryExpansion: false,
+        rawWhenSparse: true,
+        removeEmptyBins: true,
     });
     const [searchParams, setSearchParams] = useSearchParams();
     const [widgets, setWidgets] = useState<Widget[]>([]);
@@ -59,14 +60,13 @@ const Content: React.FC = () => {
                     // check if target widget contains the same channel
                     const existingChannel = widgets
                         .find((widget) => widget.layout.i === key)
-                        ?.channels.find(
-                            (channel) =>
-                                channels.find(
-                                    (newChannel) =>
-                                        newChannel.backend === channel.backend &&
-                                        newChannel.name === channel.name &&
-                                        newChannel.type === channel.type
-                                )
+                        ?.channels.find((channel) =>
+                            channels.find(
+                                (newChannel) =>
+                                    newChannel.backend === channel.backend &&
+                                    newChannel.name === channel.name &&
+                                    newChannel.type === channel.type
+                            )
                         );
 
                     if (existingChannel) {
@@ -83,9 +83,9 @@ const Content: React.FC = () => {
                     const newWidgets = widgets.map((widget) =>
                         widget.layout.i === key
                             ? {
-                                ...widget,
-                                channels: [...widget.channels, ...channels],
-                            }
+                                  ...widget,
+                                  channels: [...widget.channels, ...channels],
+                              }
                             : widget
                     );
                     setWidgets(newWidgets);
@@ -222,7 +222,8 @@ const Content: React.FC = () => {
         (values: {
             startTime: number;
             endTime: number;
-            queryExpansion: boolean;
+            rawWhenSparse: boolean;
+            removeEmptyBins: boolean;
         }) => {
             setTimeValues(values);
         },
@@ -330,7 +331,7 @@ const Content: React.FC = () => {
                     }
                 );
                 return;
-            } catch { }
+            } catch {}
         }
         handleCreateDashboard();
     }, [backendUrl, handleCreateDashboard, searchParams, widgets]);
@@ -377,15 +378,15 @@ const Content: React.FC = () => {
     }, []);
 
     return (
-        <Box sx={styles.contentContainerStyles}>
-            <Box sx={styles.topBarStyles}>
+        <Box sx={styles.contentContainerStyle}>
+            <Box sx={styles.topBarStyle}>
                 <TimeSelector
                     ref={timeSelectorRef}
                     onTimeChange={handleTimeChange}
                 />
             </Box>
 
-            <Box sx={styles.gridContainerStyles} ref={gridContainerRef}>
+            <Box sx={styles.gridContainerStyle} ref={gridContainerRef}>
                 <div>
                     <ReactGridLayout
                         cols={12}
@@ -398,7 +399,7 @@ const Content: React.FC = () => {
                         {widgets.map(({ channels, layout }) => (
                             <Box
                                 sx={{
-                                    ...styles.gridItemStyles,
+                                    ...styles.gridItemStyle,
                                     position: "relative",
                                     filter:
                                         draggedOverKey === layout.i
@@ -423,7 +424,7 @@ const Content: React.FC = () => {
                                         onClick={() =>
                                             handleRemoveWidget(layout.i)
                                         }
-                                        sx={styles.removeWidgetButtonStyles}
+                                        sx={styles.removeWidgetButtonStyle}
                                         size="small"
                                     >
                                         <CloseIcon fontSize="small" />
@@ -438,10 +439,10 @@ const Content: React.FC = () => {
                                             prevWidgets.map((widget) =>
                                                 widget.layout.i === layout.i
                                                     ? {
-                                                        ...widget,
-                                                        channels:
-                                                            updatedChannels,
-                                                    }
+                                                          ...widget,
+                                                          channels:
+                                                              updatedChannels,
+                                                      }
                                                     : widget
                                             )
                                         );
@@ -460,13 +461,13 @@ const Content: React.FC = () => {
                         ))}
                     </ReactGridLayout>
                 </div>
-                <Box sx={styles.actionButtonBoxStyles}>
+                <Box sx={styles.actionButtonBoxStyle}>
                     <Button
                         onDrop={(event) => handleDrop(event, "-1")}
                         onDragOver={(event) => handleDragOver(event, "-1")}
                         onDragLeave={handleDragLeave}
                         sx={{
-                            ...styles.CreateWidgetStyles,
+                            ...styles.CreateWidgetStyle,
                             filter:
                                 draggedOverKey === "-1"
                                     ? "brightness(0.5)"
