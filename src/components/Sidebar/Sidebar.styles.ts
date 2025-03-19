@@ -7,6 +7,10 @@ export const sidebarStyle: SxProps<Theme> = {
     height: "100%",
     background: "#353839",
     zIndex: 10,
+    borderRight: "5px solid rgba(0, 0, 0, 0.4)",
+    "&:hover": {
+        borderRight: "5px solid rgba(0, 0, 0, 0.6)", // Hover effect
+    },
 };
 
 export const resizerStyle: SxProps<Theme> = {
