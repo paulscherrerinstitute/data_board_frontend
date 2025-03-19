@@ -31,11 +31,12 @@ export default defineConfig({
     },
     server: {
         port: 3000,
+        allowedHosts: true,
     },
     base: "/",
     build: {
         outDir: "build",
         assetsDir: "static",
-        sourcemap: true,
+        sourcemap: false,
     },
 });
