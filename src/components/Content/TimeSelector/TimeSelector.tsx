@@ -1,4 +1,4 @@
-import React, {
+import {
     forwardRef,
     useCallback,
     useEffect,
@@ -21,6 +21,7 @@ import {
     TimeSourceOption,
     QuickSelectOption,
     TimeSelectorHandle,
+    LocalTimeSelectorHandle,
 } from "./TimeSelector.types";
 import * as styles from "./TimeSelector.styles";
 import { useSearchParams } from "react-router-dom";
@@ -57,6 +58,14 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         const autoApplyIntervalRef = useRef<NodeJS.Timeout | null>(null);
         const timeSourceRef = useRef<TimeSourceOption>("quickselect");
         const isUrlParsed = useRef(false);
+
+        const localRef = useRef<LocalTimeSelectorHandle>(null);
+
+        useImperativeHandle(localRef, () => ({
+            autoApply: () => {
+                handleApply();
+            },
+        }));
 
         const convertQuickOptionToTimestamps = (option: QuickSelectOption) => {
             const now = new Date();
@@ -141,16 +150,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 removeEmptyBins,
             });
 
-            setTimeSearchParams(
-                setSearchParams,
-                startUnixTimeMs,
-                endUnixTimeMs,
-                timeSourceRef,
-                selectedQuickOption,
-                rawWhenSparse,
-                removeEmptyBins,
-                autoApply
-            );
+            setTimeSearchParams(startUnixTimeMs, endUnixTimeMs);
         }, [
             autoApply,
             endTime,
@@ -162,43 +162,48 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             startTime,
         ]);
 
-        const setTimeSearchParams = (
-            setSearchParams: ReturnType<typeof useSearchParams>[1],
-            startUnixTimeMs: number,
-            endUnixTimeMs: number,
-            timeSourceRef: React.MutableRefObject<TimeSourceOption>,
-            selectedQuickOption: QuickSelectOption,
-            rawWhenSparse: boolean,
-            removeEmptyBins: boolean,
-            autoApply: AutoApplyOption
-        ) => {
-            const startParam = startUnixTimeMs.toString();
-            const endParam = endUnixTimeMs.toString();
+        const setTimeSearchParams = useCallback(
+            (startUnixTimeMs: number, endUnixTimeMs: number) => {
+                const startParam = startUnixTimeMs.toString();
+                const endParam = endUnixTimeMs.toString();
 
-            setSearchParams((searchParams) => {
-                const newSearchParams = searchParams;
-                newSearchParams.set("startTime", startParam);
-                newSearchParams.set("endTime", endParam);
-                if (timeSourceRef.current === "quickselect") {
-                    newSearchParams.set(
-                        "relativeTime",
-                        selectedQuickOption.toString()
+                setSearchParams((searchParams) => {
+                    const newSearchParams = new URLSearchParams(
+                        searchParams.toString()
                     );
-                } else {
-                    newSearchParams.set("relativeTime", "false");
-                }
-                newSearchParams.set(
-                    "rawWhenSparse",
-                    rawWhenSparse ? "true" : "false"
-                );
-                newSearchParams.set(
-                    "removeEmptyBins",
-                    removeEmptyBins ? "true" : "false"
-                );
-                newSearchParams.set("autoApply", autoApply);
-                return newSearchParams;
-            });
-        };
+                    newSearchParams.set("startTime", startParam);
+                    newSearchParams.set("endTime", endParam);
+
+                    if (timeSourceRef.current === "quickselect") {
+                        newSearchParams.set(
+                            "relativeTime",
+                            selectedQuickOption.toString()
+                        );
+                    } else {
+                        newSearchParams.set("relativeTime", "false");
+                    }
+
+                    newSearchParams.set(
+                        "rawWhenSparse",
+                        rawWhenSparse ? "true" : "false"
+                    );
+                    newSearchParams.set(
+                        "removeEmptyBins",
+                        removeEmptyBins ? "true" : "false"
+                    );
+                    newSearchParams.set("autoApply", autoApply);
+
+                    return newSearchParams;
+                });
+            },
+            [
+                setSearchParams,
+                rawWhenSparse,
+                removeEmptyBins,
+                selectedQuickOption,
+                autoApply,
+            ]
+        );
 
         const simulateAutoApplyPress = () => {
             setIsAutoApplyPressSimulated(true);
@@ -219,7 +224,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     const interval = newAutoApply === "1min" ? 60000 : 600000; // 1 minute or 10 minutes
                     autoApplyIntervalRef.current = setInterval(() => {
                         simulateAutoApplyPress();
-                        handleApply();
+                        localRef.current?.autoApply();
                     }, interval);
                 }
             },
@@ -324,16 +329,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     rawWhenSparse: rawWhenSparse,
                     removeEmptyBins: removeEmptyBins,
                 });
-                setTimeSearchParams(
-                    setSearchParams,
-                    startTime,
-                    endTime,
-                    timeSourceRef,
-                    selectedQuickOption,
-                    rawWhenSparse,
-                    removeEmptyBins,
-                    autoApply
-                );
+                setTimeSearchParams(startTime, endTime);
             },
             [
                 onTimeChange,
@@ -424,6 +420,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 <Tooltip
                     title="Automatically applies the configuration, includes updating relative times from Quick Select"
                     arrow
+                    placement="left"
                 >
                     <TextField
                         select
