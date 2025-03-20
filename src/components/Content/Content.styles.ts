@@ -57,7 +57,7 @@ export const CreateWidgetStyle: SxProps<Theme> = {
     height: "5vh",
     minHeight: "5vh",
     width: "10vw",
-    backgroundImage: `url(${Background})`,
+    backgroundImage: `url("${Background}")`,
     backgroundSize: "contain",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
