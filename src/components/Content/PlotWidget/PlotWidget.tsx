@@ -6,6 +6,7 @@ import React, {
     useState,
 } from "react";
 import { Box, CircularProgress, Tooltip, Typography } from "@mui/material";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import {
     PlotWidgetProps,
@@ -791,6 +792,35 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             onChannelsChange(updatedChannels);
         };
 
+        function onChannelDragStart(e: React.DragEvent, curve: Curve) {
+            let channel = channels.find(
+                (channel) =>
+                    getLabelForChannelAttributes(
+                        channel.name,
+                        channel.backend,
+                        channel.type
+                    ) === getLabelForCurve(curve)
+            );
+            if (!channel) {
+                return;
+            }
+            e.dataTransfer.setData("text", JSON.stringify([channel]));
+
+            const dragPreview = document.createElement("div");
+            dragPreview.style.cssText = `
+                display: flex; align-items: center; padding: 10px; width: 300px; 
+                background: #333; border-radius: 5px; color: white; font-weight: bold;
+            `;
+
+            dragPreview.innerText = `${channel.name} (${channel.backend} - ${channel.type})`;
+
+            document.body.appendChild(dragPreview);
+            e.dataTransfer.setDragImage(dragPreview, 0, 0);
+
+            // Remove the preview after the drag starts
+            setTimeout(() => dragPreview.remove(), 0);
+        }
+
         return (
             <Box
                 sx={styles.containerStyle}
@@ -849,6 +879,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     ></span>
                                 )}
                                 <span>{label}</span>
+                                <Box
+                                    sx={styles.dragIconStyle}
+                                    draggable={true}
+                                    onDragStart={(e: React.DragEvent) => {
+                                        onChannelDragStart(e, curve);
+                                    }}
+                                >
+                                    <DragIndicatorIcon />
+                                </Box>
                                 <button
                                     style={{
                                         background: "none",

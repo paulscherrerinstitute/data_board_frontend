@@ -54,3 +54,10 @@ export const statusSymbolStyle: SxProps<Theme> = {
     justifySelf: "center",
     alignSelf: "center",
 };
+
+export const dragIconStyle: SxProps<Theme> = {
+    cursor: "grab",
+    display: "flex",
+    justifySelf: "center",
+    alignSelf: "center",
+};
