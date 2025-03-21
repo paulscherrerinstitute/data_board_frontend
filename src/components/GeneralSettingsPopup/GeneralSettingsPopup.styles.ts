@@ -14,3 +14,27 @@ export const closeButtonStyle: SxProps<Theme> = {
     right: 8,
     top: 8,
 };
+
+export const settingBoxStyle: SxProps<Theme> = {
+    width: "100%",
+    display: "flex",
+    gap: "20px",
+    marginBottom: "20px",
+};
+
+export const colorPickerStyle: SxProps<Theme> = {
+    width: "50px",
+};
+
+export const curveColorsBoxStyle: SxProps<Theme> = {
+    width: "auto",
+    display: "flex",
+    gap: "10px",
+    overflow: "auto",
+};
+
+export const resetButtonStyle: SxProps<Theme> = {
+    display: "flex",
+    justifyContent: "center",
+    marginTop: "15px",
+};

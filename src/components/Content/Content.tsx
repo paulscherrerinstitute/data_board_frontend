@@ -13,6 +13,11 @@ import axios from "axios";
 import { useApiUrls } from "../ApiContext/ApiContext";
 import { TimeSelectorHandle } from "./TimeSelector/TimeSelector.types";
 import { Channel } from "../Selector/Selector.types";
+import { useLocalStorage } from "../../helpers/useLocalStorage";
+import {
+    defaultWidgetHeight,
+    defaultWidgetWidth,
+} from "../../helpers/defaults";
 
 const Content: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -29,13 +34,20 @@ const Content: React.FC = () => {
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
+    const [initialWidgetHeight] = useLocalStorage(
+        "initialWidgetHeight",
+        defaultWidgetHeight
+    );
+    const [initialWidgetWidth] = useLocalStorage(
+        "initialWidgetWidth",
+        defaultWidgetWidth
+    );
+
     const timeSelectorRef = useRef<TimeSelectorHandle | null>(null);
     const prevWidgetsLengthRef = useRef<number | null>(null);
     const isWidgetsInitializedRef = useRef(false);
     const gridContainerRef = useRef<HTMLElement | null>(null);
     const newPlotNumberRef = useRef(1);
-    const defaultWidgetWidth = 6;
-    const defaultWidgetHeight = 12;
 
     const handleDrop = (event: React.DragEvent<HTMLElement>, key: string) => {
         event.preventDefault();
@@ -144,12 +156,12 @@ const Content: React.FC = () => {
             }
         });
 
-        // Now, try to find the first available space with width = default width
+        // Now, try to find the first available space with width = initialWidgetWidth
         let calculatedX = 0;
-        for (let x = 0; x <= 12 - defaultWidgetWidth; x++) {
+        for (let x = 0; x <= 12 - initialWidgetWidth; x++) {
             // Check if this space (x, x+1, ..., x + defaultWidgetWidth - 1) is available
             const isSpaceAvailable = Array.from(
-                { length: defaultWidgetWidth },
+                { length: initialWidgetWidth },
                 (_, i) => x + i
             ).every((occupiedX) => !occupiedXPositions.has(occupiedX));
 
@@ -169,8 +181,8 @@ const Content: React.FC = () => {
                     i: plotNumber.toString(),
                     x: calculatedX,
                     y: Infinity,
-                    w: defaultWidgetWidth,
-                    h: defaultWidgetHeight,
+                    w: initialWidgetWidth,
+                    h: initialWidgetHeight,
                 },
             },
         ]);

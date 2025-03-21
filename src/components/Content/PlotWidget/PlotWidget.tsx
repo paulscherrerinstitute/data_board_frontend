@@ -21,6 +21,14 @@ import { debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
 import Plotly from "plotly.js";
+import { useLocalStorage } from "../../../helpers/useLocalStorage";
+import {
+    defaultCurveColors,
+    defaultPlotBackgroundColor,
+    defaultXAxisGridColor,
+    defaultYAxisGridColor,
+    defaultYAxisScaling,
+} from "../../../helpers/defaults";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -37,43 +45,50 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 height: 0,
             });
         const [curves, setCurves] = useState<Curve[]>([]);
+        const [yAxisScaling, setYAxisScaling] = useState(
+            Array(4).fill(
+                JSON.parse(
+                    localStorage.getItem("yAxisScaling") ||
+                        JSON.stringify(defaultYAxisScaling)
+                )
+            )
+        );
+
+        const [plotBackgroundColor] = useLocalStorage(
+            "plotBackgroundColor",
+            defaultPlotBackgroundColor
+        );
+        const [xAxisGridColor] = useLocalStorage(
+            "xAxisGridColor",
+            defaultXAxisGridColor
+        );
+        const [yAxisGridColor] = useLocalStorage(
+            "yAxisGridColor",
+            defaultYAxisGridColor
+        );
+
         const isCtrlPressed = useRef(false);
         const containerRef = useRef<HTMLDivElement | null>(null);
         const curvesRef = useRef(curves);
-        const numBins = 1000;
-        const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
-
-        const colorList = useMemo(
-            () => [
-                "#1f77b4",
-                "#ff7f0e",
-                "#2ca02c",
-                "#d62728",
-                "#9467bd",
-                "#8c564b",
-                "#e377c2",
-                "#7f7f7f",
-                "#bcbd22",
-                "#17becf",
-            ],
-            []
-        );
-
         const colorMap = useRef<Map<string, string>>(new Map());
 
-        const getColorForCurve = useCallback(
-            (curve: Curve) => {
-                const curveKey = `${curve.backend}-${Object.keys(curve.curveData.curve)[0]}-${curve.type}`;
-                if (!colorMap.current.has(curveKey)) {
-                    // Assign a color if not already assigned
-                    const color =
-                        colorList[colorMap.current.size % colorList.length];
-                    colorMap.current.set(curveKey, color);
-                }
-                return colorMap.current.get(curveKey)!; // Ensure it has a value
-            },
-            [colorList]
+        const numBins = 1000;
+        const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
+        const curveColors = JSON.parse(
+            localStorage.getItem("curveColors") ||
+                JSON.stringify(defaultCurveColors)
         );
+
+        const getColorForCurve = useCallback((curve: Curve) => {
+            const curveKey = `${curve.backend}-${Object.keys(curve.curveData.curve)[0]}-${curve.type}`;
+            if (!colorMap.current.has(curveKey)) {
+                // Assign a color if not already assigned
+                const color =
+                    curveColors[colorMap.current.size % curveColors.length];
+                colorMap.current.set(curveKey, color);
+            }
+            return colorMap.current.get(curveKey)!; // Ensure it has a value
+        }, []);
 
         const getLabelForChannelAttributes = useCallback(
             (name: string, backend: string, type: string) => {
@@ -672,12 +687,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             // Define dynamic y-axes using channel names
             // If more than 4 channels are used, put everything on the same axis
             const useMultipleAxes = curves.length <= 4;
-
             const yAxes = useMultipleAxes
                 ? curves.map((curve, curveIndex) => {
                       return {
                           [`yaxis${curveIndex === 0 ? "" : `${curveIndex + 1}`}`]:
                               {
+                                  type: yAxisScaling[
+                                      curveIndex
+                                  ] as Plotly.AxisType,
+                                  gridcolor: yAxisGridColor,
                                   title: {
                                       text: getLabelForCurve(curve),
                                   },
@@ -694,7 +712,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                             curveIndex /
                                                 (40 *
                                                     (window.innerWidth / 2560)),
-                              },
+                              } as Partial<Plotly.LayoutAxis>,
                       };
                   }, [])
                 : [];
@@ -712,6 +730,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     b: 70,
                 },
                 xaxis: {
+                    gridcolor: xAxisGridColor,
                     title: {
                         text: "Time",
                     },
@@ -732,6 +751,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         : {}),
                 },
                 yaxis: {
+                    gridcolor: yAxisGridColor,
+                    type: yAxisScaling[0] as Plotly.AxisType,
                     title: {
                         text: "Value",
                     }, // Remove the default "Click to add title"
@@ -739,8 +760,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 ...Object.assign({}, ...yAxes), // Merge all y-axis definitions into layout
                 showlegend: false,
                 uirevision: "time",
+                plot_bgcolor: plotBackgroundColor,
             } as Plotly.Layout;
-        }, [curves, containerDimensions, index, getLabelForCurve]);
+        }, [
+            curves,
+            containerDimensions,
+            plotBackgroundColor,
+            yAxisScaling,
+            xAxisGridColor,
+            yAxisGridColor,
+            index,
+            getLabelForCurve,
+        ]);
 
         const config = useMemo(() => {
             return {
