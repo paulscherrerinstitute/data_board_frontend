@@ -13,6 +13,8 @@ import {
     CurveData,
     Curve,
     ContainerDimensions,
+    AxisAssignment,
+    YAxisAssignment,
 } from "./PlotWidget.types";
 import Plot from "react-plotly.js";
 import { useApiUrls } from "../../ApiContext/ApiContext";
@@ -45,14 +47,31 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 height: 0,
             });
         const [curves, setCurves] = useState<Curve[]>([]);
-        const [yAxisScaling, setYAxisScaling] = useState(
-            Array(4).fill(
-                JSON.parse(
-                    localStorage.getItem("yAxisScaling") ||
-                        JSON.stringify(defaultYAxisScaling)
-                )
-            )
+        const [manualAxisAssignment, setManualAxisAssignment] = useState(false);
+        const [axisAssignments, setAxisAssignments] = useState(
+            new Map<string, AxisAssignment>()
         );
+        const [yAxisScaling, setYAxisScaling] = useState(() => {
+            const savedScaling = JSON.parse(
+                localStorage.getItem("yAxisScaling") ||
+                    JSON.stringify(defaultYAxisScaling)
+            );
+
+            return {
+                y1: savedScaling,
+                y2: savedScaling,
+                y3: savedScaling,
+                y4: savedScaling,
+            };
+        });
+
+        const [manualAxisLabels, setManualAxisLabels] = useState(false);
+        const [yAxisLabels, setYAxisLabels] = useState({
+            y1: "y1",
+            y2: "y2",
+            y3: "y3",
+            y4: "y4",
+        });
 
         const [plotBackgroundColor] = useLocalStorage(
             "plotBackgroundColor",
@@ -135,6 +154,56 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 e.stopPropagation();
             }
         };
+
+        useEffect(() => {
+            const newAxisOptions: YAxisAssignment[] = ["y1", "y2", "y3", "y4"];
+            let newAxisAssignments = new Map(axisAssignments);
+
+            if (!manualAxisAssignment) {
+                newAxisAssignments.clear();
+            }
+
+            channels.forEach((channel, index) => {
+                const label = getLabelForChannelAttributes(
+                    channel.name,
+                    channel.backend,
+                    channel.type
+                );
+                if (!manualAxisAssignment || !newAxisAssignments.has(label)) {
+                    let assignedAxis: YAxisAssignment;
+                    if (channels.length > 4) {
+                        const axisKey = (assignedAxis = "y1");
+                        if (!manualAxisLabels) {
+                            setYAxisLabels((prevYAxisLabels) => {
+                                const newYAxisLabels = prevYAxisLabels;
+                                newYAxisLabels[axisKey] = "Value";
+                                return newYAxisLabels;
+                            });
+                        }
+                    } else {
+                        const axisKey = (assignedAxis = newAxisOptions[index]);
+                        if (!manualAxisLabels) {
+                            setYAxisLabels((prevYAxisLabels) => {
+                                const newYAxisLabels = prevYAxisLabels;
+                                newYAxisLabels[axisKey] = label;
+                                return newYAxisLabels;
+                            });
+                        }
+                    }
+                    newAxisAssignments.set(label, assignedAxis);
+                }
+            });
+
+            // Compare newAxisAssignments with the current axisAssignments
+            if (
+                newAxisAssignments.size !== axisAssignments.size ||
+                [...newAxisAssignments].some(
+                    ([key, value]) => axisAssignments.get(key) !== value
+                )
+            ) {
+                setAxisAssignments(newAxisAssignments);
+            }
+        }, [channels]);
 
         useEffect(() => {
             const handleKeyDown = (event: KeyboardEvent) => {
@@ -622,8 +691,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             const values: Plotly.Data[] = [];
             const result: Plotly.Data[] = [];
 
-            // If there are more than 4 curves, put everything on one axis.
-            const useMultipleAxes = curves.length <= 4;
             for (let index = 0; index < curves.length; index++) {
                 const curve = curves[index];
                 const keyName = Object.keys(curve.curveData.curve)[0];
@@ -632,10 +699,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     continue; // Skip processing if it's a min/max entry itself
                 }
 
-                const yAxis =
-                    index === 0 || !useMultipleAxes ? "y" : `y${index + 1}`;
                 const color = getColorForCurve(curve);
                 const label = getLabelForCurve(curve);
+                const yAxis = axisAssignments.get(label);
 
                 const baseData = curve.curveData.curve[keyName] || {};
                 const minData = curve.curveData.curve[`${keyName}_min`] || {};
@@ -660,7 +726,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     y: yBase,
                     type: "scattergl",
                     mode: "lines+markers",
-                    yaxis: yAxis,
+                    yaxis: yAxis === "y1" ? "y" : yAxis,
                     line: { color: color },
                 } as Plotly.Data);
                 result.push({
@@ -673,49 +739,94 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     line: { color: "transparent", shape: "vh" },
                     showlegend: false,
                     showscale: false,
-                    yaxis: yAxis,
+                    yaxis: yAxis === "y1" ? "y" : yAxis,
                     hoverinfo: "skip",
                 } as Plotly.Data);
             }
 
             result.push(...values);
-
             return result;
-        }, [curves, getColorForCurve, getLabelForCurve]);
+        }, [
+            curves,
+            axisAssignments,
+            manualAxisAssignment,
+            getColorForCurve,
+            getLabelForCurve,
+        ]);
 
         const layout = useMemo(() => {
-            // Define dynamic y-axes using channel names
-            // If more than 4 channels are used, put everything on the same axis
-            const useMultipleAxes = curves.length <= 4;
-            const yAxes = useMultipleAxes
-                ? curves.map((curve, curveIndex) => {
-                      return {
-                          [`yaxis${curveIndex === 0 ? "" : `${curveIndex + 1}`}`]:
-                              {
-                                  type: yAxisScaling[
-                                      curveIndex
-                                  ] as Plotly.AxisType,
-                                  gridcolor: yAxisGridColor,
-                                  title: {
-                                      text: getLabelForCurve(curve),
-                                  },
-                                  overlaying:
-                                      curveIndex === 0 ? undefined : "y", // Overlay all except the first axis, this shows all grids
-                                  side: curveIndex % 2 === 0 ? "left" : "right", // Alternate sides for clarity, starting with left
-                                  anchor: "free",
-                                  // Calculate the position based on the index, as plotly can't do this automatically...
-                                  position:
-                                      curveIndex % 2 === 0
-                                          ? curveIndex /
-                                            (40 * (window.innerWidth / 2560))
-                                          : 1 -
-                                            curveIndex /
-                                                (40 *
-                                                    (window.innerWidth / 2560)),
-                              } as Partial<Plotly.LayoutAxis>,
-                      };
-                  }, [])
-                : [];
+            const yAxes: { [key: string]: Partial<Plotly.LayoutAxis> }[] = [];
+
+            if (!manualAxisAssignment) {
+                if (curves.length > 4) {
+                    // More than 4 curves: no new axes are created, they are all in one.
+                } else {
+                    // Sort assignments by value (alphabetically) and create axes.
+                    const sortedAssignments = Array.from(
+                        axisAssignments.values()
+                    ).sort((a, b) => a.localeCompare(b)) as YAxisAssignment[]; // Since the assignment is not manual, we know the X-Axis isn't assigned.
+
+                    sortedAssignments.forEach((assignment, index) => {
+                        yAxes.push({
+                            [`yaxis${index === 0 ? "" : index + 1}`]: {
+                                type: yAxisScaling[
+                                    assignment
+                                ] as Plotly.AxisType,
+                                gridcolor: yAxisGridColor,
+                                title: { text: yAxisLabels[assignment] },
+                                overlaying: index === 0 ? undefined : "y", // overlay all except the first axis
+                                side: index % 2 === 0 ? "left" : "right", // alternate sides
+                                anchor: "free",
+                                position:
+                                    index % 2 === 0
+                                        ? index /
+                                          (40 * (window.innerWidth / 2560))
+                                        : 1 -
+                                          index /
+                                              (40 * (window.innerWidth / 2560)),
+                            },
+                        });
+                    });
+                }
+            } else {
+                // Manual axis assignment:
+                // Extract unique assignments and exclude "x"
+                const uniqueAssignments = Array.from(
+                    new Set(
+                        Array.from(axisAssignments)
+                            .filter(([_, assignment]) => assignment !== "x") // Exclude "x"
+                            .map(
+                                ([_, assignment]) =>
+                                    assignment as YAxisAssignment
+                            ) // Extract the Y-Axis assignments
+                    )
+                ).sort((a, b) => a.localeCompare(b)); // Sort alphabetically
+
+                uniqueAssignments.forEach((assignment, index) => {
+                    //const titleText = freq.get(val) === 1 ? key : val;
+                    const titleText = yAxisLabels[assignment];
+                    yAxes.push({
+                        [`yaxis${index === 0 ? "" : index + 1}`]: {
+                            type: yAxisScaling[assignment] as Plotly.AxisType,
+                            gridcolor: yAxisGridColor,
+                            title: { text: titleText },
+                            overlaying: index === 0 ? undefined : "y",
+                            side: index % 2 === 0 ? "left" : "right",
+                            anchor: "free",
+                            position:
+                                index % 2 === 0
+                                    ? index / (40 * (window.innerWidth / 2560))
+                                    : 1 -
+                                      index / (40 * (window.innerWidth / 2560)),
+                        },
+                    });
+                });
+            }
+
+            const xLabel =
+                Array.from(axisAssignments).find(
+                    ([_, value]) => value === "x"
+                )?.[0] || "Time";
 
             return {
                 title: {
@@ -732,7 +843,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 xaxis: {
                     gridcolor: xAxisGridColor,
                     title: {
-                        text: "Time",
+                        text: xLabel,
                     },
                     ...(curves.length <= 4
                         ? {
@@ -752,7 +863,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 },
                 yaxis: {
                     gridcolor: yAxisGridColor,
-                    type: yAxisScaling[0] as Plotly.AxisType,
+                    type: yAxisScaling.y1 as Plotly.AxisType,
                     title: {
                         text: "Value",
                     }, // Remove the default "Click to add title"
@@ -766,6 +877,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             curves,
             containerDimensions,
             plotBackgroundColor,
+            axisAssignments,
+            manualAxisAssignment,
+            yAxisLabels,
             yAxisScaling,
             xAxisGridColor,
             yAxisGridColor,

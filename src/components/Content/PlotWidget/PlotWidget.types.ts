@@ -29,3 +29,6 @@ export type ContainerDimensions = {
     height: number;
     width: number;
 };
+
+export type YAxisAssignment = "y1" | "y2" | "y3" | "y4";
+export type AxisAssignment = YAxisAssignment | "x";
