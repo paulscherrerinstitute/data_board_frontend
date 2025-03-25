@@ -14,6 +14,7 @@ import {
     Button,
     Typography,
     Tooltip,
+    LinearProgress,
 } from "@mui/material";
 import {
     AutoApplyOption,
@@ -55,7 +56,11 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         const [selectedQuickOption, setSelectedQuickOption] =
             useState<QuickSelectOption>(quickOptions[1].value);
         const [autoApply, setAutoApply] = useState<AutoApplyOption>("never");
+        const [autoApplyProgress, setAutoApplyProgress] = useState(0);
         const autoApplyIntervalRef = useRef<NodeJS.Timeout | null>(null);
+        const autoApplyProgressIntervalRef = useRef<NodeJS.Timeout | null>(
+            null
+        );
         const timeSourceRef = useRef<TimeSourceOption>("quickselect");
         const isUrlParsed = useRef(false);
 
@@ -218,14 +223,24 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 if (autoApplyIntervalRef.current) {
                     clearInterval(autoApplyIntervalRef.current);
                 }
+                if (autoApplyProgressIntervalRef.current) {
+                    clearInterval(autoApplyProgressIntervalRef.current);
+                }
 
                 // Set interval if not 'never'
                 if (newAutoApply !== "never") {
                     const interval = newAutoApply === "1min" ? 60000 : 600000; // 1 minute or 10 minutes
-                    autoApplyIntervalRef.current = setInterval(() => {
-                        simulateAutoApplyPress();
-                        localRef.current?.autoApply();
-                    }, interval);
+                    setAutoApplyProgress(0);
+                    autoApplyProgressIntervalRef.current = setInterval(() => {
+                        setAutoApplyProgress((prev) => {
+                            if (prev === 100) {
+                                simulateAutoApplyPress();
+                                localRef.current?.autoApply();
+                                return 0;
+                            }
+                            return prev + 1;
+                        });
+                    }, interval / 100);
                 }
             },
             [handleApply]
@@ -417,26 +432,36 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                         />
                     </Box>
                 </Tooltip>
-                <Tooltip
-                    title="Automatically applies the configuration, includes updating relative times from Quick Select"
-                    arrow
-                    placement="left"
-                >
-                    <TextField
-                        select
-                        label="Auto Apply"
-                        value={autoApply}
-                        onChange={(e) =>
-                            handleAutoApplyChange(
-                                e.target.value as AutoApplyOption
-                            )
-                        }
+                <Box sx={styles.autoApplyContainerStyle}>
+                    <Tooltip
+                        title="Automatically applies the configuration, includes updating relative times from Quick Select"
+                        arrow
+                        placement="left"
                     >
-                        <MenuItem value="never">Never</MenuItem>
-                        <MenuItem value="1min">1 min</MenuItem>
-                        <MenuItem value="10min">10 min</MenuItem>
-                    </TextField>
-                </Tooltip>
+                        <TextField
+                            select
+                            label="Auto Apply"
+                            value={autoApply}
+                            onChange={(e) =>
+                                handleAutoApplyChange(
+                                    e.target.value as AutoApplyOption
+                                )
+                            }
+                        >
+                            <MenuItem value="never">Never</MenuItem>
+                            <MenuItem value="1min">1 min</MenuItem>
+                            <MenuItem value="10min">10 min</MenuItem>
+                        </TextField>
+                    </Tooltip>
+                    {autoApply !== "never" && (
+                        <Box sx={styles.autoApplyProgressStyle}>
+                            <LinearProgress
+                                variant="determinate"
+                                value={autoApplyProgress}
+                            />
+                        </Box>
+                    )}
+                </Box>
                 <Button
                     variant="contained"
                     sx={{
