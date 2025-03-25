@@ -32,3 +32,21 @@ export type ContainerDimensions = {
 
 export type YAxisAssignment = "y1" | "y2" | "y3" | "y4";
 export type AxisAssignment = YAxisAssignment | "x";
+
+export type CurveAttributes = {
+    color: string;
+    curveShape: Plotly.PlotData["line.shape"];
+    displayLabel: string;
+    axisAssignment: AxisAssignment;
+};
+
+export type AxisLimit = number | null;
+
+export type YAxisAttributes = {
+    label: YAxisAssignment;
+    scaling: Plotly.AxisType;
+    min: AxisLimit;
+    max: AxisLimit;
+    displayLabel: string;
+    manualDisplayLabel: boolean;
+};

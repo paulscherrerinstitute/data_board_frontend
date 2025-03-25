@@ -16,7 +16,7 @@ import { useState, useEffect } from "react";
  */
 export const useLocalStorage = <T>(
     key: string,
-    initialValue: T
+    initialValue?: T
 ): [T, React.Dispatch<React.SetStateAction<T>>] => {
     // Retrieve and parse the stored value, or use the initial value if not present.
     const storedValue = localStorage.getItem(key);
