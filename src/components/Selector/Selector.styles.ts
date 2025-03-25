@@ -2,6 +2,7 @@ import { SxProps, Theme } from "@mui/system";
 
 export const containerStyle: SxProps<Theme> = {
     padding: 2,
+    paddingTop: 0,
     height: "100%",
     display: "flex",
     flexDirection: "column",

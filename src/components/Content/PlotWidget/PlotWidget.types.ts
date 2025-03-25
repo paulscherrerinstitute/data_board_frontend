@@ -29,3 +29,25 @@ export type ContainerDimensions = {
     height: number;
     width: number;
 };
+
+export type YAxisAssignment = "y1" | "y2" | "y3" | "y4";
+export type AxisAssignment = YAxisAssignment | "x";
+
+export type CurveAttributes = {
+    channel: Channel;
+    color: string;
+    curveShape: Plotly.PlotData["line.shape"];
+    displayLabel: string;
+    axisAssignment: AxisAssignment;
+};
+
+export type AxisLimit = number | null;
+
+export type YAxisAttributes = {
+    label: YAxisAssignment;
+    scaling: Plotly.AxisType;
+    min: AxisLimit;
+    max: AxisLimit;
+    displayLabel: string;
+    manualDisplayLabel: boolean;
+};
