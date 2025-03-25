@@ -220,6 +220,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         }
                     }
                     newCurveAttributes.set(label, {
+                        channel: channel,
                         color: getColorForChannel(channel),
                         curveShape: initialCurveShape,
                         displayLabel: label,
@@ -779,6 +780,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 }
 
                 const label = getLabelForCurve(curve);
+                const displayLabel = curveAttributes.get(label)?.displayLabel;
                 const color = curveAttributes.get(label)?.color || "#ffffff";
                 const yAxis =
                     curveAttributes.get(label)?.axisAssignment || "y1";
@@ -802,7 +804,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 const yPolygon = yMax.concat(yMin.reverse());
 
                 values.push({
-                    name: label,
+                    name: displayLabel,
                     x: xValues,
                     y: yBase,
                     type: "scattergl",
@@ -891,7 +893,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     )
                 ).sort((a, b) => a.localeCompare(b)); // Sort alphabetically
 
-                uniqueAssignments.forEach((assignment, index) => {
+                uniqueAssignments.forEach((assignment) => {
+                    const index = parseInt(assignment.slice(1), 10) - 1;
                     const scaling =
                         yAxisAttributes.find(
                             (attributes) => attributes.label === assignment
@@ -972,7 +975,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 uirevision: "time",
                 plot_bgcolor: plotBackgroundColor,
             } as Plotly.Layout;
-
+            console.log(layout);
             return layout;
         }, [
             curves,
@@ -1106,6 +1109,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     </Typography>
                     {curves.map((curve) => {
                         const label = getLabelForCurve(curve);
+                        const displayLabel =
+                            curveAttributes.get(label)?.displayLabel;
                         const color = curveAttributes.get(label)?.color;
                         return (
                             <Box
@@ -1134,7 +1139,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         }}
                                     ></span>
                                 )}
-                                <span>{label}</span>
+                                <span>{displayLabel}</span>
                                 <Box
                                     sx={styles.dragIconStyle}
                                     draggable={true}

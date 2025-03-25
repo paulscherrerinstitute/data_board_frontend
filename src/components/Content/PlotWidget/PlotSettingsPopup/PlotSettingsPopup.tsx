@@ -19,6 +19,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { PlotSettingsPopupProps } from "./PlotSettingsPopup.types";
 import * as styles from "./PlotSettingsPopup.styles";
+import { CurveAttributes } from "../PlotWidget.types";
 
 const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
     open,
@@ -85,6 +86,24 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
         []
     );
 
+    const handleCurveAttributesChanged = useCallback(
+        (
+            key: string,
+            field: keyof CurveAttributes,
+            value: CurveAttributes[typeof field]
+        ) => {
+            setLocalPlotSettings((prev) => {
+                const newCurveAttributes = new Map(prev.curveAttributes);
+                const attr = newCurveAttributes.get(key);
+                if (attr) {
+                    newCurveAttributes.set(key, { ...attr, [field]: value });
+                }
+                return { ...prev, curveAttributes: newCurveAttributes };
+            });
+        },
+        []
+    );
+
     return (
         <Box
             // Prevent manipulation of parent container (plot, content)
@@ -133,6 +152,157 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                             }
                             sx={styles.textFieldStyle}
                         ></Input>
+                    </Box>
+                    <Box sx={styles.settingBoxStyle}>
+                        <Box sx={styles.tableContainerStyle}>
+                            <Typography variant="h6">Curve Settings</Typography>
+                            <TableContainer>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Color</TableCell>
+                                            <TableCell>Curve Shape</TableCell>
+                                            <TableCell>Name</TableCell>
+                                            <TableCell>Backend</TableCell>
+                                            <TableCell>Datatype</TableCell>
+                                            <TableCell>Label</TableCell>
+                                            <TableCell>Axis</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {Array.from(
+                                            localPlotSettings.curveAttributes.entries()
+                                        ).map(([key, attr]) => (
+                                            <TableRow key={key}>
+                                                <TableCell>
+                                                    <Input
+                                                        type="color"
+                                                        value={attr.color}
+                                                        sx={
+                                                            styles.colorPickerStyle
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleCurveAttributesChanged(
+                                                                key,
+                                                                "color",
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                    />
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <Select
+                                                        value={attr.curveShape}
+                                                        onChange={(e) =>
+                                                            handleCurveAttributesChanged(
+                                                                key,
+                                                                "curveShape",
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                    >
+                                                        <MenuItem value="linear">
+                                                            Direct (linear)
+                                                        </MenuItem>
+                                                        <MenuItem value="hv">
+                                                            Digital (hv)
+                                                        </MenuItem>
+                                                        <MenuItem value="vh">
+                                                            vh
+                                                        </MenuItem>
+                                                        <MenuItem value="hvh">
+                                                            hvh
+                                                        </MenuItem>
+                                                        <MenuItem value="vhv">
+                                                            vhv
+                                                        </MenuItem>
+                                                    </Select>
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <Input
+                                                        type="text"
+                                                        value={
+                                                            attr.channel.name
+                                                        }
+                                                        disabled
+                                                    />
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <Input
+                                                        type="text"
+                                                        value={
+                                                            attr.channel.backend
+                                                        }
+                                                        disabled
+                                                    />
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <Input
+                                                        type="text"
+                                                        value={
+                                                            attr.channel.type ||
+                                                            "[]"
+                                                        }
+                                                        disabled
+                                                    />
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <Input
+                                                        type="text"
+                                                        value={
+                                                            attr.displayLabel
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleCurveAttributesChanged(
+                                                                key,
+                                                                "displayLabel",
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                    />
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <Select
+                                                        value={
+                                                            attr.axisAssignment
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleCurveAttributesChanged(
+                                                                key,
+                                                                "axisAssignment",
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                    >
+                                                        <MenuItem value="x">
+                                                            x
+                                                        </MenuItem>
+                                                        <MenuItem value="y1">
+                                                            y1
+                                                        </MenuItem>
+                                                        <MenuItem value="y2">
+                                                            y2
+                                                        </MenuItem>
+                                                        <MenuItem value="y3">
+                                                            y3
+                                                        </MenuItem>
+                                                        <MenuItem value="y4">
+                                                            y4
+                                                        </MenuItem>
+                                                    </Select>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Box>
                     </Box>
                     <Box sx={styles.settingBoxStyle}>
                         <Box sx={styles.tableContainerStyle}>

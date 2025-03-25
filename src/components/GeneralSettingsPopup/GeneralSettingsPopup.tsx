@@ -246,7 +246,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                 <MenuItem value="linear">
                                     Direct (linear)
                                 </MenuItem>
-                                <MenuItem value="hv">digital (hv)</MenuItem>
+                                <MenuItem value="hv">Digital (hv)</MenuItem>
                                 <MenuItem value="vh">vh</MenuItem>
                                 <MenuItem value="hvh">hvh</MenuItem>
                                 <MenuItem value="vhv">vhv</MenuItem>

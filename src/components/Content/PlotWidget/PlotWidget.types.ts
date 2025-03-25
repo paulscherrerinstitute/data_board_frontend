@@ -34,6 +34,7 @@ export type YAxisAssignment = "y1" | "y2" | "y3" | "y4";
 export type AxisAssignment = YAxisAssignment | "x";
 
 export type CurveAttributes = {
+    channel: Channel;
     color: string;
     curveShape: Plotly.PlotData["line.shape"];
     displayLabel: string;
