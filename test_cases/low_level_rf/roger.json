@@ -1,0 +1,85 @@
+{
+    "dashboard": {
+        "widgets": [
+            {
+                "channels": [
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SINSB03-RILK:FIRSTERROR",
+                        "seriesId": "2388876181604777167",
+                        "source": "",
+                        "type": "i32",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    }
+                ],
+                "layout": {
+                    "w": 12,
+                    "h": 12,
+                    "x": 0,
+                    "y": 0,
+                    "i": "1",
+                    "moved": false,
+                    "static": false
+                }
+            },
+            {
+                "channels": [
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SINSB03-RMSM:SM-GET",
+                        "seriesId": "5153070578867313411",
+                        "source": "",
+                        "type": "enum",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    }
+                ],
+                "layout": {
+                    "w": 12,
+                    "h": 14,
+                    "x": 0,
+                    "y": 12,
+                    "i": "2",
+                    "moved": false,
+                    "static": false
+                }
+            },
+            {
+                "channels": [
+                    {
+                        "backend": "sf-databuffer",
+                        "name": "SINSB03-RLLE-REF10:SIG-PHASE-AVG",
+                        "seriesId": "5496",
+                        "source": "",
+                        "type": "",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-databuffer",
+                        "name": "SINSB03-RLLE-REF20:SIG-PHASE-AVG",
+                        "seriesId": "5444",
+                        "source": "",
+                        "type": "",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    }
+                ],
+                "layout": {
+                    "w": 12,
+                    "h": 14,
+                    "x": 0,
+                    "y": 26,
+                    "i": "3",
+                    "moved": false,
+                    "static": false
+                }
+            }
+        ]
+    }
+}
