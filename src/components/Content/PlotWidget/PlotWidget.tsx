@@ -1139,7 +1139,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         }}
                                     ></span>
                                 )}
-                                <span>{displayLabel}</span>
+                                <span
+                                    style={{
+                                        overflowWrap: "break-word",
+                                        maxWidth: "calc(100% - 100px)",
+                                    }}
+                                >
+                                    {displayLabel}
+                                </span>
                                 <Box
                                     sx={styles.dragIconStyle}
                                     draggable={true}
