@@ -30,6 +30,7 @@ import { DateTimePicker } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 
 const quickOptions = [
+    { label: "Not selected", value: "false" },
     { label: "Last 1m", value: 1 },
     { label: "Last 10m", value: 10 },
     { label: "Last 1h", value: 60 },
@@ -54,7 +55,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         const [rawWhenSparse, setRawWhenSparse] = useState(true);
         const [removeEmptyBins, setRemoveEmptyBins] = useState(true);
         const [selectedQuickOption, setSelectedQuickOption] =
-            useState<QuickSelectOption>(quickOptions[1].value);
+            useState<QuickSelectOption>(quickOptions[0].value);
         const [autoApply, setAutoApply] = useState<AutoApplyOption>("never");
         const [autoApplyProgress, setAutoApplyProgress] = useState(0);
         const autoApplyIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -128,6 +129,10 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         };
 
         const handleQuickSelect = (value: QuickSelectOption) => {
+            if (value === "false") {
+                timeSourceRef.current = "manual";
+                return;
+            }
             timeSourceRef.current = "quickselect";
             setSelectedQuickOption(value);
 
@@ -144,7 +149,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     convertQuickOptionToTimestamps(selectedQuickOption);
                 setStartTime(dayjs(start));
                 setEndTime(dayjs(end));
-            }
+            } else setSelectedQuickOption("false");
             const startUnixTimeMs = startTime.valueOf();
             const endUnixTimeMs = endTime.valueOf();
 
@@ -275,6 +280,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             } else {
                 // Else, default to ten minutes ago
                 ({ start, end } = convertQuickOptionToTimestamps(10));
+                setSelectedQuickOption(10);
             }
 
             setStartTime(dayjs(start));
@@ -338,6 +344,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 setStartTime(dayjs(startTime));
                 setEndTime(dayjs(endTime));
                 timeSourceRef.current = "manual";
+                setSelectedQuickOption("false");
                 onTimeChange({
                     startTime: startTime,
                     endTime: endTime,
@@ -375,6 +382,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                         onChange={(newTime) => {
                             setStartTime(dayjs(newTime));
                             timeSourceRef.current = "manual";
+                            setSelectedQuickOption("false");
                         }}
                     />
                 </Box>
@@ -387,6 +395,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                         onChange={(newTime) => {
                             setEndTime(dayjs(newTime));
                             timeSourceRef.current = "manual";
+                            setSelectedQuickOption("false");
                         }}
                     />
                 </Box>
