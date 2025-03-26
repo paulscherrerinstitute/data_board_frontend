@@ -61,3 +61,9 @@ export const dragIconStyle: SxProps<Theme> = {
     justifySelf: "center",
     alignSelf: "center",
 };
+
+export const interactiveLegendElementsStyle: SxProps<Theme> = {
+    display: "flex",
+    flexDirection: "row",
+    marginLeft: "auto",
+};

@@ -1147,27 +1147,29 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 >
                                     {displayLabel}
                                 </span>
-                                <Box
-                                    sx={styles.dragIconStyle}
-                                    draggable={true}
-                                    onDragStart={(e: React.DragEvent) => {
-                                        onChannelDragStart(e, curve);
-                                    }}
-                                >
-                                    <DragIndicatorIcon />
+                                <Box sx={styles.interactiveLegendElementsStyle}>
+                                    <Box
+                                        sx={styles.dragIconStyle}
+                                        draggable={true}
+                                        onDragStart={(e: React.DragEvent) => {
+                                            onChannelDragStart(e, curve);
+                                        }}
+                                    >
+                                        <DragIndicatorIcon />
+                                    </Box>
+                                    <button
+                                        style={{
+                                            background: "none",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            color: "red",
+                                            fontWeight: "bold",
+                                        }}
+                                        onClick={() => handleRemoveCurve(label)}
+                                    >
+                                        ✖
+                                    </button>
                                 </Box>
-                                <button
-                                    style={{
-                                        background: "none",
-                                        border: "none",
-                                        cursor: "pointer",
-                                        color: "red",
-                                        fontWeight: "bold",
-                                    }}
-                                    onClick={() => handleRemoveCurve(label)}
-                                >
-                                    ✖
-                                </button>
                             </Box>
                         );
                     })}
