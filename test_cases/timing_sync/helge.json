@@ -1,0 +1,219 @@
+{
+    "dashboard": {
+        "widgets": [
+            {
+                "channels": [
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-01-EVR0:RX-PERF",
+                        "seriesId": "3879063748223743665",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-02-EVR0:RX-PERF",
+                        "seriesId": "4894136419406455684",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-11-EVR0:RX-PERF",
+                        "seriesId": "1176580797400862060",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-12-EVR0:RX-PERF",
+                        "seriesId": "2294755667246568515",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-13-EVR0:RX-PERF",
+                        "seriesId": "2756333654341858792",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-14-EVR0:RX-PERF",
+                        "seriesId": "8996918832361215873",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-21-EVR0:RX-PERF",
+                        "seriesId": "3992578466299547652",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-31-EVR0:RX-PERF",
+                        "seriesId": "5556224483070253228",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-41-EVR0:RX-PERF",
+                        "seriesId": "8639119901576243758",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-42-EVR0:RX-PERF",
+                        "seriesId": "4879665877172714133",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-51-EVR0:RX-PERF",
+                        "seriesId": "4547820602889132402",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-61-EVR0:RX-PERF",
+                        "seriesId": "2925076018066874025",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-62-EVR0:RX-PERF",
+                        "seriesId": "8830391626014178350",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-63-EVR0:RX-PERF",
+                        "seriesId": "4720321240709275964",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-64-EVR0:RX-PERF",
+                        "seriesId": "4713926402604671478",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-65-EVR0:RX-PERF",
+                        "seriesId": "2853597638823191505",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-71-EVR0:RX-PERF",
+                        "seriesId": "8906092849185509876",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-72-EVR0:RX-PERF",
+                        "seriesId": "7327911206238923420",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-73-EVR0:RX-PERF",
+                        "seriesId": "2349830824083157104",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-74-EVR0:RX-PERF",
+                        "seriesId": "4692135031444455745",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    }
+                ],
+                "layout": {
+                    "w": 12,
+                    "h": 30.3875,
+                    "x": 0,
+                    "y": 0,
+                    "i": "1",
+                    "moved": false,
+                    "static": false
+                }
+            }
+        ]
+    }
+}
