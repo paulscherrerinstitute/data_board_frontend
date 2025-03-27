@@ -37,6 +37,7 @@ export type CurveAttributes = {
     channel: Channel;
     color: string;
     curveShape: Plotly.PlotData["line.shape"];
+    curveMode: Plotly.PlotData["mode"];
     displayLabel: string;
     axisAssignment: AxisAssignment;
 };

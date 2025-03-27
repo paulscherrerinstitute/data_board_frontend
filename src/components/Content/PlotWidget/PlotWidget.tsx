@@ -26,6 +26,7 @@ import Plotly from "plotly.js";
 import { useLocalStorage } from "../../../helpers/useLocalStorage";
 import {
     defaultCurveColors,
+    defaultCurveMode,
     defaultCurveShape,
     defaultPlotBackgroundColor,
     defaultXAxisGridColor,
@@ -135,6 +136,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             );
         }, []);
 
+        const initialCurveMode = useMemo(() => {
+            return JSON.parse(
+                localStorage.getItem("curveMode") ||
+                    JSON.stringify(defaultCurveMode)
+            );
+        }, []);
+
         const getLabelForChannelAttributes = useCallback(
             (name: string, backend: string, type: string) => {
                 return `${name.split("|")[0].trim()} | ${backend} | ${type === "" ? "[]" : type}`;
@@ -227,11 +235,20 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             newYAxisAttributes[index].displayLabel = label;
                         }
                     }
+
                     newCurveAttributes.set(label, {
                         channel: channel,
-                        color: getColorForChannel(channel),
-                        curveShape: initialCurveShape,
-                        displayLabel: label,
+                        color:
+                            curveAttributes.get(label)?.color ||
+                            getColorForChannel(channel),
+                        curveShape:
+                            curveAttributes.get(label)?.curveShape ||
+                            initialCurveShape,
+                        curveMode:
+                            curveAttributes.get(label)?.curveMode ||
+                            initialCurveMode,
+                        displayLabel:
+                            curveAttributes.get(label)?.displayLabel || label,
                         axisAssignment: assignedAxis,
                     });
                 } else {
@@ -825,6 +842,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 const yAxis =
                     curveAttributes.get(label)?.axisAssignment || "y1";
                 const shape = curveAttributes.get(label)?.curveShape || "label";
+                const mode =
+                    curveAttributes.get(label)?.curveMode || "lines+markers";
 
                 const baseData = curve.curveData.curve[keyName] || {};
                 const minData = curve.curveData.curve[`${keyName}_min`] || {};
@@ -848,7 +867,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     x: xValues,
                     y: yBase,
                     type: "scattergl",
-                    mode: "lines+markers",
+                    mode: mode,
                     yaxis: yAxis === "y1" ? "y" : yAxis,
                     line: { color: color, shape: shape },
                 } as Plotly.Data);

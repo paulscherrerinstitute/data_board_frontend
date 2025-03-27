@@ -15,6 +15,7 @@ import {
     TableRow,
     MenuItem,
     Select,
+    Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { PlotSettingsPopupProps } from "./PlotSettingsPopup.types";
@@ -192,32 +193,75 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                 </TableCell>
 
                                                 <TableCell>
-                                                    <Select
-                                                        value={attr.curveShape}
-                                                        onChange={(e) =>
-                                                            handleCurveAttributesChanged(
-                                                                key,
-                                                                "curveShape",
-                                                                e.target.value
-                                                            )
-                                                        }
+                                                    <Tooltip
+                                                        title="Defines the connection between data points."
+                                                        arrow
+                                                        placement="top"
                                                     >
-                                                        <MenuItem value="linear">
-                                                            Direct (linear)
-                                                        </MenuItem>
-                                                        <MenuItem value="hv">
-                                                            Digital (hv)
-                                                        </MenuItem>
-                                                        <MenuItem value="vh">
-                                                            vh
-                                                        </MenuItem>
-                                                        <MenuItem value="hvh">
-                                                            hvh
-                                                        </MenuItem>
-                                                        <MenuItem value="vhv">
-                                                            vhv
-                                                        </MenuItem>
-                                                    </Select>
+                                                        <Select
+                                                            value={
+                                                                attr.curveShape
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleCurveAttributesChanged(
+                                                                    key,
+                                                                    "curveShape",
+                                                                    e.target
+                                                                        .value
+                                                                )
+                                                            }
+                                                        >
+                                                            <MenuItem value="linear">
+                                                                Direct (linear)
+                                                            </MenuItem>
+                                                            <MenuItem value="hv">
+                                                                Digital (hv)
+                                                            </MenuItem>
+                                                            <MenuItem value="vh">
+                                                                vh
+                                                            </MenuItem>
+                                                            <MenuItem value="hvh">
+                                                                hvh
+                                                            </MenuItem>
+                                                            <MenuItem value="vhv">
+                                                                vhv
+                                                            </MenuItem>
+                                                        </Select>
+                                                    </Tooltip>
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <Tooltip
+                                                        title="Defines the mode in which the data points are drawn."
+                                                        arrow
+                                                        placement="top"
+                                                    >
+                                                        <Select
+                                                            value={
+                                                                attr.curveMode
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleCurveAttributesChanged(
+                                                                    key,
+                                                                    "curveMode",
+                                                                    e.target
+                                                                        .value
+                                                                )
+                                                            }
+                                                        >
+                                                            <MenuItem value="lines+markers">
+                                                                lines and
+                                                                markers
+                                                            </MenuItem>
+                                                            <MenuItem value="markers">
+                                                                only markers
+                                                                (points)
+                                                            </MenuItem>
+                                                            <MenuItem value="lines">
+                                                                only lines
+                                                            </MenuItem>
+                                                        </Select>
+                                                    </Tooltip>
                                                 </TableCell>
 
                                                 <TableCell>

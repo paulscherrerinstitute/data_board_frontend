@@ -15,6 +15,7 @@ export const defaultCurveColors = [
 ];
 export const defaultYAxisScaling = "linear";
 export const defaultCurveShape = "linear";
+export const defaultCurveMode = "lines+markers";
 
 export const defaultWidgetWidth = 6;
 export const defaultWidgetHeight = 12;
