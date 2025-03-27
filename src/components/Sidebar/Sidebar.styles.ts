@@ -61,11 +61,9 @@ export const buttonOptionsStyle: SxProps<Theme> = {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "start",
-    padding: "2px",
 };
 
 export const menuButtonStyle: SxProps<Theme> = {
     color: "white",
-    marginLeft: 0,
-    paddingLeft: 0,
+    maxWidth: "100%",
 };
