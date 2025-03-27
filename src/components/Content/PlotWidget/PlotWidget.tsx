@@ -245,7 +245,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
             // Compare and only update new data, to avoid endless loops
             if (
-                newYAxisAttributes.length !== newYAxisAttributes.length ||
+                newYAxisAttributes.length !== yAxisAttributes.length ||
                 newYAxisAttributes.some((value, index) => {
                     return yAxisAttributes[index] !== value;
                 })
