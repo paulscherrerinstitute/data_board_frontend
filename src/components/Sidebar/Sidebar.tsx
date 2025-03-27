@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Button, IconButton } from "@mui/material";
+import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { Resizable } from "re-resizable";
@@ -99,7 +99,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                         sx={styles.menuButtonStyle}
                         onClick={() => setOpenSettings(true)}
                     >
-                        <SettingsIcon />
+                        <Tooltip
+                            title="Open General Settings"
+                            arrow
+                            placement="right"
+                        >
+                            <SettingsIcon />
+                        </Tooltip>
                     </IconButton>
                     <IconButton
                         sx={styles.menuButtonStyle}
@@ -107,7 +113,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        <HelpOutlineIcon />
+                        <Tooltip
+                            title="Open Documentation"
+                            arrow
+                            placement="right"
+                        >
+                            <HelpOutlineIcon />
+                        </Tooltip>
                     </IconButton>
 
                     <GeneralSettingsPopup
