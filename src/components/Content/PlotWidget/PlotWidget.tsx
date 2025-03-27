@@ -5,9 +5,7 @@ import React, {
     useRef,
     useState,
 } from "react";
-import { Box, CircularProgress, Tooltip, Typography } from "@mui/material";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import { Box, Typography } from "@mui/material";
 import {
     PlotWidgetProps,
     CurveData,
@@ -36,6 +34,7 @@ import {
 } from "../../../helpers/defaults";
 import PlotSettingsPopup from "./PlotSettingsPopup/PlotSettingsPopup";
 import { PlotSettings } from "./PlotSettingsPopup/PlotSettingsPopup.types";
+import LegendEntry from "./LegendEntry/LegendEntry";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -975,7 +974,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 uirevision: "time",
                 plot_bgcolor: plotBackgroundColor,
             } as Plotly.Layout;
-            console.log(layout);
             return layout;
         }, [
             curves,
@@ -1112,56 +1110,17 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const displayLabel =
                             curveAttributes.get(label)?.displayLabel;
                         const color = curveAttributes.get(label)?.color;
+
                         return (
-                            <Box
+                            <LegendEntry
                                 key={label}
-                                className="legendEntry"
-                                sx={styles.legendEntryStyle}
-                            >
-                                {curve.isLoading ? (
-                                    <CircularProgress
-                                        size="1rem"
-                                        disableShrink={true}
-                                        sx={styles.statusSymbolStyle}
-                                    />
-                                ) : curve.error ? (
-                                    <Tooltip title={curve.error} arrow>
-                                        <ErrorOutlineIcon color="error" />
-                                    </Tooltip>
-                                ) : (
-                                    <span
-                                        style={{
-                                            display: "inline-block",
-                                            width: "16px",
-                                            height: "16px",
-                                            backgroundColor: color,
-                                            marginRight: "8px",
-                                        }}
-                                    ></span>
-                                )}
-                                <span>{displayLabel}</span>
-                                <Box
-                                    sx={styles.dragIconStyle}
-                                    draggable={true}
-                                    onDragStart={(e: React.DragEvent) => {
-                                        onChannelDragStart(e, curve);
-                                    }}
-                                >
-                                    <DragIndicatorIcon />
-                                </Box>
-                                <button
-                                    style={{
-                                        background: "none",
-                                        border: "none",
-                                        cursor: "pointer",
-                                        color: "red",
-                                        fontWeight: "bold",
-                                    }}
-                                    onClick={() => handleRemoveCurve(label)}
-                                >
-                                    ✖
-                                </button>
-                            </Box>
+                                curve={curve}
+                                label={label}
+                                displayLabel={displayLabel}
+                                color={color}
+                                onChannelDragStart={onChannelDragStart}
+                                handleRemoveCurve={handleRemoveCurve}
+                            />
                         );
                     })}
                 </Box>
