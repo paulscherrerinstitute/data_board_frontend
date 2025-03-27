@@ -19,4 +19,4 @@ export type TimeSourceOption = "quickselect" | "manual";
 
 export type AutoApplyOption = "never" | "1min" | "10min";
 
-export type QuickSelectOption = string | number;
+export type QuickSelectOption = string | number | boolean;
