@@ -974,7 +974,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 uirevision: "time",
                 plot_bgcolor: plotBackgroundColor,
             } as Plotly.Layout;
-            console.log(layout);
             return layout;
         }, [
             curves,
