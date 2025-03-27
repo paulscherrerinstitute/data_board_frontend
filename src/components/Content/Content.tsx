@@ -343,7 +343,9 @@ const Content: React.FC = () => {
                     }
                 );
                 return;
-            } catch {}
+            } catch {
+                // ignored
+            }
         }
         handleCreateDashboard();
     }, [backendUrl, handleCreateDashboard, searchParams, widgets]);

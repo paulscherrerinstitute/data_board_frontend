@@ -142,36 +142,6 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             setEndTime(dayjs(end));
         };
 
-        const handleApply = useCallback(() => {
-            // in case a quickselect option was selected last, recalculate the start and end times based on it
-            if (timeSourceRef.current === "quickselect") {
-                const { start, end } =
-                    convertQuickOptionToTimestamps(selectedQuickOption);
-                setStartTime(dayjs(start));
-                setEndTime(dayjs(end));
-            } else setSelectedQuickOption(false);
-            const startUnixTimeMs = startTime.valueOf();
-            const endUnixTimeMs = endTime.valueOf();
-
-            onTimeChange({
-                startTime: startUnixTimeMs,
-                endTime: endUnixTimeMs,
-                rawWhenSparse,
-                removeEmptyBins,
-            });
-
-            setTimeSearchParams(startUnixTimeMs, endUnixTimeMs);
-        }, [
-            autoApply,
-            endTime,
-            onTimeChange,
-            rawWhenSparse,
-            removeEmptyBins,
-            selectedQuickOption,
-            setSearchParams,
-            startTime,
-        ]);
-
         const setTimeSearchParams = useCallback(
             (startUnixTimeMs: number, endUnixTimeMs: number) => {
                 const startParam = startUnixTimeMs.toString();
@@ -215,6 +185,35 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             ]
         );
 
+        const handleApply = useCallback(() => {
+            // in case a quickselect option was selected last, recalculate the start and end times based on it
+            if (timeSourceRef.current === "quickselect") {
+                const { start, end } =
+                    convertQuickOptionToTimestamps(selectedQuickOption);
+                setStartTime(dayjs(start));
+                setEndTime(dayjs(end));
+            } else setSelectedQuickOption(false);
+            const startUnixTimeMs = startTime.valueOf();
+            const endUnixTimeMs = endTime.valueOf();
+
+            onTimeChange({
+                startTime: startUnixTimeMs,
+                endTime: endUnixTimeMs,
+                rawWhenSparse,
+                removeEmptyBins,
+            });
+
+            setTimeSearchParams(startUnixTimeMs, endUnixTimeMs);
+        }, [
+            endTime,
+            onTimeChange,
+            rawWhenSparse,
+            removeEmptyBins,
+            selectedQuickOption,
+            setTimeSearchParams,
+            startTime,
+        ]);
+
         const simulateAutoApplyPress = () => {
             setIsAutoApplyPressSimulated(true);
             setTimeout(() => setIsAutoApplyPressSimulated(false), 200);
@@ -248,7 +247,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     }, interval / 100);
                 }
             },
-            [handleApply]
+            []
         );
 
         const isValueInQuickSelectOptions = (value: string | number) => {
@@ -353,14 +352,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 });
                 setTimeSearchParams(startTime, endTime);
             },
-            [
-                onTimeChange,
-                setSearchParams,
-                rawWhenSparse,
-                removeEmptyBins,
-                selectedQuickOption,
-                autoApply,
-            ]
+            [onTimeChange, setTimeSearchParams, rawWhenSparse, removeEmptyBins]
         );
 
         useImperativeHandle(

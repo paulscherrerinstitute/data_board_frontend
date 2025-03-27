@@ -44,7 +44,7 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
         if (open) {
             setLocalPlotSettings(plotSettings);
         }
-    }, [open]);
+    }, [open, plotSettings]);
 
     // For the sake of simplicity, there is no safe button, updates are applied on safe.
     const saveAndClose = useCallback(() => {
@@ -58,7 +58,7 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
             index: number,
             inputType: "min" | "max"
         ) => {
-            let value = e.target.value.trim();
+            const value = e.target.value.trim();
             const parsedValue = parseFloat(value);
             const newValue = isNaN(parsedValue) ? null : parsedValue;
 
