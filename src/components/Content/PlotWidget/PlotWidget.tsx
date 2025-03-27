@@ -22,7 +22,7 @@ import { cloneDeep, debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
 import gearIcon from "../../../media/gear.svg?raw";
-import Plotly from "plotly.js";
+import Plotly, { Root } from "plotly.js";
 import { useLocalStorage } from "../../../helpers/useLocalStorage";
 import {
     defaultCurveColors,
@@ -117,6 +117,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const containerRef = useRef<HTMLDivElement | null>(null);
         const curvesRef = useRef(curves);
         const colorMap = useRef<Map<string, string>>(new Map());
+        const previousTimeValues = useRef(timeValues);
+        const plotRef = useRef<Root | null>(null);
 
         const numBins = 1000;
         const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
@@ -651,6 +653,23 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             curvesRef.current = curves;
         }, [curves]);
 
+        // Resets zoom when time values change (and ctrl isn't pressed)
+        useEffect(() => {
+            const previousTimeValuesRef = previousTimeValues.current;
+
+            if (
+                timeValues.startTime !== previousTimeValuesRef?.startTime ||
+                timeValues.endTime !== previousTimeValuesRef?.endTime
+            ) {
+                if (plotRef.current && !isCtrlPressed.current) {
+                    // recalculates and resets the zoom
+                    Plotly.react(plotRef.current, data, layout, config);
+                }
+
+                previousTimeValues.current = timeValues;
+            }
+        }, [timeValues]);
+
         const downloadBlob = useCallback((blob: Blob, fileName: string) => {
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -1130,6 +1149,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             >
                 <Box ref={containerRef} sx={styles.plotContainerStyle}>
                     <Plot
+                        onInitialized={(_, graphDiv) => {
+                            plotRef.current = graphDiv;
+                        }}
                         data={data}
                         layout={layout}
                         config={config}
