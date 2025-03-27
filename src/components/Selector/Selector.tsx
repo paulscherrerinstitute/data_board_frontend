@@ -50,7 +50,7 @@ const Selector: React.FC = () => {
         if (searchRegex) {
             try {
                 regex = new RegExp(searchRegex, "i");
-            } catch (e) {
+            } catch {
                 // ignore invalid regex
             }
         }

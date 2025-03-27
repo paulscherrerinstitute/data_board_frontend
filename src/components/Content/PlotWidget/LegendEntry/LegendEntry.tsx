@@ -31,13 +31,15 @@ const LegendEntry: React.FC<{
             }
         });
 
-        if (legendEntryRef.current) {
-            observer.observe(legendEntryRef.current);
+        const currentRef = legendEntryRef.current;
+
+        if (currentRef) {
+            observer.observe(currentRef);
         }
 
         return () => {
-            if (legendEntryRef.current) {
-                observer.unobserve(legendEntryRef.current);
+            if (currentRef) {
+                observer.unobserve(currentRef);
             }
         };
     }, []);

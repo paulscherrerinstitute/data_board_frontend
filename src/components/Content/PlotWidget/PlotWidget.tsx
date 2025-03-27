@@ -120,30 +120,19 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const numBins = 1000;
         const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
-        const initialCurveColors = JSON.parse(
-            localStorage.getItem("curveColors") ||
-                JSON.stringify(defaultCurveColors)
-        );
-        const initialCurveShape = JSON.parse(
-            localStorage.getItem("curveShape") ||
-                JSON.stringify(defaultCurveShape)
-        );
 
-        const getColorForChannel = useCallback((channel: Channel) => {
-            const channelKey = getLabelForChannelAttributes(
-                channel.name,
-                channel.backend,
-                channel.type
+        const initialCurveColors = useMemo(() => {
+            return JSON.parse(
+                localStorage.getItem("curveColors") ||
+                    JSON.stringify(defaultCurveColors)
             );
-            if (!colorMap.current.has(channelKey)) {
-                // Assign a color if not already assigned
-                const color =
-                    initialCurveColors[
-                        colorMap.current.size % initialCurveColors.length
-                    ];
-                colorMap.current.set(channelKey, color);
-            }
-            return colorMap.current.get(channelKey)!; // Ensure it has a value
+        }, []);
+
+        const initialCurveShape = useMemo(() => {
+            return JSON.parse(
+                localStorage.getItem("curveShape") ||
+                    JSON.stringify(defaultCurveShape)
+            );
         }, []);
 
         const getLabelForChannelAttributes = useCallback(
@@ -151,6 +140,26 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 return `${name.split("|")[0].trim()} | ${backend} | ${type === "" ? "[]" : type}`;
             },
             []
+        );
+
+        const getColorForChannel = useCallback(
+            (channel: Channel) => {
+                const channelKey = getLabelForChannelAttributes(
+                    channel.name,
+                    channel.backend,
+                    channel.type
+                );
+                if (!colorMap.current.has(channelKey)) {
+                    // Assign a color if not already assigned
+                    const color =
+                        initialCurveColors[
+                            colorMap.current.size % initialCurveColors.length
+                        ];
+                    colorMap.current.set(channelKey, color);
+                }
+                return colorMap.current.get(channelKey)!; // Ensure it has a value
+            },
+            [getLabelForChannelAttributes, initialCurveColors]
         );
 
         const getLabelForCurve = useCallback(
@@ -194,8 +203,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         useEffect(() => {
             const newAxisOptions: YAxisAssignment[] = ["y1", "y2", "y3", "y4"];
-            let newCurveAttributes = new Map<string, CurveAttributes>();
-            let newYAxisAttributes = new Array(...yAxisAttributes);
+            const newCurveAttributes = new Map<string, CurveAttributes>();
+            const newYAxisAttributes = new Array(...yAxisAttributes);
 
             // Add new Channels, update axis assignments and labels if applicable
             channels.forEach((channel, index) => {
@@ -236,9 +245,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
             // Compare and only update new data, to avoid endless loops
             if (
-                newYAxisAttributes.length !== newYAxisAttributes.length ||
+                newYAxisAttributes.length !== yAxisAttributes.length ||
                 newYAxisAttributes.some((value, index) => {
-                    yAxisAttributes[index] !== value;
+                    return yAxisAttributes[index] !== value;
                 })
             ) {
                 setYAxisAttributes(newYAxisAttributes);
@@ -247,13 +256,22 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             if (
                 newCurveAttributes.size !== curveAttributes.size ||
                 [...newCurveAttributes].some(([key, value]) => {
-                    !curveAttributes.has(key) ||
-                        curveAttributes.get(key) !== value;
+                    return (
+                        !curveAttributes.has(key) ||
+                        curveAttributes.get(key) !== value
+                    );
                 })
             ) {
                 setCurveAttributes(newCurveAttributes);
             }
-        }, [channels, getLabelForChannelAttributes, getColorForChannel]);
+        }, [
+            channels,
+            getLabelForChannelAttributes,
+            getColorForChannel,
+            initialCurveShape,
+            manualAxisAssignment,
+            yAxisAttributes,
+        ]);
 
         useEffect(() => {
             const handleKeyDown = (event: KeyboardEvent) => {
@@ -329,18 +347,41 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         );
 
         const handleResponseError = useCallback(
-            (error: AxiosError | any, channel: Channel) => {
+            (error: AxiosError | unknown, channel: Channel) => {
                 console.error(error);
-                let errorMsg = error.response?.data?.detail;
-                if (!errorMsg) {
-                    errorMsg = error.code;
-                }
-                if (!errorMsg) {
-                    errorMsg = error.message;
-                }
-                if (errorMsg) {
-                    setErrorCurve(errorMsg, channel);
-                    return;
+
+                if (error) {
+                    let errorMsg: string | null = null;
+
+                    if (typeof error === "object" && error !== null) {
+                        if (
+                            "response" in error &&
+                            typeof error.response === "object" &&
+                            error.response !== null
+                        ) {
+                            if (
+                                "data" in error.response &&
+                                typeof error.response.data === "object" &&
+                                error.response.data !== null
+                            ) {
+                                if ("detail" in error.response.data) {
+                                    errorMsg = error.response.data
+                                        .detail as string;
+                                }
+                            }
+                        }
+                        if (!errorMsg && "code" in error) {
+                            errorMsg = error.code as string;
+                        }
+                        if (!errorMsg && "message" in error) {
+                            errorMsg = error.message as string;
+                        }
+                    }
+
+                    if (errorMsg) {
+                        setErrorCurve(errorMsg, channel);
+                        return;
+                    }
                 }
             },
             [setErrorCurve]
@@ -414,7 +455,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 allow_cached_response: false,
                             },
                         });
-                    } catch (error: AxiosError | any) {
+                    } catch (error: AxiosError | unknown) {
                         handleResponseError(error, channel);
                         return;
                     }
@@ -456,7 +497,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 },
                             }
                         );
-                    } catch (error: AxiosError | any) {
+                    } catch (error: AxiosError | unknown) {
                         handleResponseError(error, channel);
                         return;
                     }
@@ -828,7 +869,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
             result.push(...values);
             return result;
-        }, [curves, manualAxisAssignment, curveAttributes, getLabelForCurve]);
+        }, [curves, curveAttributes, getLabelForCurve]);
 
         const layout = useMemo(() => {
             const yAxes: { [key: string]: Partial<Plotly.LayoutAxis> }[] = [];
@@ -926,7 +967,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
             const xLabel =
                 Array.from(curveAttributes).find(
-                    ([_, attributes]) => attributes.axisAssignment === "x"
+                    ([, attributes]) => attributes.axisAssignment === "x"
                 )?.[1].displayLabel || "Time";
 
             const layout = {
@@ -985,8 +1026,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             xAxisGridColor,
             yAxisGridColor,
             plotTitle,
-            index,
-            getLabelForCurve,
         ]);
 
         const config = useMemo(() => {
@@ -1050,7 +1089,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         };
 
         function onChannelDragStart(e: React.DragEvent, curve: Curve) {
-            let channel = channels.find(
+            const channel = channels.find(
                 (channel) =>
                     getLabelForChannelAttributes(
                         channel.name,
