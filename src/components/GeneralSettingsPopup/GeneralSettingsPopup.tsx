@@ -21,6 +21,7 @@ import * as styles from "./GeneralSettingsPopup.styles";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import {
     defaultCurveColors,
+    defaultCurveMode,
     defaultCurveShape,
     defaultPlotBackgroundColor,
     defaultWidgetHeight,
@@ -66,6 +67,11 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     const [curveShape, setCurveShape] = useLocalStorage(
         "curveShape",
         defaultCurveShape
+    );
+
+    const [curveMode, setCurveMode] = useLocalStorage(
+        "curveMode",
+        defaultCurveMode
     );
 
     const resetToDefaults = () => {
@@ -262,6 +268,30 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                         </Tooltip>
                     </FormControl>
                 </Box>
+                <Box sx={styles.settingBoxStyle}>
+                    <FormControl fullWidth>
+                        <InputLabel>Curve Mode</InputLabel>
+                        <Tooltip
+                            title="Defines the mode in which the data points are drawn."
+                            arrow
+                            placement="top"
+                        >
+                            <Select
+                                value={curveMode}
+                                onChange={(e) => setCurveMode(e.target.value)}
+                                label="Curve Mode"
+                            >
+                                <MenuItem value="lines+markers">
+                                    lines and markers
+                                </MenuItem>
+                                <MenuItem value="markers">
+                                    only markers (points)
+                                </MenuItem>
+                                <MenuItem value="lines">only lines</MenuItem>
+                            </Select>
+                        </Tooltip>
+                    </FormControl>
+                </Box>
                 <Typography variant="h4" sx={{ marginBottom: "8px" }}>
                     Example Plot
                 </Typography>
@@ -277,7 +307,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                 980,
                             ],
                             type: "scattergl",
-                            mode: "lines+markers",
+                            mode: curveMode as Plotly.PlotData["mode"],
                             line: {
                                 color: curveColors[0], // First curve color
                                 shape: curveShape as Plotly.ScatterLine["shape"],
@@ -294,7 +324,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                 950,
                             ],
                             type: "scattergl",
-                            mode: "lines+markers",
+                            mode: curveMode as Plotly.PlotData["mode"],
                             line: {
                                 color: curveColors[1] || "#ff0000", // Second curve color (fallback to red)
                                 shape: curveShape as Plotly.ScatterLine["shape"],
