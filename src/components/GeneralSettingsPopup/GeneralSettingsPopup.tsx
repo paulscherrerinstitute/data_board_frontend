@@ -89,6 +89,14 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         >
             <DialogTitle>
                 Settings
+                <Tooltip
+                    title="These settings are only stored locally in your browser, so they will not be saved to the url, or the dashboards you export/save."
+                    arrow
+                >
+                    <IconButton size="small">
+                        <HelpOutlineIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
                 <IconButton
                     aria-label="close"
                     onClick={onClose}
