@@ -104,17 +104,20 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const [plotBackgroundColor] = useLocalStorage(
             "plotBackgroundColor",
-            defaultPlotBackgroundColor
+            defaultPlotBackgroundColor,
+            true
         );
         const [xAxisGridColor] = useLocalStorage(
             "xAxisGridColor",
-            defaultXAxisGridColor
+            defaultXAxisGridColor,
+            true
         );
         const [yAxisGridColor] = useLocalStorage(
             "yAxisGridColor",
-            defaultYAxisGridColor
+            defaultYAxisGridColor,
+            true
         );
-        const [useWebGL] = useLocalStorage("useWebGL", defaultUseWebGL);
+        const [useWebGL] = useLocalStorage("useWebGL", defaultUseWebGL, true);
 
         const isCtrlPressed = useRef(false);
         const containerRef = useRef<HTMLDivElement | null>(null);
