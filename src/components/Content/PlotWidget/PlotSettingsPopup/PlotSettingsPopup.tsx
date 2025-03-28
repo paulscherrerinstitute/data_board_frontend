@@ -250,15 +250,15 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                             }
                                                         >
                                                             <MenuItem value="lines+markers">
-                                                                lines and
-                                                                markers
+                                                                Lines and
+                                                                Markers
                                                             </MenuItem>
                                                             <MenuItem value="markers">
-                                                                only markers
+                                                                Only Markers
                                                                 (points)
                                                             </MenuItem>
                                                             <MenuItem value="lines">
-                                                                only lines
+                                                                Only Lines
                                                             </MenuItem>
                                                         </Select>
                                                     </Tooltip>

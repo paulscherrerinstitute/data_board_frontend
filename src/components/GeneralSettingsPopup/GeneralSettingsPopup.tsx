@@ -24,6 +24,7 @@ import {
     defaultCurveMode,
     defaultCurveShape,
     defaultPlotBackgroundColor,
+    defaultUseWebGL,
     defaultWidgetHeight,
     defaultWidgetWidth,
     defaultXAxisGridColor,
@@ -48,6 +49,10 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         "yAxisGridColor",
         defaultYAxisGridColor
     );
+    const [useWebGL, setUseWebGL] = useLocalStorage(
+        "useWebGL",
+        isWebGLSupported() ? defaultUseWebGL : false
+    );
     const [initialWidgetHeight, setInitialWidgetHeight] = useLocalStorage(
         "initialWidgetHeight",
         defaultWidgetHeight
@@ -68,7 +73,6 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         "curveShape",
         defaultCurveShape
     );
-
     const [curveMode, setCurveMode] = useLocalStorage(
         "curveMode",
         defaultCurveMode
@@ -78,12 +82,28 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setPlotBackgroundColor(defaultPlotBackgroundColor);
         setXAxisGridColor(defaultXAxisGridColor);
         setYAxisGridColor(defaultYAxisGridColor);
+        setUseWebGL(isWebGLSupported() ? defaultUseWebGL : false);
         setInitialWidgetHeight(defaultWidgetHeight);
         setInitialWidgetWidth(defaultWidgetWidth);
         setCurveColors(defaultCurveColors);
         setYAxisScaling(defaultYAxisScaling);
         setCurveShape(defaultCurveShape);
+        setCurveMode(defaultCurveMode);
     };
+
+    // from https://stackoverflow.com/a/22953053/21240915
+    function isWebGLSupported() {
+        try {
+            const canvas = document.createElement("canvas");
+            return (
+                !!window.WebGLRenderingContext &&
+                (canvas.getContext("webgl") ||
+                    canvas.getContext("experimental-webgl"))
+            );
+        } catch {
+            return false;
+        }
+    }
 
     return (
         <Dialog
@@ -144,6 +164,41 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                         onChange={(e) => setYAxisGridColor(e.target.value)}
                         sx={styles.colorPickerStyle}
                     ></Input>
+                </Box>
+
+                <Box sx={styles.settingBoxStyle}>
+                    <FormControl fullWidth>
+                        <InputLabel>Use WebGL</InputLabel>
+                        <Tooltip
+                            title="If enabled, plots will be rendered using WebGL. This is much more performant, and highly recommended. However, not all browsers support this."
+                            arrow
+                            placement="top"
+                        >
+                            <Select
+                                label="UseWebGL"
+                                value={useWebGL ? "enabled" : "disabled"}
+                                onChange={(e) =>
+                                    setUseWebGL(e.target.value === "enabled")
+                                }
+                            >
+                                <MenuItem value="enabled">Enabled</MenuItem>
+                                <MenuItem value="disabled">Disabled</MenuItem>
+                            </Select>
+                        </Tooltip>
+                    </FormControl>
+                    {!isWebGLSupported() && useWebGL && (
+                        <Typography variant="body2" sx={styles.errorStyle}>
+                            ⚠ Your browser does not meet WebGL requirements.
+                            The plots will probably break.
+                        </Typography>
+                    )}
+
+                    {isWebGLSupported() && !useWebGL && (
+                        <Typography variant="body2" sx={styles.warningStyle}>
+                            ⚠ WebGL is disabled. Enabling it can drastically
+                            improve performance.
+                        </Typography>
+                    )}
                 </Box>
 
                 <Box sx={styles.settingBoxStyle}>
@@ -282,12 +337,12 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                 label="Curve Mode"
                             >
                                 <MenuItem value="lines+markers">
-                                    lines and markers
+                                    Lines and Markers
                                 </MenuItem>
                                 <MenuItem value="markers">
-                                    only markers (points)
+                                    Only Markers (points)
                                 </MenuItem>
-                                <MenuItem value="lines">only lines</MenuItem>
+                                <MenuItem value="lines">Only Lines</MenuItem>
                             </Select>
                         </Tooltip>
                     </FormControl>
@@ -306,7 +361,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                 1, 100, 250, 400, 320, 510, 600, 720, 800, 910,
                                 980,
                             ],
-                            type: "scattergl",
+                            type: useWebGL ? "scattergl" : "scatter",
                             mode: curveMode as Plotly.PlotData["mode"],
                             line: {
                                 color: curveColors[0], // First curve color
@@ -323,7 +378,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                 1, 90, 220, 390, 310, 480, 580, 690, 770, 890,
                                 950,
                             ],
-                            type: "scattergl",
+                            type: useWebGL ? "scattergl" : "scatter",
                             mode: curveMode as Plotly.PlotData["mode"],
                             line: {
                                 color: curveColors[1] || "#ff0000", // Second curve color (fallback to red)

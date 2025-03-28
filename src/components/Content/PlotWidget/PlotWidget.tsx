@@ -29,6 +29,7 @@ import {
     defaultCurveMode,
     defaultCurveShape,
     defaultPlotBackgroundColor,
+    defaultUseWebGL,
     defaultXAxisGridColor,
     defaultYAxisGridColor,
     defaultYAxisScaling,
@@ -113,6 +114,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             "yAxisGridColor",
             defaultYAxisGridColor
         );
+        const [useWebGL] = useLocalStorage("useWebGL", defaultUseWebGL);
 
         const isCtrlPressed = useRef(false);
         const containerRef = useRef<HTMLDivElement | null>(null);
@@ -885,7 +887,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     name: displayLabel,
                     x: xValues,
                     y: yBase,
-                    type: "scattergl",
+                    type: useWebGL ? "scattergl" : "scatter",
                     mode: mode,
                     yaxis: yAxis === "y1" ? "y" : yAxis,
                     line: { color: color, shape: shape },
@@ -893,7 +895,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 result.push({
                     x: xPolygon,
                     y: yPolygon,
-                    type: "scattergl",
+                    type: useWebGL ? "scattergl" : "scatter",
                     mode: "lines",
                     fill: "toself",
                     fillcolor: hexToRgba(color, 0.3),
@@ -907,7 +909,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
             result.push(...values);
             return result;
-        }, [curves, curveAttributes, getLabelForCurve]);
+        }, [curves, curveAttributes, useWebGL, getLabelForCurve]);
 
         const layout = useMemo(() => {
             const yAxes: { [key: string]: Partial<Plotly.LayoutAxis> }[] = [];

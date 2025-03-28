@@ -38,3 +38,15 @@ export const resetButtonStyle: SxProps<Theme> = {
     justifyContent: "center",
     marginTop: "15px",
 };
+
+export const warningStyle: SxProps<Theme> = {
+    color: "orange",
+    marginTop: "8px",
+    fontWeight: "bold",
+};
+
+export const errorStyle: SxProps<Theme> = {
+    color: "red",
+    marginTop: "8px",
+    fontWeight: "bold",
+};
