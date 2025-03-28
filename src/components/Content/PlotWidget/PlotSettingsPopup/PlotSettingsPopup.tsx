@@ -163,6 +163,7 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                         <TableRow>
                                             <TableCell>Color</TableCell>
                                             <TableCell>Curve Shape</TableCell>
+                                            <TableCell>Curve Mode</TableCell>
                                             <TableCell>Name</TableCell>
                                             <TableCell>Backend</TableCell>
                                             <TableCell>Datatype</TableCell>
