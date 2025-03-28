@@ -45,7 +45,7 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
         if (open) {
             setLocalPlotSettings(plotSettings);
         }
-    }, [open, plotSettings]);
+    }, [open]);
 
     // For the sake of simplicity, there is no safe button, updates are applied on safe.
     const saveAndClose = useCallback(() => {
