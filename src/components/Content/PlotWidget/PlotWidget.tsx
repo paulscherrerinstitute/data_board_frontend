@@ -43,8 +43,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         channels,
         timeValues,
         index,
+        initialPlotSettings,
         onChannelsChange,
         onZoomTimeRangeChange,
+        onUpdatePlotSettings,
     }) => {
         const { backendUrl } = useApiUrls();
         const [containerDimensions, setContainerDimensions] =
@@ -125,6 +127,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const colorMap = useRef<Map<string, string>>(new Map());
         const previousTimeValues = useRef(timeValues);
         const plotRef = useRef<Root | null>(null);
+        const settingsInitialized = useRef(false);
 
         const numBins = 1000;
         const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
@@ -149,6 +152,20 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     JSON.stringify(defaultCurveMode)
             );
         }, []);
+
+        if (!settingsInitialized.current) {
+            settingsInitialized.current = true;
+            // Initialize the plot settings
+            if (initialPlotSettings) {
+                setPlotTitle(cloneDeep(initialPlotSettings.plotTitle));
+                setCurveAttributes(
+                    cloneDeep(initialPlotSettings.curveAttributes)
+                );
+                setYAxisAttributes(
+                    cloneDeep(initialPlotSettings.yAxisAttributes)
+                );
+            }
+        }
 
         const getLabelForChannelAttributes = useCallback(
             (name: string, backend: string, type: string) => {
@@ -215,6 +232,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 e.stopPropagation();
             }
         };
+
+        useEffect(() => {
+            onUpdatePlotSettings(index, {
+                plotTitle: plotTitle,
+                curveAttributes: curveAttributes,
+                yAxisAttributes: yAxisAttributes,
+            });
+        }, [plotTitle, curveAttributes, yAxisAttributes]);
 
         useEffect(() => {
             const newAxisOptions: YAxisAssignment[] = ["y1", "y2", "y3", "y4"];
@@ -294,7 +319,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             getColorForChannel,
             initialCurveShape,
             manualAxisAssignment,
-            yAxisAttributes,
         ]);
 
         useEffect(() => {
@@ -1050,7 +1074,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     gridcolor: yAxisGridColor,
                     type: yAxisAttributes[0].scaling,
                     title: {
-                        text: "Value",
+                        text:
+                            curves.length == 0
+                                ? "Value"
+                                : yAxisAttributes[0].displayLabel,
                     }, // Remove the default "Click to add title"
                 },
                 ...Object.assign({}, ...yAxes), // Merge all y-axis definitions into layout

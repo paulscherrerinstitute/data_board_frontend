@@ -1,12 +1,18 @@
 import { Channel } from "../../Selector/Selector.types";
 import { TimeValues } from "../Content.types";
+import { PlotSettings } from "./PlotSettingsPopup/PlotSettingsPopup.types";
 
 export interface PlotWidgetProps {
     channels: Channel[];
     timeValues: TimeValues;
     index: string;
+    initialPlotSettings?: PlotSettings;
     onChannelsChange: (updatedChannels: Channel[]) => void;
     onZoomTimeRangeChange: (startTime: number, endTime: number) => void;
+    onUpdatePlotSettings: (
+        index: string,
+        newPlotSettings: PlotSettings
+    ) => void;
 }
 
 export type CurveData = {
