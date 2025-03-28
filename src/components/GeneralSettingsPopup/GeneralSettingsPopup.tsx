@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import {
     Dialog,
     DialogTitle,
@@ -100,6 +100,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         defaultCurveMode
     );
 
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const resetToDefaults = () => {
         setInitialSidebarState(defaultInitialSidebarState);
         setPlotBackgroundColor(defaultPlotBackgroundColor);
@@ -112,6 +114,73 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setYAxisScaling(defaultYAxisScaling);
         setCurveShape(defaultCurveShape);
         setCurveMode(defaultCurveMode);
+    };
+
+    const exportSettings = () => {
+        const settings = {
+            initialSidebarState,
+            plotBackgroundColor,
+            xAxisGridColor,
+            yAxisGridColor,
+            useWebGL,
+            initialWidgetHeight,
+            initialWidgetWidth,
+            curveColors,
+            yAxisScaling,
+            curveShape,
+            curveMode,
+        };
+        const blob = new Blob([JSON.stringify(settings, null, 2)], {
+            type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "settings.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    const importSettings = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const imported = JSON.parse(e.target?.result as string);
+                if (imported.initialSidebarState !== undefined)
+                    setInitialSidebarState(imported.initialSidebarState);
+                if (imported.plotBackgroundColor !== undefined)
+                    setPlotBackgroundColor(imported.plotBackgroundColor);
+                if (imported.xAxisGridColor !== undefined)
+                    setXAxisGridColor(imported.xAxisGridColor);
+                if (imported.yAxisGridColor !== undefined)
+                    setYAxisGridColor(imported.yAxisGridColor);
+                if (imported.useWebGL !== undefined)
+                    setUseWebGL(imported.useWebGL);
+                if (imported.initialWidgetHeight !== undefined)
+                    setInitialWidgetHeight(imported.initialWidgetHeight);
+                if (imported.initialWidgetWidth !== undefined)
+                    setInitialWidgetWidth(imported.initialWidgetWidth);
+                if (imported.curveColors !== undefined)
+                    setCurveColors(imported.curveColors);
+                if (imported.yAxisScaling !== undefined)
+                    setYAxisScaling(imported.yAxisScaling);
+                if (imported.curveShape !== undefined)
+                    setCurveShape(imported.curveShape);
+                if (imported.curveMode !== undefined)
+                    setCurveMode(imported.curveMode);
+            } catch (error) {
+                console.error("Error importing settings:", error);
+            }
+        };
+        reader.readAsText(file);
+        // Allow re-importing the same file later if needed
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     };
 
     return (
@@ -440,6 +509,33 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                         onClick={resetToDefaults}
                     >
                         Reset to Defaults
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={exportSettings}
+                        sx={{ ml: 2 }}
+                    >
+                        Export Settings
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                            if (fileInputRef.current) {
+                                fileInputRef.current.click();
+                            }
+                        }}
+                        sx={{ ml: 2 }}
+                    >
+                        Import Settings
+                        <input
+                            type="file"
+                            accept="application/json"
+                            ref={fileInputRef}
+                            hidden
+                            onChange={importSettings}
+                        />
                     </Button>
                 </Box>
             </DialogContent>
