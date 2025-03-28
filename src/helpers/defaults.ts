@@ -1,6 +1,8 @@
 export const defaultPlotBackgroundColor = "#fcfcfc";
 export const defaultXAxisGridColor = "#ebebeb";
 export const defaultYAxisGridColor = "#ebebeb";
+export const defaultUseWebGL = true;
+
 export const defaultCurveColors = [
     "#1f77b4",
     "#ff7f0e",

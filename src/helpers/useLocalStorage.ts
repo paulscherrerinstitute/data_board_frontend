@@ -12,15 +12,29 @@ import { useState, useEffect } from "react";
  * @template T - The type of the value being stored (e.g., string, number).
  * @param key - The localStorage key.
  * @param initialValue - The initial value to use if the key is not found in localStorage.
+ * @param readOnly - If true, the value is only read from localStorage and updates
+ *                   will only apply to the local state. However, any changes made
+ *                   externally in localStorage will overwrite the local state.
  * @returns A stateful value and a setter function that updates both state and localStorage.
  */
 export const useLocalStorage = <T>(
     key: string,
-    initialValue?: T
+    initialValue?: T,
+    readOnly: boolean = false
 ): [T, React.Dispatch<React.SetStateAction<T>>] => {
     // Retrieve and parse the stored value, or use the initial value if not present.
     const storedValue = localStorage.getItem(key);
-    const parsedValue = storedValue ? JSON.parse(storedValue) : initialValue;
+    let parsedValue: T;
+    if (storedValue !== null) {
+        parsedValue = JSON.parse(storedValue);
+    } else {
+        parsedValue = initialValue as T;
+
+        if (initialValue !== undefined && !readOnly) {
+            // Store the initialValue in localStorage if it doesn't exist
+            localStorage.setItem(key, JSON.stringify(initialValue));
+        }
+    }
 
     const [value, setValue] = useState<T>(parsedValue);
 
@@ -29,13 +43,15 @@ export const useLocalStorage = <T>(
         newValue
     ) => {
         setValue(newValue);
-        localStorage.setItem(key, JSON.stringify(newValue));
-        // Dispatch a custom event so other hook instances in the same tab update.
-        window.dispatchEvent(
-            new CustomEvent("localStorageUpdate", {
-                detail: { key, newValue },
-            })
-        );
+        if (!readOnly) {
+            localStorage.setItem(key, JSON.stringify(newValue));
+            // Dispatch a custom event so other hook instances in the same tab update.
+            window.dispatchEvent(
+                new CustomEvent("localStorageUpdate", {
+                    detail: { key, newValue },
+                })
+            );
+        }
     };
 
     useEffect(() => {
