@@ -25,8 +25,11 @@ export const useLocalStorage = <T>(
         parsedValue = JSON.parse(storedValue);
     } else {
         parsedValue = initialValue as T;
-        // Store the initialValue in localStorage if it doesn't exist
-        localStorage.setItem(key, JSON.stringify(initialValue));
+
+        if (initialValue !== null) {
+            // Store the initialValue in localStorage if it doesn't exist
+            localStorage.setItem(key, JSON.stringify(initialValue));
+        }
     }
 
     const [value, setValue] = useState<T>(parsedValue);
