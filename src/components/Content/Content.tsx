@@ -1,9 +1,21 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, {
+    useState,
+    useCallback,
+    useRef,
+    useEffect,
+    useMemo,
+} from "react";
 import { Box, Button, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
-import { Widget, TimeValues, DashboardDto } from "./Content.types";
+import {
+    Widget,
+    TimeValues,
+    DashboardDto,
+    Dashboard,
+    StoredPlotSettings,
+} from "./Content.types";
 import ReactGridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -317,12 +329,18 @@ const Content: React.FC = () => {
         };
     }, [searchParams, backendUrl]);
 
+    const dashboardData = useMemo(() => {
+        return {
+            dashboard: {
+                widgets: widgets,
+            } as Dashboard,
+        };
+    }, [widgets]);
+
     const handleCreateDashboard = useCallback(async () => {
         const response = await axios.post<DashboardDto>(
             `${backendUrl}/dashboard`,
-            {
-                dashboard: { widgets: widgets },
-            }
+            dashboardData
         );
         const dashboardId = response.data.id;
         setSearchParams((searchParams) => {
@@ -330,7 +348,7 @@ const Content: React.FC = () => {
             newSearchParams.set("dashboardId", dashboardId);
             return newSearchParams;
         });
-    }, [backendUrl, setSearchParams, widgets]);
+    }, [backendUrl, dashboardData, setSearchParams]);
 
     const handleSaveDashboard = useCallback(async () => {
         const dashboardId = searchParams.get("dashboardId");
@@ -338,9 +356,7 @@ const Content: React.FC = () => {
             try {
                 await axios.patch<DashboardDto>(
                     `${backendUrl}/dashboard/${dashboardId}`,
-                    {
-                        dashboard: { widgets: widgets },
-                    }
+                    dashboardData
                 );
                 return;
             } catch {
@@ -348,10 +364,10 @@ const Content: React.FC = () => {
             }
         }
         handleCreateDashboard();
-    }, [backendUrl, handleCreateDashboard, searchParams, widgets]);
+    }, [backendUrl, searchParams, dashboardData, handleCreateDashboard]);
 
     const handleDownloadDashboard = useCallback(async () => {
-        const dashboardData = { dashboard: { widgets: widgets } };
+        // We need to create  the data like this, otherwise the curveAttributes Map couldn't be parsed.
         const jsonContent = JSON.stringify(dashboardData, null, 4);
         const blob = new Blob([jsonContent], { type: "application/json" });
         const fileName = `dashboard_${new Date().toISOString()}.json`;
@@ -361,11 +377,10 @@ const Content: React.FC = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    }, [widgets]);
+    }, [dashboardData]);
 
     const handleImportDashboard = useCallback(async () => {
         try {
-            // Create an input element dynamically
             const input = document.createElement("input");
             input.type = "file";
             input.accept = ".json"; // Accept only JSON files
@@ -377,16 +392,15 @@ const Content: React.FC = () => {
                 }
 
                 const content = await file.text();
-                const dashboardData = JSON.parse(content) as {
-                    dashboard: { widgets: Widget[] };
-                };
-
-                setWidgets(dashboardData.dashboard.widgets);
+                const parsedDashboard = JSON.parse(
+                    content
+                ) as typeof dashboardData;
+                setWidgets(parsedDashboard.dashboard.widgets);
             };
 
             input.click();
         } catch (e) {
-            console.error("Error in handleImportWidgets:", e);
+            console.error("Error in handleImportDashboard:", e);
             alert("Something went wrong while importing widgets.");
         }
     }, []);
@@ -410,7 +424,7 @@ const Content: React.FC = () => {
                         resizeHandles={["sw", "nw", "se", "ne"]}
                         onLayoutChange={handleLayoutChange}
                     >
-                        {widgets.map(({ channels, layout }) => (
+                        {widgets.map(({ channels, layout, plotSettings }) => (
                             <Box
                                 sx={{
                                     ...styles.gridItemStyle,
@@ -448,6 +462,19 @@ const Content: React.FC = () => {
                                     channels={channels}
                                     timeValues={timeValues}
                                     index={layout.i}
+                                    initialPlotSettings={
+                                        plotSettings
+                                            ? {
+                                                  ...plotSettings,
+                                                  curveAttributes: new Map(
+                                                      Object.entries(
+                                                          plotSettings.curveAttributes ||
+                                                              []
+                                                      )
+                                                  ),
+                                              }
+                                            : undefined
+                                    }
                                     onChannelsChange={(updatedChannels) => {
                                         setWidgets((prevWidgets) =>
                                             prevWidgets.map((widget) =>
@@ -469,6 +496,27 @@ const Content: React.FC = () => {
                                             startTime,
                                             endTime
                                         );
+                                    }}
+                                    onUpdatePlotSettings={(
+                                        index,
+                                        newPlotSettings
+                                    ) => {
+                                        setWidgets((prev) => [
+                                            ...prev.map((widget) =>
+                                                widget.layout.i === index
+                                                    ? {
+                                                          ...widget,
+                                                          plotSettings: {
+                                                              ...newPlotSettings,
+                                                              curveAttributes:
+                                                                  Object.fromEntries(
+                                                                      newPlotSettings.curveAttributes
+                                                                  ),
+                                                          } as StoredPlotSettings,
+                                                      }
+                                                    : widget
+                                            ),
+                                        ]);
                                     }}
                                 />
                             </Box>

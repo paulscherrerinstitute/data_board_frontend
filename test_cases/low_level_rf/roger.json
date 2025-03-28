@@ -22,6 +22,62 @@
                     "i": "1",
                     "moved": false,
                     "static": false
+                },
+                "plotSettings": {
+                    "plotTitle": "Plot 1",
+                    "curveAttributes": {
+                        "SINSB03-RILK:FIRSTERROR | sf-archiver | i32": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SINSB03-RILK:FIRSTERROR",
+                                "seriesId": "2388876181604777167",
+                                "source": "",
+                                "type": "i32",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SINSB03-RILK:FIRSTERROR | sf-archiver | i32",
+                            "axisAssignment": "y1"
+                        }
+                    },
+                    "yAxisAttributes": [
+                        {
+                            "label": "y1",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "SINSB03-RILK:FIRSTERROR | sf-archiver | i32",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y2",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y2",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y3",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y3",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y4",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y4",
+                            "manualDisplayLabel": false
+                        }
+                    ]
                 }
             },
             {
@@ -45,6 +101,62 @@
                     "i": "2",
                     "moved": false,
                     "static": false
+                },
+                "plotSettings": {
+                    "plotTitle": "Plot 2",
+                    "curveAttributes": {
+                        "SINSB03-RMSM:SM-GET | sf-archiver | enum": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SINSB03-RMSM:SM-GET",
+                                "seriesId": "5153070578867313411",
+                                "source": "",
+                                "type": "enum",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SINSB03-RMSM:SM-GET | sf-archiver | enum",
+                            "axisAssignment": "y1"
+                        }
+                    },
+                    "yAxisAttributes": [
+                        {
+                            "label": "y1",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "SINSB03-RMSM:SM-GET | sf-archiver | enum",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y2",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y2",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y3",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y3",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y4",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y4",
+                            "manualDisplayLabel": false
+                        }
+                    ]
                 }
             },
             {
@@ -78,6 +190,79 @@
                     "i": "3",
                     "moved": false,
                     "static": false
+                },
+                "plotSettings": {
+                    "plotTitle": "Plot 3",
+                    "curveAttributes": {
+                        "SINSB03-RLLE-REF10:SIG-PHASE-AVG | sf-databuffer | []": {
+                            "channel": {
+                                "backend": "sf-databuffer",
+                                "name": "SINSB03-RLLE-REF10:SIG-PHASE-AVG",
+                                "seriesId": "5496",
+                                "source": "",
+                                "type": "",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SINSB03-RLLE-REF10:SIG-PHASE-AVG | sf-databuffer | []",
+                            "axisAssignment": "y1"
+                        },
+                        "SINSB03-RLLE-REF20:SIG-PHASE-AVG | sf-databuffer | []": {
+                            "channel": {
+                                "backend": "sf-databuffer",
+                                "name": "SINSB03-RLLE-REF20:SIG-PHASE-AVG",
+                                "seriesId": "5444",
+                                "source": "",
+                                "type": "",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#ff7f0e",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SINSB03-RLLE-REF20:SIG-PHASE-AVG | sf-databuffer | []",
+                            "axisAssignment": "y2"
+                        }
+                    },
+                    "yAxisAttributes": [
+                        {
+                            "label": "y1",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "SINSB03-RLLE-REF10:SIG-PHASE-AVG | sf-databuffer | []",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y2",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "SINSB03-RLLE-REF20:SIG-PHASE-AVG | sf-databuffer | []",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y3",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y3",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y4",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y4",
+                            "manualDisplayLabel": false
+                        }
+                    ]
                 }
             }
         ]

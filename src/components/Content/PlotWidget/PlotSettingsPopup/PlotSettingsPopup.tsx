@@ -45,7 +45,7 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
         if (open) {
             setLocalPlotSettings(plotSettings);
         }
-    }, [open, plotSettings]);
+    }, [open]);
 
     // For the sake of simplicity, there is no safe button, updates are applied on safe.
     const saveAndClose = useCallback(() => {
@@ -163,6 +163,7 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                         <TableRow>
                                             <TableCell>Color</TableCell>
                                             <TableCell>Curve Shape</TableCell>
+                                            <TableCell>Curve Mode</TableCell>
                                             <TableCell>Name</TableCell>
                                             <TableCell>Backend</TableCell>
                                             <TableCell>Datatype</TableCell>

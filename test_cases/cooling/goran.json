@@ -132,6 +132,249 @@
                     "i": "1",
                     "moved": false,
                     "static": false
+                },
+                "plotSettings": {
+                    "plotTitle": "Plot 1",
+                    "curveAttributes": {
+                        "ARS01-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS01-CPCL-RTEMP:TEMP_X16",
+                                "seriesId": "2940147517510590188",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS01-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS02-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS02-CPCL-RTEMP:TEMP_X16",
+                                "seriesId": "7413411462534438361",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#ff7f0e",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS02-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS03-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS03-CPCL-RTEMP:TEMP_X16",
+                                "seriesId": "6239653448046309975",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#2ca02c",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS03-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS04-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS04-CPCL-RTEMP:TEMP_X16",
+                                "seriesId": "2635859668988823698",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#d62728",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS04-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS05-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS05-CPCL-RTEMP:TEMP_X16",
+                                "seriesId": "1469649673474154021",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#9467bd",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS05-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS06-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS06-CPCL-RTEMP:TEMP_X16",
+                                "seriesId": "6344841856146443254",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#8c564b",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS06-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS07-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS07-CPCL-RTEMP:TEMP_X16",
+                                "seriesId": "2740256513441678236",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#e377c2",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS07-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS08-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS08-CPCL-RTEMP:TEMP_X16",
+                                "seriesId": "7679260236021981534",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#7f7f7f",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS08-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS09-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS09-CPCL-RTEMP:TEMP_X16",
+                                "seriesId": "2185481656337658735",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#bcbd22",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS09-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS10-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS10-CPCL-RTEMP:TEMP_X16",
+                                "seriesId": "3818902745128808149",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#17becf",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS10-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS11-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS11-CPCL-RTEMP:TEMP_X16",
+                                "seriesId": "6471309768908450126",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS11-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS12-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS12-CPCL-RTEMP:TEMP_X16",
+                                "seriesId": "1230752007429286999",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#ff7f0e",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS12-CPCL-RTEMP:TEMP_X16 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        }
+                    },
+                    "yAxisAttributes": [
+                        {
+                            "label": "y1",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "value (multiple channels)",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y2",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y2",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y3",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y3",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y4",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y4",
+                            "manualDisplayLabel": false
+                        }
+                    ]
                 }
             },
             {
@@ -265,6 +508,249 @@
                     "i": "2",
                     "moved": false,
                     "static": false
+                },
+                "plotSettings": {
+                    "plotTitle": "Plot 2",
+                    "curveAttributes": {
+                        "ARS01-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS01-CPCL-RTEMP:TEMP_X17",
+                                "seriesId": "3648426080583532113",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS01-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS02-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS02-CPCL-RTEMP:TEMP_X17",
+                                "seriesId": "7011191411046253958",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#ff7f0e",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS02-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS03-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS03-CPCL-RTEMP:TEMP_X17",
+                                "seriesId": "2428714402599189291",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#2ca02c",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS03-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS04-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS04-CPCL-RTEMP:TEMP_X17",
+                                "seriesId": "7326745938828591407",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#d62728",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS04-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS05-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS05-CPCL-RTEMP:TEMP_X17",
+                                "seriesId": "7193397574189464667",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#9467bd",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS05-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS06-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS06-CPCL-RTEMP:TEMP_X17",
+                                "seriesId": "1468528264004395214",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#8c564b",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS06-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS07-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS07-CPCL-RTEMP:TEMP_X17",
+                                "seriesId": "5549945665915316450",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#e377c2",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS07-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS08-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS08-CPCL-RTEMP:TEMP_X17",
+                                "seriesId": "2683521830152260316",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#7f7f7f",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS08-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS09-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS09-CPCL-RTEMP:TEMP_X17",
+                                "seriesId": "1184765950567136221",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#bcbd22",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS09-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS10-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS10-CPCL-RTEMP:TEMP_X17",
+                                "seriesId": "5504983975816286607",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#17becf",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS10-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS11-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS11-CPCL-RTEMP:TEMP_X17",
+                                "seriesId": "4177477596910302526",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS11-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS12-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS12-CPCL-RTEMP:TEMP_X17",
+                                "seriesId": "7748544147954142828",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#ff7f0e",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS12-CPCL-RTEMP:TEMP_X17 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        }
+                    },
+                    "yAxisAttributes": [
+                        {
+                            "label": "y1",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "value (multiple channels)",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y2",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y2",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y3",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y3",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y4",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y4",
+                            "manualDisplayLabel": false
+                        }
+                    ]
                 }
             },
             {
@@ -398,6 +884,249 @@
                     "i": "3",
                     "moved": false,
                     "static": false
+                },
+                "plotSettings": {
+                    "plotTitle": "Plot 3",
+                    "curveAttributes": {
+                        "ARS01-CPCL-RTEMP:VALVE_GET | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS01-CPCL-RTEMP:VALVE_GET",
+                                "seriesId": "8260155858596228025",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS01-CPCL-RTEMP:VALVE_GET | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS02-CPCL-RTEMP:VALVE_GET | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS02-CPCL-RTEMP:VALVE_GET",
+                                "seriesId": "5888610260743246315",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#ff7f0e",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS02-CPCL-RTEMP:VALVE_GET | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS03-CPCL-RTEMP:VALVE_GET | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS03-CPCL-RTEMP:VALVE_GET",
+                                "seriesId": "2116109008851680034",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#2ca02c",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS03-CPCL-RTEMP:VALVE_GET | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS04-CPCL-RTEMP:VALVE_GET | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS04-CPCL-RTEMP:VALVE_GET",
+                                "seriesId": "4164804408170270485",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#d62728",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS04-CPCL-RTEMP:VALVE_GET | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS05-CPCL-RTEMP:VALVE_GET | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS05-CPCL-RTEMP:VALVE_GET",
+                                "seriesId": "7328083624697993790",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#9467bd",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS05-CPCL-RTEMP:VALVE_GET | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS06-CPCL-RTEMP:VALVE_GET | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS06-CPCL-RTEMP:VALVE_GET",
+                                "seriesId": "7070350140916755459",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#8c564b",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS06-CPCL-RTEMP:VALVE_GET | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS07-CPCL-RTEMP:VALVE_GET | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS07-CPCL-RTEMP:VALVE_GET",
+                                "seriesId": "6325802962527905852",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#e377c2",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS07-CPCL-RTEMP:VALVE_GET | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS08-CPCL-RTEMP:VALVE_GET | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS08-CPCL-RTEMP:VALVE_GET",
+                                "seriesId": "4836384576364977881",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#7f7f7f",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS08-CPCL-RTEMP:VALVE_GET | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS09-CPCL-RTEMP:VALVE_GET | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS09-CPCL-RTEMP:VALVE_GET",
+                                "seriesId": "3418276190535046168",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#bcbd22",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS09-CPCL-RTEMP:VALVE_GET | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS10-CPCL-RTEMP:VALVE_GET | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS10-CPCL-RTEMP:VALVE_GET",
+                                "seriesId": "2504786205741254614",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#17becf",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS10-CPCL-RTEMP:VALVE_GET | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS11-CPCL-RTEMP:VALVE_GET | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS11-CPCL-RTEMP:VALVE_GET",
+                                "seriesId": "3622990166356030127",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS11-CPCL-RTEMP:VALVE_GET | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS12-CPCL-RTEMP:VALVE_GET | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS12-CPCL-RTEMP:VALVE_GET",
+                                "seriesId": "1453068348966379894",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#ff7f0e",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS12-CPCL-RTEMP:VALVE_GET | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        }
+                    },
+                    "yAxisAttributes": [
+                        {
+                            "label": "y1",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "value (multiple channels)",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y2",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y2",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y3",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y3",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y4",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y4",
+                            "manualDisplayLabel": false
+                        }
+                    ]
                 }
             },
             {
@@ -531,6 +1260,249 @@
                     "i": "4",
                     "moved": false,
                     "static": false
+                },
+                "plotSettings": {
+                    "plotTitle": "Plot 4",
+                    "curveAttributes": {
+                        "ARS01-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS01-CPCL-RTEMP:TEMP_X10",
+                                "seriesId": "6524319853586547633",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS01-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS02-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS02-CPCL-RTEMP:TEMP_X10",
+                                "seriesId": "4402533240229586616",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#ff7f0e",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS02-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS03-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS03-CPCL-RTEMP:TEMP_X10",
+                                "seriesId": "2671411492240242110",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#2ca02c",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS03-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS04-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS04-CPCL-RTEMP:TEMP_X10",
+                                "seriesId": "7181475654592419045",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#d62728",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS04-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS05-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS05-CPCL-RTEMP:TEMP_X10",
+                                "seriesId": "3123359342421688566",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#9467bd",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS05-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS06-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS06-CPCL-RTEMP:TEMP_X10",
+                                "seriesId": "1699631009298825229",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#8c564b",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS06-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS07-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS07-CPCL-RTEMP:TEMP_X10",
+                                "seriesId": "5064852953738784293",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#e377c2",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS07-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS08-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS08-CPCL-RTEMP:TEMP_X10",
+                                "seriesId": "4542159092260222818",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#7f7f7f",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS08-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS09-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS09-CPCL-RTEMP:TEMP_X10",
+                                "seriesId": "3492362507540670199",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#bcbd22",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS09-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS10-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS10-CPCL-RTEMP:TEMP_X10",
+                                "seriesId": "7036704979853557282",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#17becf",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS10-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS11-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS11-CPCL-RTEMP:TEMP_X10",
+                                "seriesId": "2131231906707034084",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS11-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "ARS12-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64": {
+                            "channel": {
+                                "backend": "sls-archiver",
+                                "name": "ARS12-CPCL-RTEMP:TEMP_X10",
+                                "seriesId": "5897728238375044950",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#ff7f0e",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "ARS12-CPCL-RTEMP:TEMP_X10 | sls-archiver | f64",
+                            "axisAssignment": "y1"
+                        }
+                    },
+                    "yAxisAttributes": [
+                        {
+                            "label": "y1",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "value (multiple channels)",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y2",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y2",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y3",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y3",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y4",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y4",
+                            "manualDisplayLabel": false
+                        }
+                    ]
                 }
             }
         ]
