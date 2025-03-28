@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
     Dialog,
     DialogTitle,
@@ -23,6 +23,7 @@ import {
     defaultCurveColors,
     defaultCurveMode,
     defaultCurveShape,
+    defaultInitialSidebarState,
     defaultPlotBackgroundColor,
     defaultUseWebGL,
     defaultWidgetHeight,
@@ -32,11 +33,32 @@ import {
     defaultYAxisScaling,
 } from "../../helpers/defaults";
 import Plot from "react-plotly.js";
+import { InitialSidebarState } from "../Sidebar/Sidebar.types";
 
 const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     open,
     onClose,
 }) => {
+    const isWebGLSupported = useMemo(() => {
+        try {
+            const canvas = document.createElement("canvas");
+            if (
+                !window.WebGLRenderingContext ||
+                (!canvas.getContext("webgl") &&
+                    !canvas.getContext("experimental-webgl"))
+            ) {
+                return false;
+            }
+            return true;
+        } catch {
+            return false;
+        }
+    }, []);
+
+    const [initialSidebarState, setInitialSidebarState] = useLocalStorage(
+        "initialSidebarState",
+        defaultInitialSidebarState
+    );
     const [plotBackgroundColor, setPlotBackgroundColor] = useLocalStorage(
         "plotBackgroundColor",
         defaultPlotBackgroundColor
@@ -51,7 +73,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     );
     const [useWebGL, setUseWebGL] = useLocalStorage(
         "useWebGL",
-        isWebGLSupported() ? defaultUseWebGL : false
+        isWebGLSupported ? defaultUseWebGL : false
     );
     const [initialWidgetHeight, setInitialWidgetHeight] = useLocalStorage(
         "initialWidgetHeight",
@@ -79,10 +101,11 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     );
 
     const resetToDefaults = () => {
+        setInitialSidebarState(defaultInitialSidebarState);
         setPlotBackgroundColor(defaultPlotBackgroundColor);
         setXAxisGridColor(defaultXAxisGridColor);
         setYAxisGridColor(defaultYAxisGridColor);
-        setUseWebGL(isWebGLSupported() ? defaultUseWebGL : false);
+        setUseWebGL(isWebGLSupported ? defaultUseWebGL : false);
         setInitialWidgetHeight(defaultWidgetHeight);
         setInitialWidgetWidth(defaultWidgetWidth);
         setCurveColors(defaultCurveColors);
@@ -90,20 +113,6 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setCurveShape(defaultCurveShape);
         setCurveMode(defaultCurveMode);
     };
-
-    // from https://stackoverflow.com/a/22953053/21240915
-    function isWebGLSupported() {
-        try {
-            const canvas = document.createElement("canvas");
-            return (
-                !!window.WebGLRenderingContext &&
-                (canvas.getContext("webgl") ||
-                    canvas.getContext("experimental-webgl"))
-            );
-        } catch {
-            return false;
-        }
-    }
 
     return (
         <Dialog
@@ -135,6 +144,29 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                 <Typography variant="h4" sx={{ marginBottom: "8px" }}>
                     General
                 </Typography>
+
+                <Box sx={styles.settingBoxStyle}>
+                    <FormControl fullWidth>
+                        <InputLabel>Initial Sidebar State</InputLabel>
+                        <Select
+                            value={initialSidebarState}
+                            onChange={(e) =>
+                                setInitialSidebarState(
+                                    e.target.value as InitialSidebarState
+                                )
+                            }
+                            label="Initial Sidebar State"
+                        >
+                            <MenuItem value="closedIfDashboard">
+                                Closed if Dashboard is Provided
+                            </MenuItem>
+                            <MenuItem value="alwaysOpen">Always Open</MenuItem>
+                            <MenuItem value="alwaysClosed">
+                                Always Closed
+                            </MenuItem>
+                        </Select>
+                    </FormControl>
+                </Box>
 
                 <Box sx={styles.settingBoxStyle}>
                     <Typography variant="h6">Plot Background Color</Typography>
@@ -186,14 +218,14 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                             </Select>
                         </Tooltip>
                     </FormControl>
-                    {!isWebGLSupported() && useWebGL && (
+                    {!isWebGLSupported && useWebGL && (
                         <Typography variant="body2" sx={styles.errorStyle}>
                             ⚠ Your browser does not meet WebGL requirements.
                             The plots will probably break.
                         </Typography>
                     )}
 
-                    {isWebGLSupported() && !useWebGL && (
+                    {isWebGLSupported && !useWebGL && (
                         <Typography variant="body2" sx={styles.warningStyle}>
                             ⚠ WebGL is disabled. Enabling it can drastically
                             improve performance.
