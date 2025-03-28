@@ -20,7 +20,14 @@ export const useLocalStorage = <T>(
 ): [T, React.Dispatch<React.SetStateAction<T>>] => {
     // Retrieve and parse the stored value, or use the initial value if not present.
     const storedValue = localStorage.getItem(key);
-    const parsedValue = storedValue ? JSON.parse(storedValue) : initialValue;
+    let parsedValue: T;
+    if (storedValue !== null) {
+        parsedValue = JSON.parse(storedValue);
+    } else {
+        parsedValue = initialValue as T;
+        // Store the initialValue in localStorage if it doesn't exist
+        localStorage.setItem(key, JSON.stringify(initialValue));
+    }
 
     const [value, setValue] = useState<T>(parsedValue);
 
