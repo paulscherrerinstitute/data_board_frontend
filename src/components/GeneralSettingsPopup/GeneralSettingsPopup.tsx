@@ -241,18 +241,20 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     <Typography variant="h6">Plot Background Color</Typography>
                     <Input
                         type="color"
-                        value={plotBackgroundColor}
-                        onChange={(e) => setPlotBackgroundColor(e.target.value)}
+                        key={plotBackgroundColor}
+                        defaultValue={plotBackgroundColor} // Bind the value directly to the state
+                        onBlur={(e) => setPlotBackgroundColor(e.target.value)}
                         sx={styles.colorPickerStyle}
-                    ></Input>
+                    />
                 </Box>
 
                 <Box sx={styles.settingBoxStyle}>
                     <Typography variant="h6">X-Axis Grid Color</Typography>
                     <Input
                         type="color"
-                        value={xAxisGridColor}
-                        onChange={(e) => setXAxisGridColor(e.target.value)}
+                        key={xAxisGridColor}
+                        defaultValue={xAxisGridColor}
+                        onBlur={(e) => setXAxisGridColor(e.target.value)}
                         sx={styles.colorPickerStyle}
                     ></Input>
                 </Box>
@@ -261,8 +263,9 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     <Typography variant="h6">Y-Axis Grid Color</Typography>
                     <Input
                         type="color"
-                        value={yAxisGridColor}
-                        onChange={(e) => setYAxisGridColor(e.target.value)}
+                        key={yAxisGridColor}
+                        defaultValue={yAxisGridColor}
+                        onBlur={(e) => setYAxisGridColor(e.target.value)}
                         sx={styles.colorPickerStyle}
                     ></Input>
                 </Box>
@@ -373,8 +376,9 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                             <Box key={index} sx={{ marginBottom: "8px" }}>
                                 <Input
                                     type="color"
-                                    value={color}
-                                    onChange={(e) => {
+                                    key={curveColors[index]}
+                                    defaultValue={color}
+                                    onBlur={(e) => {
                                         const updatedColors = [...curveColors];
                                         updatedColors[index] = e.target.value;
                                         setCurveColors(updatedColors);
