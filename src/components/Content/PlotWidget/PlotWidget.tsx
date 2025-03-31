@@ -37,6 +37,7 @@ import {
 import PlotSettingsPopup from "./PlotSettingsPopup/PlotSettingsPopup";
 import { PlotSettings } from "./PlotSettingsPopup/PlotSettingsPopup.types";
 import LegendEntry from "./LegendEntry/LegendEntry";
+import showSnackbar from "../../../helpers/showSnackbar";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -517,8 +518,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     // Now we have our seriesId, if the channel still exists
                     if (filteredResults.length === 0) {
-                        alert(
-                            `Channel: ${channel.name} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.type}`
+                        showSnackbar(
+                            `Channel: ${channel.name} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.type}`,
+                            "error"
                         );
                         return;
                     }

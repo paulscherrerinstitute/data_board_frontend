@@ -31,6 +31,7 @@ import {
     defaultWidgetHeight,
     defaultWidgetWidth,
 } from "../../helpers/defaults";
+import showSnackbar from "../../helpers/showSnackbar";
 
 const Content: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -47,6 +48,7 @@ const Content: React.FC = () => {
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
+
     const [initialWidgetHeight] = useLocalStorage(
         "initialWidgetHeight",
         defaultWidgetHeight
@@ -94,12 +96,13 @@ const Content: React.FC = () => {
                         );
 
                     if (existingChannel) {
-                        console.error(
+                        console.warn(
                             "Widget already contains the channel:",
                             existingChannel
                         );
-                        alert(
-                            `Widget already contains the channel: ${existingChannel.name}`
+                        showSnackbar(
+                            `Widget already contains the channel: ${existingChannel.name}`,
+                            "warning"
                         );
                         return;
                     }
@@ -115,12 +118,12 @@ const Content: React.FC = () => {
                     setWidgets(newWidgets);
                 }
             } else {
-                console.error("Invalid channel structure.");
-                alert("Invalid channel structure.");
+                console.error("Invalid channel structure");
+                showSnackbar("Invalid channel structure", "error");
             }
         } catch (error) {
             console.error("Error parsing dropped data as JSON:", error);
-            alert(`Error parsing dropped data as JSON: ${error}`);
+            showSnackbar("Error parsing dropped data as JSON", "error");
         }
     };
 
@@ -294,6 +297,10 @@ const Content: React.FC = () => {
                         return;
                     } catch (e) {
                         console.error("Error fetching stored dashboard: ", e);
+                        showSnackbar(
+                            "Failed to fetch the dashboard provided in the url",
+                            "error"
+                        );
                     }
                 }
                 // If no dashboard data could be fetched or parsed, create an initial dashboard
@@ -327,16 +334,27 @@ const Content: React.FC = () => {
     }, [widgets]);
 
     const handleCreateDashboard = useCallback(async () => {
-        const response = await axios.post<DashboardDto>(
-            `${backendUrl}/dashboard`,
-            dashboardData
-        );
-        const dashboardId = response.data.id;
-        setSearchParams((searchParams) => {
-            const newSearchParams = searchParams;
-            newSearchParams.set("dashboardId", dashboardId);
-            return newSearchParams;
-        });
+        try {
+            const response = await axios.post<DashboardDto>(
+                `${backendUrl}/dashboard`,
+                dashboardData
+            );
+            const dashboardId = response.data.id;
+            setSearchParams((searchParams) => {
+                const newSearchParams = searchParams;
+                newSearchParams.set("dashboardId", dashboardId);
+                return newSearchParams;
+            });
+            showSnackbar(
+                "Successfully saved dashboard to server! We don't guarantee persistent storage, export to JSON if needed.",
+                "success"
+            );
+        } catch {
+            showSnackbar(
+                "Failed to save dashboard to server. Maybe try again, or export to JSON.",
+                "error"
+            );
+        }
     }, [backendUrl, dashboardData, setSearchParams]);
 
     const handleSaveDashboard = useCallback(async () => {
@@ -346,6 +364,10 @@ const Content: React.FC = () => {
                 await axios.patch<DashboardDto>(
                     `${backendUrl}/dashboard/${dashboardId}`,
                     dashboardData
+                );
+                showSnackbar(
+                    "Successfully saved dashboard to server! We don't guarantee persistent storage, export to JSON if needed.",
+                    "success"
                 );
                 return;
             } catch {
@@ -395,12 +417,13 @@ const Content: React.FC = () => {
                     })
                 );
                 setWidgets(uniqueKeyWidgets);
+                showSnackbar("Successfully imported dashboard!", "success");
             };
 
             input.click();
         } catch (e) {
             console.error("Error in handleImportDashboard:", e);
-            alert("Something went wrong while importing widgets.");
+            showSnackbar("Failed to import dashboard", "error");
         }
     }, [setWidgets]);
 

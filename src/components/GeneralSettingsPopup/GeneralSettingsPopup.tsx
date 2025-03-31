@@ -35,6 +35,7 @@ import {
 import Plot from "react-plotly.js";
 import { InitialSidebarState } from "../Sidebar/Sidebar.types";
 import { debounce } from "lodash";
+import showSnackbar from "../../helpers/showSnackbar";
 
 const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     open,
@@ -191,6 +192,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     setCurveMode(imported.curveMode);
             } catch (error) {
                 console.error("Error importing settings:", error);
+                showSnackbar("Failed to import settings", "error");
             }
         };
         reader.readAsText(file);

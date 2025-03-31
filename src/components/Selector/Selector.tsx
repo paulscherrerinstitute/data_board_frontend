@@ -25,6 +25,7 @@ import { useApiUrls } from "../ApiContext/ApiContext";
 import * as styles from "./Selector.styles";
 import { throttle } from "lodash";
 import { Channel, StoredChannel } from "./Selector.types";
+import showSnackbar from "../../helpers/showSnackbar";
 
 const Selector: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -129,8 +130,9 @@ const Selector: React.FC = () => {
             setTypeOptions(types);
             setSelectedBackends(backends);
             setSelectedTypes(types);
-        } catch (err) {
-            console.log(err);
+        } catch (error) {
+            console.error(error);
+            showSnackbar("Failed to fetch recent channels", "error");
         }
     }, [backendUrl]);
 
@@ -224,9 +226,10 @@ const Selector: React.FC = () => {
                     setTypeOptions(types);
 
                     setSearchResultsIsRecent(false);
-                } catch (err) {
+                } catch (error) {
+                    console.error(error);
                     setError("Error fetching channels");
-                    console.log(err);
+                    showSnackbar("Failed to fetch channels", "error");
                 }
                 setLoading(false);
                 searchIsRunningRef.current = false;
