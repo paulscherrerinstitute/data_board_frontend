@@ -34,6 +34,7 @@ import {
 } from "../../helpers/defaults";
 import Plot from "react-plotly.js";
 import { InitialSidebarState } from "../Sidebar/Sidebar.types";
+import { debounce } from "lodash";
 
 const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     open,
@@ -63,13 +64,25 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         "plotBackgroundColor",
         defaultPlotBackgroundColor
     );
+    const debouncedSetPlotBackgroundColor = useMemo(
+        () => debounce((color: string) => setPlotBackgroundColor(color), 100),
+        [setPlotBackgroundColor]
+    );
     const [xAxisGridColor, setXAxisGridColor] = useLocalStorage(
         "xAxisGridColor",
         defaultXAxisGridColor
     );
+    const debouncedSetXAxisGridColor = useMemo(
+        () => debounce((color: string) => setXAxisGridColor(color), 100),
+        [setXAxisGridColor]
+    );
     const [yAxisGridColor, setYAxisGridColor] = useLocalStorage(
         "yAxisGridColor",
         defaultYAxisGridColor
+    );
+    const debouncedSetYAxisGridColor = useMemo(
+        () => debounce((color: string) => setYAxisGridColor(color), 100),
+        [setYAxisGridColor]
     );
     const [useWebGL, setUseWebGL] = useLocalStorage(
         "useWebGL",
@@ -86,6 +99,10 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     const [curveColors, setCurveColors] = useLocalStorage(
         "curveColors",
         defaultCurveColors
+    );
+    const debouncedSetCurveColors = useMemo(
+        () => debounce((colors: string[]) => setCurveColors(colors), 100),
+        [setCurveColors]
     );
     const [yAxisScaling, setYAxisScaling] = useLocalStorage(
         "yAxisScaling",
@@ -241,9 +258,10 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     <Typography variant="h6">Plot Background Color</Typography>
                     <Input
                         type="color"
-                        key={plotBackgroundColor}
-                        defaultValue={plotBackgroundColor} // Bind the value directly to the state
-                        onBlur={(e) => setPlotBackgroundColor(e.target.value)}
+                        value={plotBackgroundColor}
+                        onChange={(e) =>
+                            debouncedSetPlotBackgroundColor(e.target.value)
+                        }
                         sx={styles.colorPickerStyle}
                     />
                 </Box>
@@ -252,9 +270,10 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     <Typography variant="h6">X-Axis Grid Color</Typography>
                     <Input
                         type="color"
-                        key={xAxisGridColor}
-                        defaultValue={xAxisGridColor}
-                        onBlur={(e) => setXAxisGridColor(e.target.value)}
+                        value={xAxisGridColor}
+                        onChange={(e) =>
+                            debouncedSetXAxisGridColor(e.target.value)
+                        }
                         sx={styles.colorPickerStyle}
                     ></Input>
                 </Box>
@@ -263,9 +282,10 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     <Typography variant="h6">Y-Axis Grid Color</Typography>
                     <Input
                         type="color"
-                        key={yAxisGridColor}
-                        defaultValue={yAxisGridColor}
-                        onBlur={(e) => setYAxisGridColor(e.target.value)}
+                        value={yAxisGridColor}
+                        onChange={(e) =>
+                            debouncedSetYAxisGridColor(e.target.value)
+                        }
                         sx={styles.colorPickerStyle}
                     ></Input>
                 </Box>
@@ -376,12 +396,11 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                             <Box key={index} sx={{ marginBottom: "8px" }}>
                                 <Input
                                     type="color"
-                                    key={curveColors[index]}
-                                    defaultValue={color}
-                                    onBlur={(e) => {
+                                    value={color}
+                                    onChange={(e) => {
                                         const updatedColors = [...curveColors];
                                         updatedColors[index] = e.target.value;
-                                        setCurveColors(updatedColors);
+                                        debouncedSetCurveColors(updatedColors);
                                     }}
                                     sx={styles.colorPickerStyle}
                                 />
