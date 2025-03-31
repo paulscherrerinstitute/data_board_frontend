@@ -101,7 +101,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 },
             ];
         });
-        const [plotTitle, setPlotTitle] = useState(`Plot ${index}`);
+        const [plotTitle, setPlotTitle] = useState(`New Plot`);
         const [openPlotSettings, setOpenPlotSettings] = useState(false);
 
         const [plotBackgroundColor] = useLocalStorage(

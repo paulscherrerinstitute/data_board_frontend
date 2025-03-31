@@ -9,6 +9,7 @@ import { Box, Button, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
+import * as uuid from "uuid";
 import {
     Widget,
     TimeValues,
@@ -59,7 +60,6 @@ const Content: React.FC = () => {
     const prevWidgetsLengthRef = useRef<number | null>(null);
     const isWidgetsInitializedRef = useRef(false);
     const gridContainerRef = useRef<HTMLElement | null>(null);
-    const newPlotNumberRef = useRef(1);
 
     const handleDrop = (event: React.DragEvent<HTMLElement>, key: string) => {
         event.preventDefault();
@@ -183,14 +183,12 @@ const Content: React.FC = () => {
             }
         }
 
-        const plotNumber = newPlotNumberRef.current;
-        newPlotNumberRef.current++;
         setWidgets((prevWidgets) => [
             ...prevWidgets,
             {
                 channels: initialChannels,
                 layout: {
-                    i: plotNumber.toString(),
+                    i: uuid.v4(),
                     x: calculatedX,
                     y: Infinity,
                     w: initialWidgetWidth,
@@ -291,13 +289,6 @@ const Content: React.FC = () => {
                         );
                         const dashboard = response.data.dashboard;
                         if (dashboard) {
-                            const maxPlotNumber = Math.max(
-                                ...dashboard.widgets.map(
-                                    (widget) =>
-                                        parseInt(widget.layout.i, 10) || 0
-                                )
-                            );
-                            newPlotNumberRef.current = maxPlotNumber + 1;
                             setWidgets(dashboard.widgets);
                         }
                         return;
@@ -306,13 +297,11 @@ const Content: React.FC = () => {
                     }
                 }
                 // If no dashboard data could be fetched or parsed, create an initial dashboard
-                const plotNumber = newPlotNumberRef.current;
-                newPlotNumberRef.current++;
                 setWidgets([
                     {
                         channels: [],
                         layout: {
-                            i: plotNumber.toString(),
+                            i: uuid.v4(),
                             x: 0,
                             y: 0,
                             w: 12,
@@ -395,7 +384,17 @@ const Content: React.FC = () => {
                 const parsedDashboard = JSON.parse(
                     content
                 ) as typeof dashboardData;
-                setWidgets(parsedDashboard.dashboard.widgets);
+                // To avoid rerendering issues caused by using i as a key, update all keys.
+                const uniqueKeyWidgets = parsedDashboard.dashboard.widgets.map(
+                    (widget) => ({
+                        ...widget,
+                        layout: {
+                            ...widget.layout,
+                            i: uuid.v4(),
+                        },
+                    })
+                );
+                setWidgets(uniqueKeyWidgets);
             };
 
             input.click();
@@ -403,7 +402,7 @@ const Content: React.FC = () => {
             console.error("Error in handleImportDashboard:", e);
             alert("Something went wrong while importing widgets.");
         }
-    }, []);
+    }, [setWidgets]);
 
     return (
         <Box sx={styles.contentContainerStyle}>
