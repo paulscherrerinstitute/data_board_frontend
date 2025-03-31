@@ -179,11 +179,13 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                 <TableCell>
                                                     <Input
                                                         type="color"
-                                                        value={attr.color}
+                                                        defaultValue={
+                                                            attr.color
+                                                        }
                                                         sx={
                                                             styles.colorPickerStyle
                                                         }
-                                                        onChange={(e) =>
+                                                        onBlur={(e) =>
                                                             handleCurveAttributesChanged(
                                                                 key,
                                                                 "color",

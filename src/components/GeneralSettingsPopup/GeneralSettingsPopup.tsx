@@ -34,6 +34,7 @@ import {
 } from "../../helpers/defaults";
 import Plot from "react-plotly.js";
 import { InitialSidebarState } from "../Sidebar/Sidebar.types";
+import { debounce } from "lodash";
 
 const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     open,
@@ -63,13 +64,25 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         "plotBackgroundColor",
         defaultPlotBackgroundColor
     );
+    const debouncedSetPlotBackgroundColor = useMemo(
+        () => debounce((color: string) => setPlotBackgroundColor(color), 100),
+        [setPlotBackgroundColor]
+    );
     const [xAxisGridColor, setXAxisGridColor] = useLocalStorage(
         "xAxisGridColor",
         defaultXAxisGridColor
     );
+    const debouncedSetXAxisGridColor = useMemo(
+        () => debounce((color: string) => setXAxisGridColor(color), 100),
+        [setXAxisGridColor]
+    );
     const [yAxisGridColor, setYAxisGridColor] = useLocalStorage(
         "yAxisGridColor",
         defaultYAxisGridColor
+    );
+    const debouncedSetYAxisGridColor = useMemo(
+        () => debounce((color: string) => setYAxisGridColor(color), 100),
+        [setYAxisGridColor]
     );
     const [useWebGL, setUseWebGL] = useLocalStorage(
         "useWebGL",
@@ -86,6 +99,10 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     const [curveColors, setCurveColors] = useLocalStorage(
         "curveColors",
         defaultCurveColors
+    );
+    const debouncedSetCurveColors = useMemo(
+        () => debounce((colors: string[]) => setCurveColors(colors), 100),
+        [setCurveColors]
     );
     const [yAxisScaling, setYAxisScaling] = useLocalStorage(
         "yAxisScaling",
@@ -242,9 +259,11 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     <Input
                         type="color"
                         value={plotBackgroundColor}
-                        onChange={(e) => setPlotBackgroundColor(e.target.value)}
+                        onChange={(e) =>
+                            debouncedSetPlotBackgroundColor(e.target.value)
+                        }
                         sx={styles.colorPickerStyle}
-                    ></Input>
+                    />
                 </Box>
 
                 <Box sx={styles.settingBoxStyle}>
@@ -252,7 +271,9 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     <Input
                         type="color"
                         value={xAxisGridColor}
-                        onChange={(e) => setXAxisGridColor(e.target.value)}
+                        onChange={(e) =>
+                            debouncedSetXAxisGridColor(e.target.value)
+                        }
                         sx={styles.colorPickerStyle}
                     ></Input>
                 </Box>
@@ -262,7 +283,9 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     <Input
                         type="color"
                         value={yAxisGridColor}
-                        onChange={(e) => setYAxisGridColor(e.target.value)}
+                        onChange={(e) =>
+                            debouncedSetYAxisGridColor(e.target.value)
+                        }
                         sx={styles.colorPickerStyle}
                     ></Input>
                 </Box>
@@ -377,7 +400,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                     onChange={(e) => {
                                         const updatedColors = [...curveColors];
                                         updatedColors[index] = e.target.value;
-                                        setCurveColors(updatedColors);
+                                        debouncedSetCurveColors(updatedColors);
                                     }}
                                     sx={styles.colorPickerStyle}
                                 />
