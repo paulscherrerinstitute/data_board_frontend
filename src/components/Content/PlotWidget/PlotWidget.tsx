@@ -14,6 +14,7 @@ import {
     YAxisAssignment,
     CurveAttributes,
     YAxisAttributes,
+    AxisLimit,
 } from "./PlotWidget.types";
 import Plot from "react-plotly.js";
 import { useApiUrls } from "../../ApiContext/ApiContext";
@@ -957,17 +958,32 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         ) as YAxisAssignment[]; // Since the assignment is not manual, we know the X-Axis isn't assigned.
 
                     sortedAssignments.forEach((assignment, index) => {
-                        const scaling =
-                            yAxisAttributes.find(
-                                (attributes) => attributes.label === assignment
-                            )?.scaling || "linear";
+                        const attributes = yAxisAttributes.find(
+                            (attributes) => attributes.label === assignment
+                        );
+
+                        const scaling = attributes?.scaling || "linear";
                         const displayLabel =
-                            yAxisAttributes.find(
-                                (attributes) => attributes.label === assignment
-                            )?.displayLabel || assignment;
+                            attributes?.displayLabel || assignment;
+
+                        let useCustomRange = false;
+
+                        const range: { [key: string]: AxisLimit[] } = {};
+
+                        if (
+                            attributes &&
+                            attributes.min !== null &&
+                            attributes.max !== null
+                        ) {
+                            useCustomRange = true;
+                            range.range = [attributes.min, attributes.max];
+                        }
+
                         yAxes.push({
                             [`yaxis${index === 0 ? "" : index + 1}`]: {
                                 type: scaling,
+                                autorange: !useCustomRange,
+                                fixedrange: useCustomRange,
                                 gridcolor: yAxisGridColor,
                                 title: { text: displayLabel },
                                 overlaying: index === 0 ? undefined : "y", // overlay all except the first axis
@@ -980,6 +996,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         : 1 -
                                           index /
                                               (40 * (window.innerWidth / 2560)),
+                                ...range,
                             },
                         });
                     });
@@ -1004,21 +1021,31 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                 uniqueAssignments.forEach((assignment) => {
                     const index = parseInt(assignment.slice(1), 10) - 1;
-                    const scaling =
-                        yAxisAttributes.find(
-                            (attributes) => attributes.label === assignment
-                        )?.scaling || "linear";
-                    const displayLabel =
-                        yAxisAttributes.find(
-                            (attributes) => attributes.label === assignment
-                        )?.displayLabel || assignment;
+                    const attributes = yAxisAttributes.find(
+                        (attr) => attr.label === assignment
+                    );
+
+                    const scaling = attributes?.scaling || "linear";
+                    const displayLabel = attributes?.displayLabel || assignment;
+
+                    let useCustomRange = false;
+
+                    const range: { [key: string]: AxisLimit[] } = {};
+
+                    if (
+                        attributes &&
+                        attributes.min !== null &&
+                        attributes.max !== null
+                    ) {
+                        useCustomRange = true;
+                        range.range = [attributes.min, attributes.max];
+                    }
+
                     yAxes.push({
                         [`yaxis${index === 0 ? "" : index + 1}`]: {
                             type: scaling,
-                            range: [
-                                yAxisAttributes[index].min,
-                                yAxisAttributes[index].max,
-                            ],
+                            autorange: !useCustomRange,
+                            fixedrange: useCustomRange,
                             gridcolor: yAxisGridColor,
                             title: { text: displayLabel },
                             overlaying: index === 0 ? undefined : "y",
@@ -1029,6 +1056,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     ? index / (40 * (window.innerWidth / 2560))
                                     : 1 -
                                       index / (40 * (window.innerWidth / 2560)),
+                            ...range,
                         },
                     });
                 });
