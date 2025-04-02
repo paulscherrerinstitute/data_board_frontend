@@ -335,12 +335,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 }
             };
 
+            const handleMouse = (event: MouseEvent) => {
+                isCtrlPressed.current = event.getModifierState("Control");
+            };
+
             window.addEventListener("keydown", handleKeyDown);
             window.addEventListener("keyup", handleKeyUp);
+            window.addEventListener("mousemove", handleMouse);
 
             return () => {
                 window.removeEventListener("keydown", handleKeyDown);
                 window.removeEventListener("keyup", handleKeyUp);
+                window.removeEventListener("mousemove", handleMouse);
             };
         }, []);
 
