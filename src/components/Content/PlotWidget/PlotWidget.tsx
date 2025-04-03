@@ -1048,6 +1048,26 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     ([, attributes]) => attributes.axisAssignment === "x"
                 )?.[1].displayLabel || "Time";
 
+            let leftYAxes = 0;
+            let rightYAxes = 0;
+
+            for (let i = 0; i < yAxes.length; i++) {
+                // Extract the actual axis number from the key (e.g. "yaxis3" -> 3, "yaxis" -> 1)
+                const axisKey = Object.keys(yAxes[i])[0];
+                const axisNumber =
+                    axisKey === "yaxis"
+                        ? 1
+                        : parseInt(axisKey.replace("yaxis", ""));
+                const axis =
+                    yAxes[i][`yaxis${axisNumber === 1 ? "" : axisNumber}`];
+
+                if (axis?.side === "left") {
+                    leftYAxes++;
+                } else if (axis?.side === "right") {
+                    rightYAxes++;
+                }
+            }
+
             const layout = {
                 title: {
                     text: plotTitle,
@@ -1065,21 +1085,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     title: {
                         text: xLabel,
                     },
-                    ...(curves.length <= 4
-                        ? {
-                              // Specify the width of the X axis to leave enough room for all y axes
-                              domain: [
-                                  0.01 +
-                                      Math.ceil(curves.length / 2) /
-                                          (40 * (window.innerWidth / 2560)),
-                                  1.01 -
-                                      Math.floor(curves.length / 2) /
-                                          (40 *
-                                              0.5 *
-                                              (window.innerWidth / 2560)),
-                              ],
-                          }
-                        : {}),
+                    ...{
+                        // Specify the width of the X axis to leave enough room for all y axes
+                        domain: [
+                            0.01 +
+                                leftYAxes / (40 * (window.innerWidth / 2560)),
+                            1.01 -
+                                rightYAxes /
+                                    (40 * 0.5 * (window.innerWidth / 2560)),
+                        ],
+                    },
                 },
                 yaxis: {
                     gridcolor: yAxisGridColor,
