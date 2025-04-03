@@ -44,11 +44,11 @@ export const gridItemStyle: SxProps<Theme> = {
     justifyContent: "center",
     alignItems: "center",
     borderRadius: "8px",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    boxShadow: (theme) => `0 2px 4px ${theme.palette.divider}`,
     transition: "filter 0.3s ease",
-    background: "#e0e0e0",
+    background: (theme) => theme.palette.background.paper,
     "&:hover": {
-        backgroundColor: "rgba(0, 0, 0, 0.1)",
+        backgroundColor: (theme) => theme.palette.action.hover,
     },
 };
 

@@ -16,6 +16,7 @@ import {
     Select,
     Checkbox,
     ListItemText,
+    useTheme,
 } from "@mui/material";
 import debounce from "lodash/debounce";
 import axios from "axios";
@@ -44,6 +45,7 @@ const Selector: React.FC = () => {
     const alreadyFetchedRecentRef = useRef(false);
     const selectRef = useRef<HTMLHeadingElement>(null);
     const searchIsRunningRef = useRef(false);
+    const theme = useTheme();
 
     const filteredChannels = useMemo(() => {
         let regex: RegExp | null = null;
@@ -492,7 +494,10 @@ const Selector: React.FC = () => {
                 )}
 
                 <ListWindow
-                    style={{ background: "#46494A" }}
+                    style={{
+                        background:
+                            theme.palette.custom.sidebar.background.secondary,
+                    }}
                     height={660}
                     itemCount={filteredChannels.length}
                     itemSize={46}
@@ -503,6 +508,7 @@ const Selector: React.FC = () => {
                         onDeselect: handleDeselectChannel,
                         onDragStart: handleDragStart,
                         isDraggable: true,
+                        theme,
                     }}
                 >
                     {ListItemRow}

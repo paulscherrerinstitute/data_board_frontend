@@ -36,6 +36,8 @@ import Plot from "react-plotly.js";
 import { InitialSidebarState } from "../Sidebar/Sidebar.types";
 import { debounce } from "lodash";
 import showSnackbar from "../../helpers/showSnackbar";
+import { useTheme } from "../../themes/themes";
+import { AvailableTheme } from "../../themes/themes.types";
 
 const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     open,
@@ -120,6 +122,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const { setTheme } = useTheme();
+
     const resetToDefaults = () => {
         setInitialSidebarState(defaultInitialSidebarState);
         setPlotBackgroundColor(defaultPlotBackgroundColor);
@@ -202,6 +206,10 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         }
     };
 
+    const updateTheme = (theme: AvailableTheme) => {
+        setTheme(theme);
+    };
+
     return (
         <Dialog
             open={open}
@@ -251,6 +259,27 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                             <MenuItem value="alwaysOpen">Always Open</MenuItem>
                             <MenuItem value="alwaysClosed">
                                 Always Closed
+                            </MenuItem>
+                        </Select>
+                    </FormControl>
+                </Box>
+
+                <Box sx={styles.settingBoxStyle}>
+                    <FormControl fullWidth>
+                        <InputLabel>Theme</InputLabel>
+                        <Select
+                            value={localStorage.getItem("theme") || "default"}
+                            onChange={(e) => {
+                                updateTheme(e.target.value as AvailableTheme);
+                            }}
+                            label="Theme"
+                        >
+                            <MenuItem value="default">Classic</MenuItem>
+                            <MenuItem value="dark">Dark</MenuItem>
+                            <MenuItem value="light">Light</MenuItem>
+                            <MenuItem value="nicole">Nicole</MenuItem>
+                            <MenuItem value="highContrast">
+                                High Contrast
                             </MenuItem>
                         </Select>
                     </FormControl>

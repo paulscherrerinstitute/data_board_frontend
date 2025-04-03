@@ -5,25 +5,12 @@ export const sidebarStyle: SxProps<Theme> = {
     flexDirection: "column",
     position: "relative",
     height: "100%",
-    background: "#353839",
+    background: (theme) => theme.palette.custom.sidebar.background.primary,
     zIndex: 10,
-    borderRight: "5px solid rgba(0, 0, 0, 0.4)",
+    borderColor: (theme) => theme.palette.divider,
+    borderRight: (theme) => `5px solid ${theme.palette.divider}`,
     "&:hover": {
-        borderRight: "5px solid rgba(0, 0, 0, 0.6)", // Hover effect
-    },
-};
-
-export const resizerStyle: SxProps<Theme> = {
-    width: "5px",
-    cursor: "ew-resize",
-    position: "absolute",
-    top: 0,
-    right: 0,
-    height: "100%",
-    zIndex: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-    "&:hover": {
-        backgroundColor: "rgba(0, 0, 0, 0.6)",
+        borderRight: (theme) => `5px solid ${theme.palette.secondary.dark}`, // Hover effect
     },
 };
 
@@ -36,7 +23,7 @@ export const buttonContainerStyle: SxProps<Theme> = {
     zIndex: 100,
     transform: "translateX(100%)",
     display: "flex",
-    background: "#353839",
+    background: (theme) => theme.palette.custom.sidebar.background.primary,
     paddingLeft: "20px",
     borderRadius: 1,
 };
@@ -64,6 +51,9 @@ export const buttonOptionsStyle: SxProps<Theme> = {
 };
 
 export const menuButtonStyle: SxProps<Theme> = {
-    color: "white",
+    color: (theme) =>
+        theme.palette.getContrastText(
+            theme.palette.custom.sidebar.background.primary
+        ),
     maxWidth: "100%",
 };

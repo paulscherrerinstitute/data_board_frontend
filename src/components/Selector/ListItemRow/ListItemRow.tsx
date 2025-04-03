@@ -13,7 +13,8 @@ import * as styles from "./ListItemRow.styles";
 import { ListItemRowProps } from "./ListItemRow.types";
 
 const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
-    const { items, onSelect, onDeselect, onDragStart, isDraggable } = data;
+    const { items, onSelect, onDeselect, onDragStart, isDraggable, theme } =
+        data;
     const seriesId = items[index].attributes.seriesId;
     const isSelected = items[index].selected;
     const name = items[index].attributes.name;
@@ -26,7 +27,10 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
         <ListItem
             style={{
                 ...style,
-                background: index % 2 === 0 ? "#505355" : "#3E4142",
+                background:
+                    index % 2 === 0
+                        ? theme.palette.custom.sidebar.results.primary
+                        : theme.palette.custom.sidebar.results.secondary,
             }}
             key={seriesId}
         >
@@ -52,8 +56,12 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
                 <ListItemText
                     sx={styles.listItemTextStyle}
                     slotProps={{
-                        primary: { style: { color: "white" } },
-                        secondary: { style: { color: "#eee" } },
+                        primary: {
+                            style: { color: theme.palette.custom.sidebar.text },
+                        },
+                        secondary: {
+                            style: { color: theme.palette.custom.sidebar.text },
+                        },
                     }}
                     primary={name}
                     secondary={`${backend} - ${type}`}

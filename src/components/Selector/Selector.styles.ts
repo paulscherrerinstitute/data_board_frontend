@@ -7,13 +7,13 @@ export const containerStyle: SxProps<Theme> = {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    background: "#353839",
+    background: (theme) => theme.palette.custom.sidebar.background.primary,
 };
 
 export const textFieldStyle: SxProps<Theme> = {
     marginBottom: 2,
     "& label, & input, & p": {
-        color: "#fff",
+        color: (theme) => theme.palette.custom.sidebar.text,
     },
 };
 
@@ -21,19 +21,20 @@ export const searchBoxStyle: SxProps<Theme> = {
     marginTop: 1,
     marginBottom: 2,
     "& .MuiInputBase-root": {
-        backgroundColor: "white",
+        backgroundColor: (theme) =>
+            theme.palette.custom.sidebar.background.tertiary,
     },
     "& .MuiInputLabel-root": {
-        color: "black",
+        color: (theme) => theme.palette.text.primary,
     },
     "& .MuiFormHelperText-root": {
-        color: "white",
+        color: (theme) => theme.palette.custom.sidebar.text,
     },
 };
 
 export const buttonStyle: SxProps<Theme> = {
     marginBottom: 2,
-    color: "white",
+    color: (theme) => theme.palette.primary.secondary,
 };
 
 export const listBoxStyle: SxProps<Theme> = {
@@ -44,12 +45,12 @@ export const listBoxStyle: SxProps<Theme> = {
 
 export const typographyHeaderStyle: SxProps<Theme> = {
     variant: "h6",
-    color: "white",
+    color: (theme) => theme.palette.custom.sidebar.text,
 };
 
 export const typographyTitleStyle: SxProps<Theme> = {
     variant: "h4",
-    color: "white",
+    color: (theme) => theme.palette.custom.sidebar.text,
 };
 
 export const filterBoxStyle: SxProps<Theme> = {
@@ -72,8 +73,8 @@ export const dropwDownBoxStyle: SxProps<Theme> = {
 
 export const filterDropdownStyle: SxProps<Theme> = {
     width: "100%",
-    backgroundColor: "#f4f4f4",
-    color: "#000",
+    backgroundColor: (theme) => theme.palette.background.default,
+    color: (theme) => theme.palette.text.primary,
     div: {
         padding: 0.7,
     },
@@ -81,8 +82,8 @@ export const filterDropdownStyle: SxProps<Theme> = {
 
 export const menuItemStyle: SxProps<Theme> = {
     width: "100%",
-    backgroundColor: "#f4f4f4",
-    color: "#000",
+    backgroundColor: (theme) => theme.palette.background.default,
+    color: (theme) => theme.palette.text.primary,
 };
 
 export const statusSymbolStyle: SxProps<Theme> = {
@@ -95,14 +96,14 @@ export const selectAllStyle: SxProps<Theme> = {
     display: "flex",
     alignItems: "center",
     gap: 1,
-    color: "#fff",
+    color: (theme) => theme.palette.custom.sidebar.text,
     padding: 1,
 };
 
 export const checkboxStyle: SxProps<Theme> = {
     "&.MuiCheckbox-root": {
-        color: "black",
-        background: "white",
+        color: (theme) => theme.palette.text.primary,
+        background: (theme) => theme.palette.background.paper,
         borderRadius: 0,
         padding: 0,
     },
