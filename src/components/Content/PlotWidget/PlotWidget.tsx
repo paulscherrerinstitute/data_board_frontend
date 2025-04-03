@@ -938,6 +938,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             }
 
             result.push(...values);
+
+            // For the shadow axis - to always allow zoom, even with manual limits
+            result.push({
+                showlegend: false,
+                showscale: false,
+                yaxis: "y5",
+                hoverinfo: "skip",
+            });
             return result;
         }, [curves, curveAttributes, useWebGL, getLabelForCurve]);
 
@@ -1061,6 +1069,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     });
                 });
             }
+
+            // Add shadow axis; this one is invisible, and is simply here to always allow zooming, even if manual limits are set. ;)
+            yAxes.push({
+                yaxis5: {
+                    visible: false,
+                    overlaying: "y",
+                    autorange: true,
+                    fixedrange: false,
+                },
+            });
 
             const xLabel =
                 Array.from(curveAttributes).find(
