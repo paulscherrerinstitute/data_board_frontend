@@ -1,4 +1,4 @@
-import React, {
+import {
     forwardRef,
     useCallback,
     useEffect,
@@ -14,6 +14,7 @@ import {
     Button,
     Typography,
     Tooltip,
+    LinearProgress,
 } from "@mui/material";
 import {
     AutoApplyOption,
@@ -21,6 +22,7 @@ import {
     TimeSourceOption,
     QuickSelectOption,
     TimeSelectorHandle,
+    LocalTimeSelectorHandle,
 } from "./TimeSelector.types";
 import * as styles from "./TimeSelector.styles";
 import { useSearchParams } from "react-router-dom";
@@ -28,6 +30,7 @@ import { DateTimePicker } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 
 const quickOptions = [
+    { label: "Not selected", value: false },
     { label: "Last 1m", value: 1 },
     { label: "Last 10m", value: 10 },
     { label: "Last 1h", value: 60 },
@@ -52,11 +55,23 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         const [rawWhenSparse, setRawWhenSparse] = useState(true);
         const [removeEmptyBins, setRemoveEmptyBins] = useState(true);
         const [selectedQuickOption, setSelectedQuickOption] =
-            useState<QuickSelectOption>(quickOptions[1].value);
+            useState<QuickSelectOption>(quickOptions[0].value);
         const [autoApply, setAutoApply] = useState<AutoApplyOption>("never");
+        const [autoApplyProgress, setAutoApplyProgress] = useState(0);
         const autoApplyIntervalRef = useRef<NodeJS.Timeout | null>(null);
+        const autoApplyProgressIntervalRef = useRef<NodeJS.Timeout | null>(
+            null
+        );
         const timeSourceRef = useRef<TimeSourceOption>("quickselect");
         const isUrlParsed = useRef(false);
+
+        const localRef = useRef<LocalTimeSelectorHandle>(null);
+
+        useImperativeHandle(localRef, () => ({
+            autoApply: () => {
+                handleApply();
+            },
+        }));
 
         const convertQuickOptionToTimestamps = (option: QuickSelectOption) => {
             const now = new Date();
@@ -114,6 +129,10 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         };
 
         const handleQuickSelect = (value: QuickSelectOption) => {
+            if (value === "false") {
+                timeSourceRef.current = "manual";
+                return;
+            }
             timeSourceRef.current = "quickselect";
             setSelectedQuickOption(value);
 
@@ -123,6 +142,49 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             setEndTime(dayjs(end));
         };
 
+        const setTimeSearchParams = useCallback(
+            (startUnixTimeMs: number, endUnixTimeMs: number) => {
+                const startParam = startUnixTimeMs.toString();
+                const endParam = endUnixTimeMs.toString();
+
+                setSearchParams((searchParams) => {
+                    const newSearchParams = new URLSearchParams(
+                        searchParams.toString()
+                    );
+                    newSearchParams.set("startTime", startParam);
+                    newSearchParams.set("endTime", endParam);
+
+                    if (timeSourceRef.current === "quickselect") {
+                        newSearchParams.set(
+                            "relativeTime",
+                            selectedQuickOption.toString()
+                        );
+                    } else {
+                        newSearchParams.set("relativeTime", "false");
+                    }
+
+                    newSearchParams.set(
+                        "rawWhenSparse",
+                        rawWhenSparse ? "true" : "false"
+                    );
+                    newSearchParams.set(
+                        "removeEmptyBins",
+                        removeEmptyBins ? "true" : "false"
+                    );
+                    newSearchParams.set("autoApply", autoApply);
+
+                    return newSearchParams;
+                });
+            },
+            [
+                setSearchParams,
+                rawWhenSparse,
+                removeEmptyBins,
+                selectedQuickOption,
+                autoApply,
+            ]
+        );
+
         const handleApply = useCallback(() => {
             // in case a quickselect option was selected last, recalculate the start and end times based on it
             if (timeSourceRef.current === "quickselect") {
@@ -130,7 +192,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     convertQuickOptionToTimestamps(selectedQuickOption);
                 setStartTime(dayjs(start));
                 setEndTime(dayjs(end));
-            }
+            } else setSelectedQuickOption(false);
             const startUnixTimeMs = startTime.valueOf();
             const endUnixTimeMs = endTime.valueOf();
 
@@ -141,64 +203,16 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 removeEmptyBins,
             });
 
-            setTimeSearchParams(
-                setSearchParams,
-                startUnixTimeMs,
-                endUnixTimeMs,
-                timeSourceRef,
-                selectedQuickOption,
-                rawWhenSparse,
-                removeEmptyBins,
-                autoApply
-            );
+            setTimeSearchParams(startUnixTimeMs, endUnixTimeMs);
         }, [
-            autoApply,
             endTime,
             onTimeChange,
             rawWhenSparse,
             removeEmptyBins,
             selectedQuickOption,
-            setSearchParams,
+            setTimeSearchParams,
             startTime,
         ]);
-
-        const setTimeSearchParams = (
-            setSearchParams: ReturnType<typeof useSearchParams>[1],
-            startUnixTimeMs: number,
-            endUnixTimeMs: number,
-            timeSourceRef: React.MutableRefObject<TimeSourceOption>,
-            selectedQuickOption: QuickSelectOption,
-            rawWhenSparse: boolean,
-            removeEmptyBins: boolean,
-            autoApply: AutoApplyOption
-        ) => {
-            const startParam = startUnixTimeMs.toString();
-            const endParam = endUnixTimeMs.toString();
-
-            setSearchParams((searchParams) => {
-                const newSearchParams = searchParams;
-                newSearchParams.set("startTime", startParam);
-                newSearchParams.set("endTime", endParam);
-                if (timeSourceRef.current === "quickselect") {
-                    newSearchParams.set(
-                        "relativeTime",
-                        selectedQuickOption.toString()
-                    );
-                } else {
-                    newSearchParams.set("relativeTime", "false");
-                }
-                newSearchParams.set(
-                    "rawWhenSparse",
-                    rawWhenSparse ? "true" : "false"
-                );
-                newSearchParams.set(
-                    "removeEmptyBins",
-                    removeEmptyBins ? "true" : "false"
-                );
-                newSearchParams.set("autoApply", autoApply);
-                return newSearchParams;
-            });
-        };
 
         const simulateAutoApplyPress = () => {
             setIsAutoApplyPressSimulated(true);
@@ -213,17 +227,27 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 if (autoApplyIntervalRef.current) {
                     clearInterval(autoApplyIntervalRef.current);
                 }
+                if (autoApplyProgressIntervalRef.current) {
+                    clearInterval(autoApplyProgressIntervalRef.current);
+                }
 
                 // Set interval if not 'never'
                 if (newAutoApply !== "never") {
                     const interval = newAutoApply === "1min" ? 60000 : 600000; // 1 minute or 10 minutes
-                    autoApplyIntervalRef.current = setInterval(() => {
-                        simulateAutoApplyPress();
-                        handleApply();
-                    }, interval);
+                    setAutoApplyProgress(0);
+                    autoApplyProgressIntervalRef.current = setInterval(() => {
+                        setAutoApplyProgress((prev) => {
+                            if (prev === 100) {
+                                simulateAutoApplyPress();
+                                localRef.current?.autoApply();
+                                return 0;
+                            }
+                            return prev + 1;
+                        });
+                    }, interval / 100);
                 }
             },
-            [handleApply]
+            []
         );
 
         const isValueInQuickSelectOptions = (value: string | number) => {
@@ -255,6 +279,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             } else {
                 // Else, default to ten minutes ago
                 ({ start, end } = convertQuickOptionToTimestamps(10));
+                setSelectedQuickOption(10);
             }
 
             setStartTime(dayjs(start));
@@ -318,31 +343,16 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 setStartTime(dayjs(startTime));
                 setEndTime(dayjs(endTime));
                 timeSourceRef.current = "manual";
+                setSelectedQuickOption(false);
                 onTimeChange({
                     startTime: startTime,
                     endTime: endTime,
                     rawWhenSparse: rawWhenSparse,
                     removeEmptyBins: removeEmptyBins,
                 });
-                setTimeSearchParams(
-                    setSearchParams,
-                    startTime,
-                    endTime,
-                    timeSourceRef,
-                    selectedQuickOption,
-                    rawWhenSparse,
-                    removeEmptyBins,
-                    autoApply
-                );
+                setTimeSearchParams(startTime, endTime);
             },
-            [
-                onTimeChange,
-                setSearchParams,
-                rawWhenSparse,
-                removeEmptyBins,
-                selectedQuickOption,
-                autoApply,
-            ]
+            [onTimeChange, setTimeSearchParams, rawWhenSparse, removeEmptyBins]
         );
 
         useImperativeHandle(
@@ -364,6 +374,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                         onChange={(newTime) => {
                             setStartTime(dayjs(newTime));
                             timeSourceRef.current = "manual";
+                            setSelectedQuickOption(false);
                         }}
                     />
                 </Box>
@@ -376,6 +387,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                         onChange={(newTime) => {
                             setEndTime(dayjs(newTime));
                             timeSourceRef.current = "manual";
+                            setSelectedQuickOption(false);
                         }}
                     />
                 </Box>
@@ -389,7 +401,14 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     value={selectedQuickOption}
                 >
                     {quickOptions.map((option) => (
-                        <MenuItem key={option.label} value={option.value}>
+                        <MenuItem
+                            key={option.label}
+                            value={
+                                typeof option.value == "boolean"
+                                    ? option.value.toString()
+                                    : option.value
+                            }
+                        >
                             {option.label}
                         </MenuItem>
                     ))}
@@ -421,25 +440,36 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                         />
                     </Box>
                 </Tooltip>
-                <Tooltip
-                    title="Automatically applies the configuration, includes updating relative times from Quick Select"
-                    arrow
-                >
-                    <TextField
-                        select
-                        label="Auto Apply"
-                        value={autoApply}
-                        onChange={(e) =>
-                            handleAutoApplyChange(
-                                e.target.value as AutoApplyOption
-                            )
-                        }
+                <Box sx={styles.autoApplyContainerStyle}>
+                    <Tooltip
+                        title="Automatically applies the configuration, includes updating relative times from Quick Select"
+                        arrow
+                        placement="left"
                     >
-                        <MenuItem value="never">Never</MenuItem>
-                        <MenuItem value="1min">1 min</MenuItem>
-                        <MenuItem value="10min">10 min</MenuItem>
-                    </TextField>
-                </Tooltip>
+                        <TextField
+                            select
+                            label="Auto Apply"
+                            value={autoApply}
+                            onChange={(e) =>
+                                handleAutoApplyChange(
+                                    e.target.value as AutoApplyOption
+                                )
+                            }
+                        >
+                            <MenuItem value="never">Never</MenuItem>
+                            <MenuItem value="1min">1 min</MenuItem>
+                            <MenuItem value="10min">10 min</MenuItem>
+                        </TextField>
+                    </Tooltip>
+                    {autoApply !== "never" && (
+                        <Box sx={styles.autoApplyProgressStyle}>
+                            <LinearProgress
+                                variant="determinate"
+                                value={autoApplyProgress}
+                            />
+                        </Box>
+                    )}
+                </Box>
                 <Button
                     variant="contained"
                     sx={{

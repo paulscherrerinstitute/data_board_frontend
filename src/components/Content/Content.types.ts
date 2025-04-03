@@ -1,8 +1,15 @@
 import ReactGridLayout from "react-grid-layout";
 import { Channel } from "../Selector/Selector.types";
+import { PlotSettings } from "./PlotWidget/PlotSettingsPopup/PlotSettingsPopup.types";
+import { CurveAttributes } from "./PlotWidget/PlotWidget.types";
+
+export type StoredPlotSettings = PlotSettings & {
+    curveAttributes: { [k: string]: CurveAttributes };
+};
 
 export type Widget = {
     channels: Channel[];
+    plotSettings?: PlotSettings;
     layout: ReactGridLayout.Layout;
 };
 

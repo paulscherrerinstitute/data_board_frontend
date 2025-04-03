@@ -54,3 +54,16 @@ export const halfButtonStyle: SxProps<Theme> = {
     width: "100%",
     margin: 0,
 };
+
+export const buttonOptionsStyle: SxProps<Theme> = {
+    width: "100%",
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "start",
+};
+
+export const menuButtonStyle: SxProps<Theme> = {
+    color: "white",
+    maxWidth: "100%",
+};

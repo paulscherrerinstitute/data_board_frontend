@@ -37,3 +37,14 @@ export const refreshButtonStyle: SxProps<Theme> = {
     flex: 1,
     maxHeight: "95%",
 };
+
+export const autoApplyProgressStyle: SxProps<Theme> = {
+    marginTop: "8px",
+    width: "100%",
+};
+
+export const autoApplyContainerStyle: SxProps<Theme> = {
+    flexDirection: "column",
+    display: "flex",
+    gap: 1,
+};

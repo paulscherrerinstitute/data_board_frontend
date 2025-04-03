@@ -1,9 +1,22 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, {
+    useState,
+    useCallback,
+    useRef,
+    useEffect,
+    useMemo,
+} from "react";
 import { Box, Button, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
-import { Widget, TimeValues, DashboardDto } from "./Content.types";
+import * as uuid from "uuid";
+import {
+    Widget,
+    TimeValues,
+    DashboardDto,
+    Dashboard,
+    StoredPlotSettings,
+} from "./Content.types";
 import ReactGridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -13,6 +26,12 @@ import axios from "axios";
 import { useApiUrls } from "../ApiContext/ApiContext";
 import { TimeSelectorHandle } from "./TimeSelector/TimeSelector.types";
 import { Channel } from "../Selector/Selector.types";
+import { useLocalStorage } from "../../helpers/useLocalStorage";
+import {
+    defaultWidgetHeight,
+    defaultWidgetWidth,
+} from "../../helpers/defaults";
+import showSnackbar from "../../helpers/showSnackbar";
 
 const Content: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -29,13 +48,20 @@ const Content: React.FC = () => {
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
+
+    const [initialWidgetHeight] = useLocalStorage(
+        "initialWidgetHeight",
+        defaultWidgetHeight
+    );
+    const [initialWidgetWidth] = useLocalStorage(
+        "initialWidgetWidth",
+        defaultWidgetWidth
+    );
+
     const timeSelectorRef = useRef<TimeSelectorHandle | null>(null);
     const prevWidgetsLengthRef = useRef<number | null>(null);
     const isWidgetsInitializedRef = useRef(false);
     const gridContainerRef = useRef<HTMLElement | null>(null);
-    const newPlotNumberRef = useRef(1);
-    const defaultWidgetWidth = 6;
-    const defaultWidgetHeight = 12;
 
     const handleDrop = (event: React.DragEvent<HTMLElement>, key: string) => {
         event.preventDefault();
@@ -70,12 +96,13 @@ const Content: React.FC = () => {
                         );
 
                     if (existingChannel) {
-                        console.error(
+                        console.warn(
                             "Widget already contains the channel:",
                             existingChannel
                         );
-                        alert(
-                            `Widget already contains the channel: ${existingChannel.name}`
+                        showSnackbar(
+                            `Widget already contains the channel: ${existingChannel.name}`,
+                            "warning"
                         );
                         return;
                     }
@@ -91,12 +118,12 @@ const Content: React.FC = () => {
                     setWidgets(newWidgets);
                 }
             } else {
-                console.error("Invalid channel structure.");
-                alert("Invalid channel structure.");
+                console.error("Invalid channel structure");
+                showSnackbar("Invalid channel structure", "error");
             }
         } catch (error) {
             console.error("Error parsing dropped data as JSON:", error);
-            alert(`Error parsing dropped data as JSON: ${error}`);
+            showSnackbar("Error parsing dropped data as JSON", "error");
         }
     };
 
@@ -144,12 +171,12 @@ const Content: React.FC = () => {
             }
         });
 
-        // Now, try to find the first available space with width = default width
+        // Now, try to find the first available space with width = initialWidgetWidth
         let calculatedX = 0;
-        for (let x = 0; x <= 12 - defaultWidgetWidth; x++) {
+        for (let x = 0; x <= 12 - initialWidgetWidth; x++) {
             // Check if this space (x, x+1, ..., x + defaultWidgetWidth - 1) is available
             const isSpaceAvailable = Array.from(
-                { length: defaultWidgetWidth },
+                { length: initialWidgetWidth },
                 (_, i) => x + i
             ).every((occupiedX) => !occupiedXPositions.has(occupiedX));
 
@@ -159,18 +186,16 @@ const Content: React.FC = () => {
             }
         }
 
-        const plotNumber = newPlotNumberRef.current;
-        newPlotNumberRef.current++;
         setWidgets((prevWidgets) => [
             ...prevWidgets,
             {
                 channels: initialChannels,
                 layout: {
-                    i: plotNumber.toString(),
+                    i: uuid.v4(),
                     x: calculatedX,
                     y: Infinity,
-                    w: defaultWidgetWidth,
-                    h: defaultWidgetHeight,
+                    w: initialWidgetWidth,
+                    h: initialWidgetHeight,
                 },
             },
         ]);
@@ -267,28 +292,23 @@ const Content: React.FC = () => {
                         );
                         const dashboard = response.data.dashboard;
                         if (dashboard) {
-                            const maxPlotNumber = Math.max(
-                                ...dashboard.widgets.map(
-                                    (widget) =>
-                                        parseInt(widget.layout.i, 10) || 0
-                                )
-                            );
-                            newPlotNumberRef.current = maxPlotNumber + 1;
                             setWidgets(dashboard.widgets);
                         }
                         return;
                     } catch (e) {
                         console.error("Error fetching stored dashboard: ", e);
+                        showSnackbar(
+                            "Failed to fetch the dashboard provided in the url",
+                            "error"
+                        );
                     }
                 }
                 // If no dashboard data could be fetched or parsed, create an initial dashboard
-                const plotNumber = newPlotNumberRef.current;
-                newPlotNumberRef.current++;
                 setWidgets([
                     {
                         channels: [],
                         layout: {
-                            i: plotNumber.toString(),
+                            i: uuid.v4(),
                             x: 0,
                             y: 0,
                             w: 12,
@@ -305,20 +325,37 @@ const Content: React.FC = () => {
         };
     }, [searchParams, backendUrl]);
 
+    const dashboardData = useMemo(() => {
+        return {
+            dashboard: {
+                widgets: widgets,
+            } as Dashboard,
+        };
+    }, [widgets]);
+
     const handleCreateDashboard = useCallback(async () => {
-        const response = await axios.post<DashboardDto>(
-            `${backendUrl}/dashboard`,
-            {
-                dashboard: { widgets: widgets },
-            }
-        );
-        const dashboardId = response.data.id;
-        setSearchParams((searchParams) => {
-            const newSearchParams = searchParams;
-            newSearchParams.set("dashboardId", dashboardId);
-            return newSearchParams;
-        });
-    }, [backendUrl, setSearchParams, widgets]);
+        try {
+            const response = await axios.post<DashboardDto>(
+                `${backendUrl}/dashboard`,
+                dashboardData
+            );
+            const dashboardId = response.data.id;
+            setSearchParams((searchParams) => {
+                const newSearchParams = searchParams;
+                newSearchParams.set("dashboardId", dashboardId);
+                return newSearchParams;
+            });
+            showSnackbar(
+                "Successfully saved dashboard to server! We don't guarantee persistent storage, export to JSON if needed.",
+                "success"
+            );
+        } catch {
+            showSnackbar(
+                "Failed to save dashboard to server. Maybe try again, or export to JSON.",
+                "error"
+            );
+        }
+    }, [backendUrl, dashboardData, setSearchParams]);
 
     const handleSaveDashboard = useCallback(async () => {
         const dashboardId = searchParams.get("dashboardId");
@@ -326,18 +363,22 @@ const Content: React.FC = () => {
             try {
                 await axios.patch<DashboardDto>(
                     `${backendUrl}/dashboard/${dashboardId}`,
-                    {
-                        dashboard: { widgets: widgets },
-                    }
+                    dashboardData
+                );
+                showSnackbar(
+                    "Successfully saved dashboard to server! We don't guarantee persistent storage, export to JSON if needed.",
+                    "success"
                 );
                 return;
-            } catch {}
+            } catch {
+                // ignored
+            }
         }
         handleCreateDashboard();
-    }, [backendUrl, handleCreateDashboard, searchParams, widgets]);
+    }, [backendUrl, searchParams, dashboardData, handleCreateDashboard]);
 
     const handleDownloadDashboard = useCallback(async () => {
-        const dashboardData = { dashboard: { widgets: widgets } };
+        // We need to create  the data like this, otherwise the curveAttributes Map couldn't be parsed.
         const jsonContent = JSON.stringify(dashboardData, null, 4);
         const blob = new Blob([jsonContent], { type: "application/json" });
         const fileName = `dashboard_${new Date().toISOString()}.json`;
@@ -347,11 +388,10 @@ const Content: React.FC = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    }, [widgets]);
+    }, [dashboardData]);
 
     const handleImportDashboard = useCallback(async () => {
         try {
-            // Create an input element dynamically
             const input = document.createElement("input");
             input.type = "file";
             input.accept = ".json"; // Accept only JSON files
@@ -363,19 +403,29 @@ const Content: React.FC = () => {
                 }
 
                 const content = await file.text();
-                const dashboardData = JSON.parse(content) as {
-                    dashboard: { widgets: Widget[] };
-                };
-
-                setWidgets(dashboardData.dashboard.widgets);
+                const parsedDashboard = JSON.parse(
+                    content
+                ) as typeof dashboardData;
+                // To avoid rerendering issues caused by using i as a key, update all keys.
+                const uniqueKeyWidgets = parsedDashboard.dashboard.widgets.map(
+                    (widget) => ({
+                        ...widget,
+                        layout: {
+                            ...widget.layout,
+                            i: uuid.v4(),
+                        },
+                    })
+                );
+                setWidgets(uniqueKeyWidgets);
+                showSnackbar("Successfully imported dashboard!", "success");
             };
 
             input.click();
         } catch (e) {
-            console.error("Error in handleImportWidgets:", e);
-            alert("Something went wrong while importing widgets.");
+            console.error("Error in handleImportDashboard:", e);
+            showSnackbar("Failed to import dashboard", "error");
         }
-    }, []);
+    }, [setWidgets]);
 
     return (
         <Box sx={styles.contentContainerStyle}>
@@ -396,7 +446,7 @@ const Content: React.FC = () => {
                         resizeHandles={["sw", "nw", "se", "ne"]}
                         onLayoutChange={handleLayoutChange}
                     >
-                        {widgets.map(({ channels, layout }) => (
+                        {widgets.map(({ channels, layout, plotSettings }) => (
                             <Box
                                 sx={{
                                     ...styles.gridItemStyle,
@@ -434,6 +484,19 @@ const Content: React.FC = () => {
                                     channels={channels}
                                     timeValues={timeValues}
                                     index={layout.i}
+                                    initialPlotSettings={
+                                        plotSettings
+                                            ? {
+                                                  ...plotSettings,
+                                                  curveAttributes: new Map(
+                                                      Object.entries(
+                                                          plotSettings.curveAttributes ||
+                                                              []
+                                                      )
+                                                  ),
+                                              }
+                                            : undefined
+                                    }
                                     onChannelsChange={(updatedChannels) => {
                                         setWidgets((prevWidgets) =>
                                             prevWidgets.map((widget) =>
@@ -455,6 +518,27 @@ const Content: React.FC = () => {
                                             startTime,
                                             endTime
                                         );
+                                    }}
+                                    onUpdatePlotSettings={(
+                                        index,
+                                        newPlotSettings
+                                    ) => {
+                                        setWidgets((prev) => [
+                                            ...prev.map((widget) =>
+                                                widget.layout.i === index
+                                                    ? {
+                                                          ...widget,
+                                                          plotSettings: {
+                                                              ...newPlotSettings,
+                                                              curveAttributes:
+                                                                  Object.fromEntries(
+                                                                      newPlotSettings.curveAttributes
+                                                                  ),
+                                                          } as StoredPlotSettings,
+                                                      }
+                                                    : widget
+                                            ),
+                                        ]);
                                     }}
                                 />
                             </Box>

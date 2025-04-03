@@ -1,0 +1,598 @@
+{
+    "dashboard": {
+        "widgets": [
+            {
+                "channels": [
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-01-EVR0:RX-PERF",
+                        "seriesId": "3879063748223743665",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-02-EVR0:RX-PERF",
+                        "seriesId": "4894136419406455684",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-11-EVR0:RX-PERF",
+                        "seriesId": "1176580797400862060",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-12-EVR0:RX-PERF",
+                        "seriesId": "2294755667246568515",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-13-EVR0:RX-PERF",
+                        "seriesId": "2756333654341858792",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-14-EVR0:RX-PERF",
+                        "seriesId": "8996918832361215873",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-21-EVR0:RX-PERF",
+                        "seriesId": "3992578466299547652",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-31-EVR0:RX-PERF",
+                        "seriesId": "5556224483070253228",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-41-EVR0:RX-PERF",
+                        "seriesId": "8639119901576243758",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-42-EVR0:RX-PERF",
+                        "seriesId": "4879665877172714133",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-51-EVR0:RX-PERF",
+                        "seriesId": "4547820602889132402",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-61-EVR0:RX-PERF",
+                        "seriesId": "2925076018066874025",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-62-EVR0:RX-PERF",
+                        "seriesId": "8830391626014178350",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-63-EVR0:RX-PERF",
+                        "seriesId": "4720321240709275964",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-64-EVR0:RX-PERF",
+                        "seriesId": "4713926402604671478",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-65-EVR0:RX-PERF",
+                        "seriesId": "2853597638823191505",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-71-EVR0:RX-PERF",
+                        "seriesId": "8906092849185509876",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-72-EVR0:RX-PERF",
+                        "seriesId": "7327911206238923420",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-73-EVR0:RX-PERF",
+                        "seriesId": "2349830824083157104",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SGE-CPCW-74-EVR0:RX-PERF",
+                        "seriesId": "4692135031444455745",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    }
+                ],
+                "layout": {
+                    "w": 12,
+                    "h": 30.3875,
+                    "x": 0,
+                    "y": 0,
+                    "i": "1",
+                    "moved": false,
+                    "static": false
+                },
+                "plotSettings": {
+                    "plotTitle": "Plot 1",
+                    "curveAttributes": {
+                        "SGE-CPCW-01-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-01-EVR0:RX-PERF",
+                                "seriesId": "3879063748223743665",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-01-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-02-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-02-EVR0:RX-PERF",
+                                "seriesId": "4894136419406455684",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#ff7f0e",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-02-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-11-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-11-EVR0:RX-PERF",
+                                "seriesId": "1176580797400862060",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#2ca02c",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-11-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-12-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-12-EVR0:RX-PERF",
+                                "seriesId": "2294755667246568515",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#d62728",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-12-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-13-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-13-EVR0:RX-PERF",
+                                "seriesId": "2756333654341858792",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#9467bd",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-13-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-14-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-14-EVR0:RX-PERF",
+                                "seriesId": "8996918832361215873",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#8c564b",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-14-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-21-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-21-EVR0:RX-PERF",
+                                "seriesId": "3992578466299547652",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#e377c2",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-21-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-31-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-31-EVR0:RX-PERF",
+                                "seriesId": "5556224483070253228",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#7f7f7f",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-31-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-41-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-41-EVR0:RX-PERF",
+                                "seriesId": "8639119901576243758",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#bcbd22",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-41-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-42-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-42-EVR0:RX-PERF",
+                                "seriesId": "4879665877172714133",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#17becf",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-42-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-51-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-51-EVR0:RX-PERF",
+                                "seriesId": "4547820602889132402",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-51-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-61-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-61-EVR0:RX-PERF",
+                                "seriesId": "2925076018066874025",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#ff7f0e",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-61-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-62-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-62-EVR0:RX-PERF",
+                                "seriesId": "8830391626014178350",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#2ca02c",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-62-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-63-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-63-EVR0:RX-PERF",
+                                "seriesId": "4720321240709275964",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#d62728",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-63-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-64-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-64-EVR0:RX-PERF",
+                                "seriesId": "4713926402604671478",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#9467bd",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-64-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-65-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-65-EVR0:RX-PERF",
+                                "seriesId": "2853597638823191505",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#8c564b",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-65-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-71-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-71-EVR0:RX-PERF",
+                                "seriesId": "8906092849185509876",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#e377c2",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-71-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-72-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-72-EVR0:RX-PERF",
+                                "seriesId": "7327911206238923420",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#7f7f7f",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-72-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-73-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-73-EVR0:RX-PERF",
+                                "seriesId": "2349830824083157104",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#bcbd22",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-73-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SGE-CPCW-74-EVR0:RX-PERF | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SGE-CPCW-74-EVR0:RX-PERF",
+                                "seriesId": "4692135031444455745",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#17becf",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SGE-CPCW-74-EVR0:RX-PERF | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        }
+                    },
+                    "yAxisAttributes": [
+                        {
+                            "label": "y1",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "value (multiple channels)",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y2",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y2",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y3",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y3",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y4",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "y4",
+                            "manualDisplayLabel": false
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

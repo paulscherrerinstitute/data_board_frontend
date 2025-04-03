@@ -5,29 +5,49 @@ import React, {
     useRef,
     useState,
 } from "react";
-import { Box, CircularProgress, Tooltip, Typography } from "@mui/material";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import { Box, Typography } from "@mui/material";
 import {
     PlotWidgetProps,
     CurveData,
     Curve,
     ContainerDimensions,
+    YAxisAssignment,
+    CurveAttributes,
+    YAxisAttributes,
 } from "./PlotWidget.types";
 import Plot from "react-plotly.js";
 import { useApiUrls } from "../../ApiContext/ApiContext";
 import axios, { AxiosError, AxiosResponse } from "axios";
-import { debounce } from "lodash";
+import { cloneDeep, debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
-import Plotly from "plotly.js";
+import gearIcon from "../../../media/gear.svg?raw";
+import Plotly, { Root } from "plotly.js";
+import { useLocalStorage } from "../../../helpers/useLocalStorage";
+import {
+    defaultCurveColors,
+    defaultCurveMode,
+    defaultCurveShape,
+    defaultPlotBackgroundColor,
+    defaultUseWebGL,
+    defaultXAxisGridColor,
+    defaultYAxisGridColor,
+    defaultYAxisScaling,
+} from "../../../helpers/defaults";
+import PlotSettingsPopup from "./PlotSettingsPopup/PlotSettingsPopup";
+import { PlotSettings } from "./PlotSettingsPopup/PlotSettingsPopup.types";
+import LegendEntry from "./LegendEntry/LegendEntry";
+import showSnackbar from "../../../helpers/showSnackbar";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
         channels,
         timeValues,
         index,
+        initialPlotSettings,
         onChannelsChange,
         onZoomTimeRangeChange,
+        onUpdatePlotSettings,
     }) => {
         const { backendUrl } = useApiUrls();
         const [containerDimensions, setContainerDimensions] =
@@ -36,49 +56,143 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 height: 0,
             });
         const [curves, setCurves] = useState<Curve[]>([]);
+        const [manualAxisAssignment, setManualAxisAssignment] = useState(false);
+        const [curveAttributes, setCurveAttributes] = useState(
+            new Map<string, CurveAttributes>()
+        );
+        const [yAxisAttributes, setYAxisAttributes] = useState<
+            YAxisAttributes[]
+        >(() => {
+            const savedScaling = JSON.parse(
+                localStorage.getItem("yAxisScaling") ||
+                    JSON.stringify(defaultYAxisScaling)
+            );
+            return [
+                {
+                    label: "y1",
+                    scaling: savedScaling,
+                    min: null,
+                    max: null,
+                    displayLabel: "y1",
+                    manualDisplayLabel: false,
+                },
+                {
+                    label: "y2",
+                    scaling: savedScaling,
+                    min: null,
+                    max: null,
+                    displayLabel: "y2",
+                    manualDisplayLabel: false,
+                },
+                {
+                    label: "y3",
+                    scaling: savedScaling,
+                    min: null,
+                    max: null,
+                    displayLabel: "y3",
+                    manualDisplayLabel: false,
+                },
+                {
+                    label: "y4",
+                    scaling: savedScaling,
+                    min: null,
+                    max: null,
+                    displayLabel: "y4",
+                    manualDisplayLabel: false,
+                },
+            ];
+        });
+        const [plotTitle, setPlotTitle] = useState(`New Plot`);
+        const [openPlotSettings, setOpenPlotSettings] = useState(false);
+
+        const [plotBackgroundColor] = useLocalStorage(
+            "plotBackgroundColor",
+            defaultPlotBackgroundColor,
+            true
+        );
+        const [xAxisGridColor] = useLocalStorage(
+            "xAxisGridColor",
+            defaultXAxisGridColor,
+            true
+        );
+        const [yAxisGridColor] = useLocalStorage(
+            "yAxisGridColor",
+            defaultYAxisGridColor,
+            true
+        );
+        const [useWebGL] = useLocalStorage("useWebGL", defaultUseWebGL, true);
+
         const isCtrlPressed = useRef(false);
         const containerRef = useRef<HTMLDivElement | null>(null);
         const curvesRef = useRef(curves);
+        const colorMap = useRef<Map<string, string>>(new Map());
+        const previousTimeValues = useRef(timeValues);
+        const plotRef = useRef<Root | null>(null);
+        const settingsInitialized = useRef(false);
+
         const numBins = 1000;
         const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
 
-        const colorList = useMemo(
-            () => [
-                "#1f77b4",
-                "#ff7f0e",
-                "#2ca02c",
-                "#d62728",
-                "#9467bd",
-                "#8c564b",
-                "#e377c2",
-                "#7f7f7f",
-                "#bcbd22",
-                "#17becf",
-            ],
-            []
-        );
+        const initialCurveColors = useMemo(() => {
+            return JSON.parse(
+                localStorage.getItem("curveColors") ||
+                    JSON.stringify(defaultCurveColors)
+            );
+        }, []);
 
-        const colorMap = useRef<Map<string, string>>(new Map());
+        const initialCurveShape = useMemo(() => {
+            return JSON.parse(
+                localStorage.getItem("curveShape") ||
+                    JSON.stringify(defaultCurveShape)
+            );
+        }, []);
 
-        const getColorForCurve = useCallback(
-            (curve: Curve) => {
-                const curveKey = `${curve.backend}-${Object.keys(curve.curveData.curve)[0]}-${curve.type}`;
-                if (!colorMap.current.has(curveKey)) {
-                    // Assign a color if not already assigned
-                    const color =
-                        colorList[colorMap.current.size % colorList.length];
-                    colorMap.current.set(curveKey, color);
-                }
-                return colorMap.current.get(curveKey)!; // Ensure it has a value
-            },
-            [colorList]
-        );
+        const initialCurveMode = useMemo(() => {
+            return JSON.parse(
+                localStorage.getItem("curveMode") ||
+                    JSON.stringify(defaultCurveMode)
+            );
+        }, []);
+
+        if (!settingsInitialized.current) {
+            settingsInitialized.current = true;
+            // Initialize the plot settings
+            if (initialPlotSettings) {
+                setPlotTitle(cloneDeep(initialPlotSettings.plotTitle));
+                setCurveAttributes(
+                    cloneDeep(initialPlotSettings.curveAttributes)
+                );
+                setYAxisAttributes(
+                    cloneDeep(initialPlotSettings.yAxisAttributes)
+                );
+            }
+        }
 
         const getLabelForChannelAttributes = useCallback(
             (name: string, backend: string, type: string) => {
                 return `${name.split("|")[0].trim()} | ${backend} | ${type === "" ? "[]" : type}`;
             },
             []
+        );
+
+        const getColorForChannel = useCallback(
+            (channel: Channel) => {
+                const channelKey = getLabelForChannelAttributes(
+                    channel.name,
+                    channel.backend,
+                    channel.type
+                );
+                if (!colorMap.current.has(channelKey)) {
+                    // Assign a color if not already assigned
+                    const color =
+                        initialCurveColors[
+                            colorMap.current.size % initialCurveColors.length
+                        ];
+                    colorMap.current.set(channelKey, color);
+                }
+                return colorMap.current.get(channelKey)!; // Ensure it has a value
+            },
+            [getLabelForChannelAttributes, initialCurveColors]
         );
 
         const getLabelForCurve = useCallback(
@@ -105,7 +219,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         );
 
         // Prevent event bubbling if its on a draggable surface so an event to drag the plot will not be handled by the grid layout to move the whole widget.
-        const handleEventPropagation = (e: React.SyntheticEvent) => {
+        const handleEventPropagation = (
+            e: React.SyntheticEvent,
+            isMouseDown: boolean = false
+        ) => {
+            if (isMouseDown) {
+                isCtrlPressed.current = (
+                    e as React.MouseEvent
+                ).getModifierState("Control");
+            }
+
             const plotCanvas = e.target as HTMLElement;
             if (
                 plotCanvas &&
@@ -119,6 +242,94 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 e.stopPropagation();
             }
         };
+
+        useEffect(() => {
+            onUpdatePlotSettings(index, {
+                plotTitle: plotTitle,
+                curveAttributes: curveAttributes,
+                yAxisAttributes: yAxisAttributes,
+            });
+        }, [plotTitle, curveAttributes, yAxisAttributes]);
+
+        useEffect(() => {
+            const newAxisOptions: YAxisAssignment[] = ["y1", "y2", "y3", "y4"];
+            const newCurveAttributes = new Map<string, CurveAttributes>();
+            const newYAxisAttributes = new Array(...yAxisAttributes);
+
+            // Add new Channels, update axis assignments and labels if applicable
+            channels.forEach((channel, index) => {
+                const label = getLabelForChannelAttributes(
+                    channel.name,
+                    channel.backend,
+                    channel.type
+                );
+                if (!manualAxisAssignment || !curveAttributes.has(label)) {
+                    let assignedAxis: YAxisAssignment;
+                    if (channels.length > 4) {
+                        assignedAxis = "y1";
+                        if (!newYAxisAttributes[0].manualDisplayLabel) {
+                            newYAxisAttributes[0].displayLabel =
+                                "value (multiple channels)";
+                        }
+                    } else {
+                        assignedAxis = newAxisOptions[index];
+                        if (!newYAxisAttributes[index].manualDisplayLabel) {
+                            newYAxisAttributes[index].displayLabel = label;
+                        }
+                    }
+
+                    newCurveAttributes.set(label, {
+                        channel: channel,
+                        color:
+                            curveAttributes.get(label)?.color ||
+                            getColorForChannel(channel),
+                        curveShape:
+                            curveAttributes.get(label)?.curveShape ||
+                            initialCurveShape,
+                        curveMode:
+                            curveAttributes.get(label)?.curveMode ||
+                            initialCurveMode,
+                        displayLabel:
+                            curveAttributes.get(label)?.displayLabel || label,
+                        axisAssignment: assignedAxis,
+                    });
+                } else {
+                    // Axis-Assignment is manual, and the curve already has its attributes defined
+                    newCurveAttributes.set(
+                        label,
+                        curveAttributes.get(label) as CurveAttributes
+                    );
+                }
+            });
+
+            // Compare and only update new data, to avoid endless loops
+            if (
+                newYAxisAttributes.length !== yAxisAttributes.length ||
+                newYAxisAttributes.some((value, index) => {
+                    return yAxisAttributes[index] !== value;
+                })
+            ) {
+                setYAxisAttributes(newYAxisAttributes);
+            }
+
+            if (
+                newCurveAttributes.size !== curveAttributes.size ||
+                [...newCurveAttributes].some(([key, value]) => {
+                    return (
+                        !curveAttributes.has(key) ||
+                        curveAttributes.get(key) !== value
+                    );
+                })
+            ) {
+                setCurveAttributes(newCurveAttributes);
+            }
+        }, [
+            channels,
+            getLabelForChannelAttributes,
+            getColorForChannel,
+            initialCurveShape,
+            manualAxisAssignment,
+        ]);
 
         useEffect(() => {
             const handleKeyDown = (event: KeyboardEvent) => {
@@ -194,18 +405,41 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         );
 
         const handleResponseError = useCallback(
-            (error: AxiosError | any, channel: Channel) => {
+            (error: AxiosError | unknown, channel: Channel) => {
                 console.error(error);
-                let errorMsg = error.response?.data?.detail;
-                if (!errorMsg) {
-                    errorMsg = error.code;
-                }
-                if (!errorMsg) {
-                    errorMsg = error.message;
-                }
-                if (errorMsg) {
-                    setErrorCurve(errorMsg, channel);
-                    return;
+
+                if (error) {
+                    let errorMsg: string | null = null;
+
+                    if (typeof error === "object" && error !== null) {
+                        if (
+                            "response" in error &&
+                            typeof error.response === "object" &&
+                            error.response !== null
+                        ) {
+                            if (
+                                "data" in error.response &&
+                                typeof error.response.data === "object" &&
+                                error.response.data !== null
+                            ) {
+                                if ("detail" in error.response.data) {
+                                    errorMsg = error.response.data
+                                        .detail as string;
+                                }
+                            }
+                        }
+                        if (!errorMsg && "code" in error) {
+                            errorMsg = error.code as string;
+                        }
+                        if (!errorMsg && "message" in error) {
+                            errorMsg = error.message as string;
+                        }
+                    }
+
+                    if (errorMsg) {
+                        setErrorCurve(errorMsg, channel);
+                        return;
+                    }
                 }
             },
             [setErrorCurve]
@@ -279,7 +513,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 allow_cached_response: false,
                             },
                         });
-                    } catch (error: AxiosError | any) {
+                    } catch (error: AxiosError | unknown) {
                         handleResponseError(error, channel);
                         return;
                     }
@@ -293,8 +527,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     // Now we have our seriesId, if the channel still exists
                     if (filteredResults.length === 0) {
-                        alert(
-                            `Channel: ${channel.name} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.type}`
+                        showSnackbar(
+                            `Channel: ${channel.name} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.type}`,
+                            "error"
                         );
                         return;
                     }
@@ -321,7 +556,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 },
                             }
                         );
-                    } catch (error: AxiosError | any) {
+                    } catch (error: AxiosError | unknown) {
                         handleResponseError(error, channel);
                         return;
                     }
@@ -475,6 +710,23 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             curvesRef.current = curves;
         }, [curves]);
 
+        // Resets zoom when time values change (and ctrl isn't pressed)
+        useEffect(() => {
+            const previousTimeValuesRef = previousTimeValues.current;
+
+            if (
+                timeValues.startTime !== previousTimeValuesRef?.startTime ||
+                timeValues.endTime !== previousTimeValuesRef?.endTime
+            ) {
+                if (plotRef.current && !isCtrlPressed.current) {
+                    // recalculates and resets the zoom
+                    Plotly.react(plotRef.current, data, layout, config);
+                }
+
+                previousTimeValues.current = timeValues;
+            }
+        }, [timeValues]);
+
         const downloadBlob = useCallback((blob: Blob, fileName: string) => {
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -594,6 +846,35 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             downloadBlob(blob, fileName);
         }, [downloadBlob]);
 
+        const onPlotSettingsSave = useCallback(
+            (newPlotSettings: PlotSettings) => {
+                setPlotTitle(String(newPlotSettings.plotTitle));
+
+                if (
+                    [...newPlotSettings.curveAttributes].some(
+                        ([key, value]) =>
+                            curveAttributes.get(key)?.axisAssignment !==
+                            value.axisAssignment
+                    )
+                ) {
+                    setManualAxisAssignment(true);
+                }
+
+                setCurveAttributes(new Map(newPlotSettings.curveAttributes));
+                newPlotSettings.yAxisAttributes =
+                    newPlotSettings.yAxisAttributes.map((value, index) => ({
+                        ...value,
+                        manualDisplayLabel:
+                            value.displayLabel !==
+                            yAxisAttributes[index].displayLabel
+                                ? true
+                                : value.manualDisplayLabel,
+                    }));
+                setYAxisAttributes([...newPlotSettings.yAxisAttributes]);
+            },
+            [curveAttributes, yAxisAttributes]
+        );
+
         const hexToRgba = (hexString: string, alpha: number) => {
             const hexValue = parseInt(hexString.slice(1), 16);
             const r = (hexValue >> 16) & 255;
@@ -606,8 +887,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             const values: Plotly.Data[] = [];
             const result: Plotly.Data[] = [];
 
-            // If there are more than 4 curves, put everything on one axis.
-            const useMultipleAxes = curves.length <= 4;
             for (let index = 0; index < curves.length; index++) {
                 const curve = curves[index];
                 const keyName = Object.keys(curve.curveData.curve)[0];
@@ -616,10 +895,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     continue; // Skip processing if it's a min/max entry itself
                 }
 
-                const yAxis =
-                    index === 0 || !useMultipleAxes ? "y" : `y${index + 1}`;
-                const color = getColorForCurve(curve);
                 const label = getLabelForCurve(curve);
+                const displayLabel = curveAttributes.get(label)?.displayLabel;
+                const color = curveAttributes.get(label)?.color || "#ffffff";
+                const yAxis =
+                    curveAttributes.get(label)?.axisAssignment || "y1";
+                const shape = curveAttributes.get(label)?.curveShape || "label";
+                const mode =
+                    curveAttributes.get(label)?.curveMode || "lines+markers";
 
                 const baseData = curve.curveData.curve[keyName] || {};
                 const minData = curve.curveData.curve[`${keyName}_min`] || {};
@@ -639,68 +922,155 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 const yPolygon = yMax.concat(yMin.reverse());
 
                 values.push({
-                    name: label,
+                    name: displayLabel,
                     x: xValues,
                     y: yBase,
-                    type: "scattergl",
-                    mode: "lines+markers",
-                    yaxis: yAxis,
-                    line: { color: color },
+                    type: useWebGL ? "scattergl" : "scatter",
+                    mode: mode,
+                    yaxis: yAxis === "y1" ? "y" : yAxis,
+                    line: { color: color, shape: shape },
                 } as Plotly.Data);
                 result.push({
                     x: xPolygon,
                     y: yPolygon,
-                    type: "scattergl",
+                    type: useWebGL ? "scattergl" : "scatter",
                     mode: "lines",
                     fill: "toself",
                     fillcolor: hexToRgba(color, 0.3),
                     line: { color: "transparent", shape: "vh" },
                     showlegend: false,
                     showscale: false,
-                    yaxis: yAxis,
+                    yaxis: yAxis === "y1" ? "y" : yAxis,
                     hoverinfo: "skip",
                 } as Plotly.Data);
             }
 
             result.push(...values);
-
             return result;
-        }, [curves, getColorForCurve, getLabelForCurve]);
+        }, [curves, curveAttributes, useWebGL, getLabelForCurve]);
 
         const layout = useMemo(() => {
-            // Define dynamic y-axes using channel names
-            // If more than 4 channels are used, put everything on the same axis
-            const useMultipleAxes = curves.length <= 4;
+            const yAxes: { [key: string]: Partial<Plotly.LayoutAxis> }[] = [];
 
-            const yAxes = useMultipleAxes
-                ? curves.map((curve, curveIndex) => {
-                      return {
-                          [`yaxis${curveIndex === 0 ? "" : `${curveIndex + 1}`}`]:
-                              {
-                                  title: {
-                                      text: getLabelForCurve(curve),
-                                  },
-                                  overlaying:
-                                      curveIndex === 0 ? undefined : "y", // Overlay all except the first axis, this shows all grids
-                                  side: curveIndex % 2 === 0 ? "left" : "right", // Alternate sides for clarity, starting with left
-                                  anchor: "free",
-                                  // Calculate the position based on the index, as plotly can't do this automatically...
-                                  position:
-                                      curveIndex % 2 === 0
-                                          ? curveIndex /
-                                            (40 * (window.innerWidth / 2560))
-                                          : 1 -
-                                            curveIndex /
-                                                (40 *
-                                                    (window.innerWidth / 2560)),
-                              },
-                      };
-                  }, [])
-                : [];
+            if (!manualAxisAssignment) {
+                if (curves.length > 4) {
+                    // More than 4 curves: no new axes are created, they are all in one.
+                } else {
+                    // Sort assignments by value (alphabetically) and create axes.
+                    const sortedAssignments = Array.from(
+                        curveAttributes.values()
+                    )
+                        .map((attributes) => attributes.axisAssignment)
+                        .sort((a, b) =>
+                            a.localeCompare(b)
+                        ) as YAxisAssignment[]; // Since the assignment is not manual, we know the X-Axis isn't assigned.
 
-            return {
+                    sortedAssignments.forEach((assignment, index) => {
+                        const scaling =
+                            yAxisAttributes.find(
+                                (attributes) => attributes.label === assignment
+                            )?.scaling || "linear";
+                        const displayLabel =
+                            yAxisAttributes.find(
+                                (attributes) => attributes.label === assignment
+                            )?.displayLabel || assignment;
+                        yAxes.push({
+                            [`yaxis${index === 0 ? "" : index + 1}`]: {
+                                type: scaling,
+                                gridcolor: yAxisGridColor,
+                                title: { text: displayLabel },
+                                overlaying: index === 0 ? undefined : "y", // overlay all except the first axis
+                                side: index % 2 === 0 ? "left" : "right", // alternate sides
+                                anchor: "free",
+                                position:
+                                    index % 2 === 0
+                                        ? index /
+                                          (40 * (window.innerWidth / 2560))
+                                        : 1 -
+                                          index /
+                                              (40 * (window.innerWidth / 2560)),
+                            },
+                        });
+                    });
+                }
+            } else {
+                // Manual axis assignment:
+                // Extract unique assignments and exclude "x"
+                const uniqueAssignments = Array.from(
+                    new Set(
+                        Array.from(curveAttributes.values())
+                            .filter(
+                                (attributes) =>
+                                    attributes.axisAssignment !== "x"
+                            ) // Exclude "x"
+                            .map(
+                                (attributes) =>
+                                    attributes.axisAssignment as YAxisAssignment
+                            )
+                        // Extract the Y-Axis assignments
+                    )
+                ).sort((a, b) => a.localeCompare(b)); // Sort alphabetically
+
+                uniqueAssignments.forEach((assignment) => {
+                    const index = parseInt(assignment.slice(1), 10) - 1;
+                    const scaling =
+                        yAxisAttributes.find(
+                            (attributes) => attributes.label === assignment
+                        )?.scaling || "linear";
+                    const displayLabel =
+                        yAxisAttributes.find(
+                            (attributes) => attributes.label === assignment
+                        )?.displayLabel || assignment;
+                    yAxes.push({
+                        [`yaxis${index === 0 ? "" : index + 1}`]: {
+                            type: scaling,
+                            range: [
+                                yAxisAttributes[index].min,
+                                yAxisAttributes[index].max,
+                            ],
+                            gridcolor: yAxisGridColor,
+                            title: { text: displayLabel },
+                            overlaying: index === 0 ? undefined : "y",
+                            side: index % 2 === 0 ? "left" : "right",
+                            anchor: "free",
+                            position:
+                                index % 2 === 0
+                                    ? index / (40 * (window.innerWidth / 2560))
+                                    : 1 -
+                                      index / (40 * (window.innerWidth / 2560)),
+                        },
+                    });
+                });
+            }
+
+            const xLabel =
+                Array.from(curveAttributes).find(
+                    ([, attributes]) => attributes.axisAssignment === "x"
+                )?.[1].displayLabel || "Time";
+
+            let leftYAxes = 0;
+            let rightYAxes = 0;
+
+            for (let i = 0; i < yAxes.length; i++) {
+                // Extract the actual axis number from the key (e.g. "yaxis3" -> 3, "yaxis" -> 1)
+                const axisKey = Object.keys(yAxes[i])[0];
+                const axisNumber =
+                    axisKey === "yaxis"
+                        ? 1
+                        : parseInt(axisKey.replace("yaxis", ""));
+                const axis =
+                    yAxes[i][`yaxis${axisNumber === 1 ? "" : axisNumber}`];
+
+                if (axis?.side === "left") {
+                    leftYAxes++;
+                } else if (axis?.side === "right") {
+                    rightYAxes++;
+                }
+            }
+
+            const layout = {
                 title: {
-                    text: `Plot ${index}`,
+                    text: plotTitle,
                 },
                 width: containerDimensions.width,
                 height: containerDimensions.height,
@@ -711,35 +1081,48 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     b: 70,
                 },
                 xaxis: {
+                    gridcolor: xAxisGridColor,
                     title: {
-                        text: "Time",
+                        text: xLabel,
                     },
-                    ...(curves.length <= 4
-                        ? {
-                              // Specify the width of the X axis to leave enough room for all y axes
-                              domain: [
-                                  0.01 +
-                                      Math.ceil(curves.length / 2) /
-                                          (40 * (window.innerWidth / 2560)),
-                                  1.01 -
-                                      Math.floor(curves.length / 2) /
-                                          (40 *
-                                              0.5 *
-                                              (window.innerWidth / 2560)),
-                              ],
-                          }
-                        : {}),
+                    ...{
+                        // Specify the width of the X axis to leave enough room for all y axes
+                        domain: [
+                            0.01 +
+                                leftYAxes / (40 * (window.innerWidth / 2560)),
+                            1.01 -
+                                rightYAxes /
+                                    (40 * 0.5 * (window.innerWidth / 2560)),
+                        ],
+                    },
                 },
                 yaxis: {
+                    gridcolor: yAxisGridColor,
+                    type: yAxisAttributes[0].scaling,
                     title: {
-                        text: "Value",
+                        text:
+                            curves.length == 0
+                                ? "Value"
+                                : yAxisAttributes[0].displayLabel,
                     }, // Remove the default "Click to add title"
                 },
                 ...Object.assign({}, ...yAxes), // Merge all y-axis definitions into layout
                 showlegend: false,
                 uirevision: "time",
+                plot_bgcolor: plotBackgroundColor,
             } as Plotly.Layout;
-        }, [curves, containerDimensions, index, getLabelForCurve]);
+            return layout;
+        }, [
+            curves,
+            containerDimensions,
+            plotBackgroundColor,
+            manualAxisAssignment,
+            curveAttributes,
+            yAxisAttributes,
+            xAxisGridColor,
+            yAxisGridColor,
+            plotTitle,
+        ]);
 
         const config = useMemo(() => {
             return {
@@ -770,6 +1153,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         "autoScale2d",
                         "resetScale2d",
                     ],
+                    [
+                        {
+                            name: "plotSettings",
+                            title: "Open Plot Settings",
+                            icon: {
+                                svg: gearIcon,
+                            },
+                            click: () => setOpenPlotSettings(true),
+                        },
+                    ],
                 ],
             } as Plotly.Config;
         }, [downloadDataCSV, downloadDataJSON]);
@@ -791,11 +1184,40 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             onChannelsChange(updatedChannels);
         };
 
+        function onChannelDragStart(e: React.DragEvent, curve: Curve) {
+            const channel = channels.find(
+                (channel) =>
+                    getLabelForChannelAttributes(
+                        channel.name,
+                        channel.backend,
+                        channel.type
+                    ) === getLabelForCurve(curve)
+            );
+            if (!channel) {
+                return;
+            }
+            e.dataTransfer.setData("text", JSON.stringify([channel]));
+
+            const dragPreview = document.createElement("div");
+            dragPreview.style.cssText = `
+                display: flex; align-items: center; padding: 10px; width: 300px; 
+                background: #333; border-radius: 5px; color: white; font-weight: bold;
+            `;
+
+            dragPreview.innerText = `${channel.name} (${channel.backend} - ${channel.type})`;
+
+            document.body.appendChild(dragPreview);
+            e.dataTransfer.setDragImage(dragPreview, 0, 0);
+
+            // Remove the preview after the drag starts
+            setTimeout(() => dragPreview.remove(), 0);
+        }
+
         return (
             <Box
                 sx={styles.containerStyle}
                 onClick={handleEventPropagation}
-                onMouseDown={handleEventPropagation}
+                onMouseDown={(e) => handleEventPropagation(e, true)}
                 onMouseUp={handleEventPropagation}
                 onMouseMove={handleEventPropagation}
                 onTouchStart={handleEventPropagation}
@@ -804,6 +1226,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             >
                 <Box ref={containerRef} sx={styles.plotContainerStyle}>
                     <Plot
+                        onInitialized={(_, graphDiv) => {
+                            plotRef.current = graphDiv;
+                        }}
                         data={data}
                         layout={layout}
                         config={config}
@@ -819,52 +1244,34 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         Legend
                     </Typography>
                     {curves.map((curve) => {
-                        const color = getColorForCurve(curve);
                         const label = getLabelForCurve(curve);
+                        const displayLabel =
+                            curveAttributes.get(label)?.displayLabel;
+                        const color = curveAttributes.get(label)?.color;
+
                         return (
-                            <Box
+                            <LegendEntry
                                 key={label}
-                                className="legendEntry"
-                                sx={styles.legendEntryStyle}
-                            >
-                                {curve.isLoading ? (
-                                    <CircularProgress
-                                        size="1rem"
-                                        disableShrink={true}
-                                        sx={styles.statusSymbolStyle}
-                                    />
-                                ) : curve.error ? (
-                                    <Tooltip title={curve.error} arrow>
-                                        <ErrorOutlineIcon color="error" />
-                                    </Tooltip>
-                                ) : (
-                                    <span
-                                        style={{
-                                            display: "inline-block",
-                                            width: "16px",
-                                            height: "16px",
-                                            backgroundColor: color,
-                                            marginRight: "8px",
-                                        }}
-                                    ></span>
-                                )}
-                                <span>{label}</span>
-                                <button
-                                    style={{
-                                        background: "none",
-                                        border: "none",
-                                        cursor: "pointer",
-                                        color: "red",
-                                        fontWeight: "bold",
-                                    }}
-                                    onClick={() => handleRemoveCurve(label)}
-                                >
-                                    ✖
-                                </button>
-                            </Box>
+                                curve={curve}
+                                label={label}
+                                displayLabel={displayLabel}
+                                color={color}
+                                onChannelDragStart={onChannelDragStart}
+                                handleRemoveCurve={handleRemoveCurve}
+                            />
                         );
                     })}
                 </Box>
+                <PlotSettingsPopup
+                    open={openPlotSettings}
+                    onClose={() => setOpenPlotSettings(false)}
+                    plotSettings={{
+                        plotTitle: cloneDeep(plotTitle),
+                        curveAttributes: cloneDeep(curveAttributes),
+                        yAxisAttributes: cloneDeep(yAxisAttributes),
+                    }}
+                    onSave={onPlotSettingsSave}
+                />
             </Box>
         );
     }

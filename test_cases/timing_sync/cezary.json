@@ -1,0 +1,166 @@
+{
+    "dashboard": {
+        "widgets": [
+            {
+                "channels": [
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SLGOS01-TLSY-MIZ:JITTERMON",
+                        "seriesId": "5308579864662520562",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SLGOS01-TLSY-MIZ:PIDOUTMON",
+                        "seriesId": "2383057255358282742",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "STSRD01-TCWL-LTX010:P_EXT",
+                        "seriesId": "5145297289689586371",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    },
+                    {
+                        "backend": "sf-archiver",
+                        "name": "SLGOS01-TLSY-MIZ:GEN5_DAC",
+                        "seriesId": "6845648497925422615",
+                        "source": "",
+                        "type": "f64",
+                        "shape": [],
+                        "unit": "",
+                        "description": ""
+                    }
+                ],
+                "layout": {
+                    "w": 12,
+                    "h": 23,
+                    "x": 0,
+                    "y": 0,
+                    "i": "3",
+                    "moved": false,
+                    "static": false
+                },
+                "plotSettings": {
+                    "plotTitle": "Plot 3",
+                    "curveAttributes": {
+                        "SLGOS01-TLSY-MIZ:JITTERMON | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SLGOS01-TLSY-MIZ:JITTERMON",
+                                "seriesId": "5308579864662520562",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#1f77b4",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SLGOS01-TLSY-MIZ:JITTERMON | sf-archiver | f64",
+                            "axisAssignment": "y1"
+                        },
+                        "SLGOS01-TLSY-MIZ:PIDOUTMON | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SLGOS01-TLSY-MIZ:PIDOUTMON",
+                                "seriesId": "2383057255358282742",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#ff7f0e",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SLGOS01-TLSY-MIZ:PIDOUTMON | sf-archiver | f64",
+                            "axisAssignment": "y2"
+                        },
+                        "STSRD01-TCWL-LTX010:P_EXT | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "STSRD01-TCWL-LTX010:P_EXT",
+                                "seriesId": "5145297289689586371",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#2ca02c",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "STSRD01-TCWL-LTX010:P_EXT | sf-archiver | f64",
+                            "axisAssignment": "y3"
+                        },
+                        "SLGOS01-TLSY-MIZ:GEN5_DAC | sf-archiver | f64": {
+                            "channel": {
+                                "backend": "sf-archiver",
+                                "name": "SLGOS01-TLSY-MIZ:GEN5_DAC",
+                                "seriesId": "6845648497925422615",
+                                "source": "",
+                                "type": "f64",
+                                "shape": [],
+                                "unit": "",
+                                "description": ""
+                            },
+                            "color": "#d62728",
+                            "curveShape": "linear",
+                            "curveMode": "lines+markers",
+                            "displayLabel": "SLGOS01-TLSY-MIZ:GEN5_DAC | sf-archiver | f64",
+                            "axisAssignment": "y4"
+                        }
+                    },
+                    "yAxisAttributes": [
+                        {
+                            "label": "y1",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "SLGOS01-TLSY-MIZ:JITTERMON | sf-archiver | f64",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y2",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "SLGOS01-TLSY-MIZ:PIDOUTMON | sf-archiver | f64",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y3",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "STSRD01-TCWL-LTX010:P_EXT | sf-archiver | f64",
+                            "manualDisplayLabel": false
+                        },
+                        {
+                            "label": "y4",
+                            "scaling": "linear",
+                            "min": null,
+                            "max": null,
+                            "displayLabel": "SLGOS01-TLSY-MIZ:GEN5_DAC | sf-archiver | f64",
+                            "manualDisplayLabel": false
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}
