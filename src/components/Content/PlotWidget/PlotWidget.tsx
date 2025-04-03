@@ -219,7 +219,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         );
 
         // Prevent event bubbling if its on a draggable surface so an event to drag the plot will not be handled by the grid layout to move the whole widget.
-        const handleEventPropagation = (e: React.SyntheticEvent) => {
+        const handleEventPropagation = (
+            e: React.SyntheticEvent,
+            isMouseDown: boolean = false
+        ) => {
+            if (isMouseDown) {
+                isCtrlPressed.current = (
+                    e as React.MouseEvent
+                ).getModifierState("Control");
+            }
+
             const plotCanvas = e.target as HTMLElement;
             if (
                 plotCanvas &&
@@ -1193,7 +1202,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             <Box
                 sx={styles.containerStyle}
                 onClick={handleEventPropagation}
-                onMouseDown={handleEventPropagation}
+                onMouseDown={(e) => handleEventPropagation(e, true)}
                 onMouseUp={handleEventPropagation}
                 onMouseMove={handleEventPropagation}
                 onTouchStart={handleEventPropagation}
