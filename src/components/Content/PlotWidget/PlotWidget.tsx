@@ -16,14 +16,13 @@ import {
     YAxisAttributes,
     AxisLimit,
 } from "./PlotWidget.types";
-import Plot from "react-plotly.js";
 import { useApiUrls } from "../../ApiContext/ApiContext";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { cloneDeep, debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
 import gearIcon from "../../../media/gear.svg?raw";
-import Plotly, { Root } from "plotly.js";
+import Plotly from "plotly.js";
 import { useLocalStorage } from "../../../helpers/useLocalStorage";
 import {
     defaultCurveColors,
@@ -39,6 +38,7 @@ import PlotSettingsPopup from "./PlotSettingsPopup/PlotSettingsPopup";
 import { PlotSettings } from "./PlotSettingsPopup/PlotSettingsPopup.types";
 import LegendEntry from "./LegendEntry/LegendEntry";
 import showSnackbar from "../../../helpers/showSnackbar";
+import { PlotlyHTMLElement } from "./PlotWidget.types";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -128,7 +128,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const curvesRef = useRef(curves);
         const colorMap = useRef<Map<string, string>>(new Map());
         const previousTimeValues = useRef(timeValues);
-        const plotRef = useRef<Root | null>(null);
+        const plotRef = useRef<PlotlyHTMLElement | null>(null);
         const settingsInitialized = useRef(false);
 
         const numBins = 1000;
@@ -938,14 +938,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             }
 
             result.push(...values);
-
-            // For the shadow axis - to always allow zoom, even with manual limits
-            result.push({
-                showlegend: false,
-                showscale: false,
-                yaxis: "y5",
-                hoverinfo: "skip",
-            });
             return result;
         }, [curves, curveAttributes, useWebGL, getLabelForCurve]);
 
@@ -1074,16 +1066,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 });
             }
 
-            // Add shadow axis; this one is invisible, and is simply here to always allow zooming, even if manual limits are set. ;)
-            yAxes.push({
-                yaxis5: {
-                    visible: false,
-                    overlaying: "y",
-                    autorange: true,
-                    fixedrange: false,
-                },
-            });
-
             const xLabel =
                 Array.from(curveAttributes).find(
                     ([, attributes]) => attributes.axisAssignment === "x"
@@ -1137,7 +1119,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 uirevision: "time",
                 plot_bgcolor: plotBackgroundColor,
             } as Plotly.Layout;
-            console.log(layout);
             return layout;
         }, [
             curves,
@@ -1193,6 +1174,19 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 ],
             } as Plotly.Config;
         }, [downloadDataCSV, downloadDataJSON]);
+
+        useEffect(() => {
+            if (plotRef.current) {
+                Plotly.newPlot(plotRef.current, data, layout, config);
+
+                plotRef.current.on("plotly_relayout", handleRelayout);
+
+                const currentPlotDiv = plotRef.current;
+                return () => {
+                    Plotly.purge(currentPlotDiv);
+                };
+            }
+        }, [data, layout, config]);
 
         const handleRemoveCurve = (label: string) => {
             setCurves((prevCurves) =>
@@ -1252,18 +1246,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 onTouchEnd={handleEventPropagation}
             >
                 <Box ref={containerRef} sx={styles.plotContainerStyle}>
-                    <Plot
-                        onInitialized={(_, graphDiv) => {
-                            plotRef.current = graphDiv;
-                        }}
-                        data={data}
-                        layout={layout}
-                        config={config}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                        }}
-                        onRelayout={handleRelayout}
+                    <div
+                        ref={plotRef}
+                        style={{ width: "100%", height: "100%" }}
                     />
                 </Box>
                 <Box sx={styles.legendStyle}>
