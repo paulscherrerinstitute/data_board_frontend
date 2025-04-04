@@ -974,24 +974,28 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const displayLabel =
                             attributes?.displayLabel || assignment;
 
-                        let useCustomRange = false;
-
                         const range: { [key: string]: AxisLimit[] } = {};
-
+                        let autorange: "min" | "max" | boolean = true;
                         if (
                             attributes &&
-                            attributes.min !== null &&
-                            attributes.max !== null
+                            (attributes.min !== null || attributes.max !== null)
                         ) {
-                            useCustomRange = true;
+                            if (
+                                attributes.min !== null &&
+                                attributes.max != null
+                            ) {
+                                autorange = false;
+                            } else {
+                                autorange =
+                                    attributes.min == null ? "min" : "max";
+                            }
                             range.range = [attributes.min, attributes.max];
                         }
 
                         yAxes.push({
                             [`yaxis${index === 0 ? "" : index + 1}`]: {
                                 type: scaling,
-                                autorange: !useCustomRange,
-                                fixedrange: useCustomRange,
+                                autorange: autorange,
                                 gridcolor: yAxisGridColor,
                                 title: { text: displayLabel },
                                 overlaying: index === 0 ? undefined : "y", // overlay all except the first axis
@@ -1036,24 +1040,24 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     const scaling = attributes?.scaling || "linear";
                     const displayLabel = attributes?.displayLabel || assignment;
 
-                    let useCustomRange = false;
-
                     const range: { [key: string]: AxisLimit[] } = {};
-
+                    let autorange: "min" | "max" | boolean = true;
                     if (
                         attributes &&
-                        attributes.min !== null &&
-                        attributes.max !== null
+                        (attributes.min !== null || attributes.max !== null)
                     ) {
-                        useCustomRange = true;
+                        if (attributes.min !== null && attributes.max != null) {
+                            autorange = false;
+                        } else {
+                            autorange = attributes.min == null ? "min" : "max";
+                        }
                         range.range = [attributes.min, attributes.max];
                     }
 
                     yAxes.push({
                         [`yaxis${index === 0 ? "" : index + 1}`]: {
                             type: scaling,
-                            autorange: !useCustomRange,
-                            fixedrange: useCustomRange,
+                            autorange: autorange,
                             gridcolor: yAxisGridColor,
                             title: { text: displayLabel },
                             overlaying: index === 0 ? undefined : "y",
@@ -1133,6 +1137,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 uirevision: "time",
                 plot_bgcolor: plotBackgroundColor,
             } as Plotly.Layout;
+            console.log(layout);
             return layout;
         }, [
             curves,
