@@ -1,0 +1,51 @@
+name: Lint and Test
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+
+jobs:
+    lint:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+
+            - name: Install dependencies
+              run: npm install
+              env:
+                  CI: true
+            - name: Lint
+              uses: sibiraj-s/action-eslint@v3
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  eslint-args: "src --ext js,jsx --report-unused-disable-directives --max-warnings 100"
+    test:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+
+            - name: Install dependencies
+              run: npm install
+              env:
+                  CI: true
+
+            - name: Run tests
+              run: npm test
+              env:
+                  CI: true

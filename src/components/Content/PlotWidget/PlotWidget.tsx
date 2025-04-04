@@ -37,7 +37,9 @@ import {
 import PlotSettingsPopup from "./PlotSettingsPopup/PlotSettingsPopup";
 import { PlotSettings } from "./PlotSettingsPopup/PlotSettingsPopup.types";
 import LegendEntry from "./LegendEntry/LegendEntry";
-import showSnackbar from "../../../helpers/showSnackbar";
+import showSnackbarAndLog, {
+    logToConsole,
+} from "../../../helpers/showSnackbar";
 import { PlotlyHTMLElement } from "./PlotWidget.types";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
@@ -220,7 +222,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         );
 
         // Prevent event bubbling if its on a draggable surface so an event to drag the plot will not be handled by the grid layout to move the whole widget.
-        const handleEventPropagation = (e: React.SyntheticEvent) => {
+        const handleEventPropagation = (
+            e: React.SyntheticEvent,
+            isMouseDown: boolean = false
+        ) => {
+            if (isMouseDown) {
+                isCtrlPressed.current = (
+                    e as React.MouseEvent
+                ).getModifierState("Control");
+            }
+
             const plotCanvas = e.target as HTMLElement;
             if (
                 plotCanvas &&
@@ -398,8 +409,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const handleResponseError = useCallback(
             (error: AxiosError | unknown, channel: Channel) => {
-                console.error(error);
-
                 if (error) {
                     let errorMsg: string | null = null;
 
@@ -430,6 +439,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     if (errorMsg) {
                         setErrorCurve(errorMsg, channel);
+                        logToConsole(errorMsg, "error", error);
                         return;
                     }
                 }
@@ -519,7 +529,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     // Now we have our seriesId, if the channel still exists
                     if (filteredResults.length === 0) {
-                        showSnackbar(
+                        showSnackbarAndLog(
                             `Channel: ${channel.name} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.type}`,
                             "error"
                         );
@@ -666,7 +676,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         return updatedCurves;
                     });
                 } catch (error) {
-                    console.log(error);
+                    logToConsole(
+                        `Failed to fetch channel: ${channel.name} on backend: ${channel.backend} with datatype: ${channel.type}`,
+                        "error",
+                        error
+                    );
                 }
             };
 
@@ -1071,6 +1085,26 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     ([, attributes]) => attributes.axisAssignment === "x"
                 )?.[1].displayLabel || "Time";
 
+            let leftYAxes = 0;
+            let rightYAxes = 0;
+
+            for (let i = 0; i < yAxes.length; i++) {
+                // Extract the actual axis number from the key (e.g. "yaxis3" -> 3, "yaxis" -> 1)
+                const axisKey = Object.keys(yAxes[i])[0];
+                const axisNumber =
+                    axisKey === "yaxis"
+                        ? 1
+                        : parseInt(axisKey.replace("yaxis", ""));
+                const axis =
+                    yAxes[i][`yaxis${axisNumber === 1 ? "" : axisNumber}`];
+
+                if (axis?.side === "left") {
+                    leftYAxes++;
+                } else if (axis?.side === "right") {
+                    rightYAxes++;
+                }
+            }
+
             const layout = {
                 title: {
                     text: plotTitle,
@@ -1088,21 +1122,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     title: {
                         text: xLabel,
                     },
-                    ...(curves.length <= 4
-                        ? {
-                              // Specify the width of the X axis to leave enough room for all y axes
-                              domain: [
-                                  0.01 +
-                                      Math.ceil(curves.length / 2) /
-                                          (40 * (window.innerWidth / 2560)),
-                                  1.01 -
-                                      Math.floor(curves.length / 2) /
-                                          (40 *
-                                              0.5 *
-                                              (window.innerWidth / 2560)),
-                              ],
-                          }
-                        : {}),
+                    ...{
+                        // Specify the width of the X axis to leave enough room for all y axes
+                        domain: [
+                            0.01 +
+                                leftYAxes / (40 * (window.innerWidth / 2560)),
+                            1.01 -
+                                rightYAxes /
+                                    (40 * 0.5 * (window.innerWidth / 2560)),
+                        ],
+                    },
                 },
                 yaxis: {
                     gridcolor: yAxisGridColor,
@@ -1238,7 +1267,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             <Box
                 sx={styles.containerStyle}
                 onClick={handleEventPropagation}
-                onMouseDown={handleEventPropagation}
+                onMouseDown={(e) => handleEventPropagation(e, true)}
                 onMouseUp={handleEventPropagation}
                 onMouseMove={handleEventPropagation}
                 onTouchStart={handleEventPropagation}
