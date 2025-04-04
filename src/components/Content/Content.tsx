@@ -31,7 +31,7 @@ import {
     defaultWidgetHeight,
     defaultWidgetWidth,
 } from "../../helpers/defaults";
-import showSnackbar from "../../helpers/showSnackbar";
+import showSnackbarAndLog from "../../helpers/showSnackbar";
 
 const Content: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -96,11 +96,7 @@ const Content: React.FC = () => {
                         );
 
                     if (existingChannel) {
-                        console.warn(
-                            "Widget already contains the channel:",
-                            existingChannel
-                        );
-                        showSnackbar(
+                        showSnackbarAndLog(
                             `Widget already contains the channel: ${existingChannel.name}`,
                             "warning"
                         );
@@ -118,12 +114,14 @@ const Content: React.FC = () => {
                     setWidgets(newWidgets);
                 }
             } else {
-                console.error("Invalid channel structure");
-                showSnackbar("Invalid channel structure", "error");
+                showSnackbarAndLog("Invalid channel structure", "error");
             }
         } catch (error) {
-            console.error("Error parsing dropped data as JSON:", error);
-            showSnackbar("Error parsing dropped data as JSON", "error");
+            showSnackbarAndLog(
+                "Failed to parse dropped data as JSON",
+                "error",
+                error
+            );
         }
     };
 
@@ -295,11 +293,11 @@ const Content: React.FC = () => {
                             setWidgets(dashboard.widgets);
                         }
                         return;
-                    } catch (e) {
-                        console.error("Error fetching stored dashboard: ", e);
-                        showSnackbar(
+                    } catch (error) {
+                        showSnackbarAndLog(
                             "Failed to fetch the dashboard provided in the url",
-                            "error"
+                            "error",
+                            error
                         );
                     }
                 }
@@ -345,14 +343,15 @@ const Content: React.FC = () => {
                 newSearchParams.set("dashboardId", dashboardId);
                 return newSearchParams;
             });
-            showSnackbar(
+            showSnackbarAndLog(
                 "Successfully saved dashboard to server! We don't guarantee persistent storage, export to JSON if needed.",
                 "success"
             );
-        } catch {
-            showSnackbar(
+        } catch (error) {
+            showSnackbarAndLog(
                 "Failed to save dashboard to server. Maybe try again, or export to JSON.",
-                "error"
+                "error",
+                error
             );
         }
     }, [backendUrl, dashboardData, setSearchParams]);
@@ -365,13 +364,17 @@ const Content: React.FC = () => {
                     `${backendUrl}/dashboard/${dashboardId}`,
                     dashboardData
                 );
-                showSnackbar(
+                showSnackbarAndLog(
                     "Successfully saved dashboard to server! We don't guarantee persistent storage, export to JSON if needed.",
                     "success"
                 );
                 return;
-            } catch {
-                // ignored
+            } catch (error) {
+                showSnackbarAndLog(
+                    "Failed to save dashboard, creating new one",
+                    "error",
+                    error
+                );
             }
         }
         handleCreateDashboard();
@@ -417,13 +420,15 @@ const Content: React.FC = () => {
                     })
                 );
                 setWidgets(uniqueKeyWidgets);
-                showSnackbar("Successfully imported dashboard!", "success");
+                showSnackbarAndLog(
+                    "Successfully imported dashboard!",
+                    "success"
+                );
             };
 
             input.click();
-        } catch (e) {
-            console.error("Error in handleImportDashboard:", e);
-            showSnackbar("Failed to import dashboard", "error");
+        } catch (error) {
+            showSnackbarAndLog("Failed to import dashboard", "error", error);
         }
     }, [setWidgets]);
 
