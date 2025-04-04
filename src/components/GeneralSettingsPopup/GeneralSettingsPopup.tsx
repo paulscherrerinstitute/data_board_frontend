@@ -1,4 +1,10 @@
-import React, { useMemo, useRef } from "react";
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import {
     Dialog,
     DialogTitle,
@@ -32,15 +38,18 @@ import {
     defaultYAxisGridColor,
     defaultYAxisScaling,
 } from "../../helpers/defaults";
-import Plot from "react-plotly.js";
 import { InitialSidebarState } from "../Sidebar/Sidebar.types";
 import { debounce } from "lodash";
 import showSnackbarAndLog from "../../helpers/showSnackbar";
+import { PlotlyHTMLElement } from "../Content/PlotWidget/PlotWidget.types";
+import Plotly from "plotly.js";
 
 const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     open,
     onClose,
 }) => {
+    const [isPlotDivRendered, setIsPlotDivRendered] = useState(false);
+
     const isWebGLSupported = useMemo(() => {
         try {
             const canvas = document.createElement("canvas");
@@ -119,6 +128,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     );
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const plotRef = useRef<PlotlyHTMLElement | null>(null);
 
     const resetToDefaults = () => {
         setInitialSidebarState(defaultInitialSidebarState);
@@ -200,6 +210,80 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
             fileInputRef.current.value = "";
         }
     };
+
+    useEffect(() => {
+        const data = [
+            {
+                x: [1, 50, 120, 230, 310, 450, 520, 630, 740, 850, 920],
+                y: [1, 100, 250, 400, 320, 510, 600, 720, 800, 910, 980],
+                type: useWebGL ? "scattergl" : "scatter",
+                mode: curveMode as Plotly.PlotData["mode"],
+                line: {
+                    color: curveColors[0],
+                    shape: curveShape as Plotly.ScatterLine["shape"],
+                },
+                name: "Curve 1",
+            },
+            {
+                x: [1, 30, 140, 260, 340, 460, 540, 650, 760, 870, 950],
+                y: [1, 90, 220, 390, 310, 480, 580, 690, 770, 890, 950],
+                type: useWebGL ? "scattergl" : "scatter",
+                mode: curveMode as Plotly.PlotData["mode"],
+                line: {
+                    color: curveColors[1],
+                    shape: curveShape as Plotly.ScatterLine["shape"],
+                },
+                name: "Curve 2",
+            },
+        ] as Plotly.Data[];
+
+        const layout = {
+            paper_bgcolor: plotBackgroundColor,
+            plot_bgcolor: plotBackgroundColor,
+            xaxis: {
+                gridcolor: xAxisGridColor,
+            },
+            yaxis: {
+                gridcolor: yAxisGridColor,
+                type: yAxisScaling as Plotly.AxisType,
+            },
+        } as Plotly.Layout;
+
+        const config = {
+            responsive: true,
+            displaylogo: false,
+        } as Plotly.Config;
+
+        if (plotRef.current) {
+            Plotly.newPlot(plotRef.current, data, layout, config);
+
+            const currentPlotDiv = plotRef.current;
+            return () => {
+                Plotly.purge(currentPlotDiv);
+            };
+        }
+    }, [
+        useWebGL,
+        curveMode,
+        curveColors,
+        curveShape,
+        plotBackgroundColor,
+        xAxisGridColor,
+        yAxisGridColor,
+        yAxisScaling,
+        isPlotDivRendered,
+    ]);
+
+    const plotRefCallback = useCallback((node: PlotlyHTMLElement | null) => {
+        if (node !== null) {
+            plotRef.current = node;
+
+            new IntersectionObserver(
+                ([entry]) => setIsPlotDivRendered(entry.isIntersecting),
+                { threshold: 0 }
+            ).observe(node);
+        }
+    }, []);
 
     return (
         <Dialog
@@ -475,55 +559,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                 <Typography variant="h4" sx={{ marginBottom: "8px" }}>
                     Example Plot
                 </Typography>
-                <Plot
-                    data={[
-                        {
-                            x: [
-                                1, 50, 120, 230, 310, 450, 520, 630, 740, 850,
-                                920,
-                            ],
-                            y: [
-                                1, 100, 250, 400, 320, 510, 600, 720, 800, 910,
-                                980,
-                            ],
-                            type: useWebGL ? "scattergl" : "scatter",
-                            mode: curveMode as Plotly.PlotData["mode"],
-                            line: {
-                                color: curveColors[0], // First curve color
-                                shape: curveShape as Plotly.ScatterLine["shape"],
-                            },
-                            name: "Curve 1",
-                        },
-                        {
-                            x: [
-                                1, 30, 140, 260, 340, 460, 540, 650, 760, 870,
-                                950,
-                            ],
-                            y: [
-                                1, 90, 220, 390, 310, 480, 580, 690, 770, 890,
-                                950,
-                            ],
-                            type: useWebGL ? "scattergl" : "scatter",
-                            mode: curveMode as Plotly.PlotData["mode"],
-                            line: {
-                                color: curveColors[1] || "#ff0000", // Second curve color (fallback to red)
-                                shape: curveShape as Plotly.ScatterLine["shape"],
-                            },
-                            name: "Curve 2",
-                        },
-                    ]}
-                    layout={{
-                        paper_bgcolor: plotBackgroundColor,
-                        plot_bgcolor: plotBackgroundColor,
-                        xaxis: {
-                            gridcolor: xAxisGridColor,
-                        },
-                        yaxis: {
-                            gridcolor: yAxisGridColor,
-                            type: yAxisScaling as Plotly.AxisType,
-                        },
-                    }}
-                    config={{ responsive: true, displaylogo: false }}
+                <div
+                    ref={plotRefCallback}
                     style={{ width: "100%", height: "100%" }}
                 />
                 <Box sx={styles.resetButtonStyle}>
