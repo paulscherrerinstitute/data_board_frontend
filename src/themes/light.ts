@@ -7,6 +7,7 @@ export const lightTheme: ThemeOptions = createTheme({
         mode: "light",
         primary: {
             main: "#00bed8",
+            contrastText: "#ffffff",
         },
         secondary: {
             main: "#f06292",
@@ -14,10 +15,10 @@ export const lightTheme: ThemeOptions = createTheme({
         },
         background: {
             default: "#ffffff",
-            paper: "#e3f0ff",
+            paper: "#ffffff",
         },
         text: {
-            primary: "#414756",
+            primary: "rgb(84, 90, 105)",
             secondary: "#a5abbd",
         },
         custom: {
@@ -32,6 +33,20 @@ export const lightTheme: ThemeOptions = createTheme({
                     primary: "rgba(255, 255, 255, 0.94)",
                     secondary: "rgb(196, 196, 196)",
                 },
+            },
+            plot: {
+                legend: {
+                    background: "#f0f0f0",
+                    entry: {
+                        background: {
+                            primary: "rgba(255, 255, 255, 0.3)",
+                            hover: "rgba(255, 255, 255, 0.4)",
+                        },
+                    },
+                },
+                background: "#ffffff",
+                xAxisGrid: "#e3f0ff",
+                yAxisGrid: "#e3f0ff",
             },
         },
     },

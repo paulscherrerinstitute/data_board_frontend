@@ -3,6 +3,7 @@ import { InitialSidebarState } from "../components/Sidebar/Sidebar.types";
 export const defaultPlotBackgroundColor = "#fcfcfc";
 export const defaultXAxisGridColor = "#ebebeb";
 export const defaultYAxisGridColor = "#ebebeb";
+export const defaultTheme = "default";
 export const defaultUseWebGL = true;
 
 export const defaultCurveColors = [

@@ -25,6 +25,20 @@ declare module "@mui/material/styles" {
                     secondary: string;
                 };
             };
+            plot: {
+                legend: {
+                    background: string;
+                    entry: {
+                        background: {
+                            primary: string;
+                            hover: string;
+                        };
+                    };
+                };
+                background: string;
+                xAxisGrid: string;
+                yAxisGrid: string;
+            };
         };
     }
 
@@ -41,6 +55,20 @@ declare module "@mui/material/styles" {
                     primary: string;
                     secondary: string;
                 };
+            };
+            plot: {
+                legend: {
+                    background: string;
+                    entry: {
+                        background: {
+                            primary: string;
+                            hover: string;
+                        };
+                    };
+                };
+                background: string;
+                xAxisGrid: string;
+                yAxisGrid: string;
             };
         };
     }

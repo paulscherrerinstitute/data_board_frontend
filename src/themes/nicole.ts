@@ -33,6 +33,20 @@ export const nicoleTheme: ThemeOptions = createTheme({
                     secondary: "rgba(250, 110, 150, 1)",
                 },
             },
+            plot: {
+                legend: {
+                    background: "#f8bbd0", // Softer pink, matching paper background
+                    entry: {
+                        background: {
+                            primary: "rgba(252, 228, 236, 0.4)", // Very light pink (default background) with opacity
+                            hover: "rgba(252, 228, 236, 0.6)", // Very light pink (default background) with higher opacity
+                        },
+                    },
+                },
+                background: "#fce4ec", // Very light pink
+                xAxisGrid: "#f8bbd0", // Softer pink
+                yAxisGrid: "#f8bbd0", // Softer pink
+            },
         },
     },
 });

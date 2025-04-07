@@ -5,7 +5,6 @@ export const baseTheme: ThemeOptions = createTheme({
         mode: "light",
         primary: {
             main: "#1976d2",
-            dark: "#353839",
         },
         secondary: {
             main: "#dc004e",
@@ -32,6 +31,20 @@ export const baseTheme: ThemeOptions = createTheme({
                     primary: "rgba(80, 83, 85, 1)",
                     secondary: "rgba(62, 65, 66, 1)",
                 },
+            },
+            plot: {
+                legend: {
+                    background: "#f4f4f4",
+                    entry: {
+                        background: {
+                            primary: "#eaeaea",
+                            hover: "#d3d3d3",
+                        },
+                    },
+                },
+                background: "#fcfcfc",
+                xAxisGrid: "#ebebeb",
+                yAxisGrid: "#ebebeb",
             },
         },
     },

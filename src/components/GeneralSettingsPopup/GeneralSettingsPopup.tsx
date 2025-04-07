@@ -13,6 +13,7 @@ import {
     InputLabel,
     Tooltip,
     Button,
+    useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
@@ -25,6 +26,7 @@ import {
     defaultCurveShape,
     defaultInitialSidebarState,
     defaultPlotBackgroundColor,
+    defaultTheme,
     defaultUseWebGL,
     defaultWidgetHeight,
     defaultWidgetWidth,
@@ -36,7 +38,7 @@ import Plot from "react-plotly.js";
 import { InitialSidebarState } from "../Sidebar/Sidebar.types";
 import { debounce } from "lodash";
 import showSnackbar from "../../helpers/showSnackbar";
-import { useTheme } from "../../themes/themes";
+import { useThemeSettings } from "../../themes/themes";
 import { AvailableTheme } from "../../themes/themes.types";
 
 const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
@@ -122,7 +124,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { setTheme } = useTheme();
+    const { setTheme, currentTheme } = useThemeSettings();
+    const theme = useTheme();
 
     const resetToDefaults = () => {
         setInitialSidebarState(defaultInitialSidebarState);
@@ -136,6 +139,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setYAxisScaling(defaultYAxisScaling);
         setCurveShape(defaultCurveShape);
         setCurveMode(defaultCurveMode);
+        setTheme(defaultTheme);
     };
 
     const exportSettings = () => {
@@ -151,6 +155,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
             yAxisScaling,
             curveShape,
             curveMode,
+            theme: currentTheme,
         };
         const blob = new Blob([JSON.stringify(settings, null, 2)], {
             type: "application/json",
@@ -194,6 +199,9 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     setCurveShape(imported.curveShape);
                 if (imported.curveMode !== undefined)
                     setCurveMode(imported.curveMode);
+                if (imported.theme !== undefined) {
+                    setTheme(imported.theme);
+                }
             } catch (error) {
                 console.error("Error importing settings:", error);
                 showSnackbar("Failed to import settings", "error");
@@ -268,7 +276,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     <FormControl fullWidth>
                         <InputLabel>Theme</InputLabel>
                         <Select
-                            value={localStorage.getItem("theme") || "default"}
+                            value={currentTheme ?? defaultTheme}
                             onChange={(e) => {
                                 updateTheme(e.target.value as AvailableTheme);
                             }}
@@ -543,14 +551,29 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                         },
                     ]}
                     layout={{
-                        paper_bgcolor: plotBackgroundColor,
-                        plot_bgcolor: plotBackgroundColor,
+                        paper_bgcolor:
+                            plotBackgroundColor == defaultPlotBackgroundColor
+                                ? theme.palette.background.paper
+                                : plotBackgroundColor,
+                        plot_bgcolor:
+                            plotBackgroundColor == defaultPlotBackgroundColor
+                                ? theme.palette.custom.plot.background
+                                : plotBackgroundColor,
                         xaxis: {
-                            gridcolor: xAxisGridColor,
+                            gridcolor:
+                                xAxisGridColor == defaultXAxisGridColor
+                                    ? theme.palette.custom.plot.xAxisGrid
+                                    : xAxisGridColor,
                         },
                         yaxis: {
-                            gridcolor: yAxisGridColor,
+                            gridcolor:
+                                yAxisGridColor == defaultYAxisGridColor
+                                    ? theme.palette.custom.plot.yAxisGrid
+                                    : yAxisGridColor,
                             type: yAxisScaling as Plotly.AxisType,
+                        },
+                        font: {
+                            color: theme.palette.text.primary,
                         },
                     }}
                     config={{ responsive: true, displaylogo: false }}

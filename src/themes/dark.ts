@@ -10,6 +10,7 @@ export const darkTheme: ThemeOptions = createTheme({
         },
         secondary: {
             main: "#dc004e",
+            dark: "rgba(85, 85, 85, 0.8)",
         },
         background: {
             default: "#121212",
@@ -25,12 +26,26 @@ export const darkTheme: ThemeOptions = createTheme({
                 background: {
                     primary: "#000000",
                     secondary: "#353839",
-                    tertiary: "#ffffff", // White for sidebar elements
+                    tertiary: "#00000",
                 },
                 results: {
                     primary: "rgba(80, 83, 85, 1)",
                     secondary: "rgba(62, 65, 66, 1)",
                 },
+            },
+            plot: {
+                legend: {
+                    background: "#19191b",
+                    entry: {
+                        background: {
+                            primary: "rgba(255, 255, 255, 0.1)",
+                            hover: "rgba(255, 255, 255, 0.2)",
+                        },
+                    },
+                },
+                background: "#121212",
+                xAxisGrid: "#1e1e1e",
+                yAxisGrid: "#1e1e1e",
             },
         },
     },

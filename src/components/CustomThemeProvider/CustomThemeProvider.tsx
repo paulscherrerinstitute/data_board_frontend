@@ -3,12 +3,13 @@ import { AvailableTheme } from "../../themes/themes.types";
 import { themes, ThemeContext } from "../../themes/themes";
 import { ThemeProvider } from "@mui/material";
 import { CustomThemeProviderProps } from "./CustomThemeProvider.types";
+import { defaultTheme } from "../../helpers/defaults";
 
 export const CustomThemeProvider: React.FC<CustomThemeProviderProps> = ({
     children,
 }) => {
     const [currentTheme, setCurrentTheme] = useState<AvailableTheme>(
-        (localStorage.getItem("theme") as AvailableTheme) || "default"
+        (localStorage.getItem("theme") as AvailableTheme) || defaultTheme
     );
 
     const setTheme = (theme: AvailableTheme) => {

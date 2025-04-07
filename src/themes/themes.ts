@@ -11,7 +11,7 @@ export const ThemeContext = createContext<ThemeContextType>(
     {} as ThemeContextType
 );
 
-export const useTheme = () => useContext(ThemeContext);
+export const useThemeSettings = () => useContext(ThemeContext);
 
 export const themes: Record<AvailableTheme, ThemeOptions> = {
     default: defaultTheme,

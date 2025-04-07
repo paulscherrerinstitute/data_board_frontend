@@ -5,7 +5,7 @@ import React, {
     useRef,
     useState,
 } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import {
     PlotWidgetProps,
     CurveData,
@@ -121,6 +121,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             true
         );
         const [useWebGL] = useLocalStorage("useWebGL", defaultUseWebGL, true);
+
+        const theme = useTheme();
 
         const isCtrlPressed = useRef(false);
         const containerRef = useRef<HTMLDivElement | null>(null);
@@ -1081,7 +1083,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     b: 70,
                 },
                 xaxis: {
-                    gridcolor: xAxisGridColor,
+                    gridcolor:
+                        xAxisGridColor == defaultXAxisGridColor
+                            ? theme.palette.custom.plot.xAxisGrid
+                            : xAxisGridColor,
                     title: {
                         text: xLabel,
                     },
@@ -1097,7 +1102,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     },
                 },
                 yaxis: {
-                    gridcolor: yAxisGridColor,
+                    gridcolor:
+                        yAxisGridColor == defaultYAxisGridColor
+                            ? theme.palette.custom.plot.yAxisGrid
+                            : yAxisGridColor,
                     type: yAxisAttributes[0].scaling,
                     title: {
                         text:
@@ -1109,7 +1117,17 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 ...Object.assign({}, ...yAxes), // Merge all y-axis definitions into layout
                 showlegend: false,
                 uirevision: "time",
-                plot_bgcolor: plotBackgroundColor,
+                plot_bgcolor:
+                    plotBackgroundColor == defaultPlotBackgroundColor
+                        ? theme.palette.custom.plot.background
+                        : plotBackgroundColor,
+                paper_bgcolor:
+                    plotBackgroundColor == defaultPlotBackgroundColor
+                        ? theme.palette.background.paper
+                        : plotBackgroundColor,
+                font: {
+                    color: theme.palette.text.primary,
+                },
             } as Plotly.Layout;
             return layout;
         }, [
@@ -1122,6 +1140,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             xAxisGridColor,
             yAxisGridColor,
             plotTitle,
+            theme,
         ]);
 
         const config = useMemo(() => {
