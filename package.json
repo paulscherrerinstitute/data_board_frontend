@@ -36,7 +36,7 @@
         "react-grid-layout": "^1.5.1",
         "react-plotly.js": "^2.6.0",
         "react-resizable": "^3.0.5",
-        "react-router-dom": "^7.4.1",
+        "react-router-dom": "^7.5.0",
         "react-window": "^1.8.11",
         "typescript": "^5.8.2",
         "uuid": "^11.1.0"
