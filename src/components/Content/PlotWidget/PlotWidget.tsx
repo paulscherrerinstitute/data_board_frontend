@@ -457,6 +457,20 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         (timeValues.endTime * 1e6).toString()
                     );
 
+                    const emptyCurveData = {
+                        curve: {
+                            [getLabelForChannelAttributes(
+                                channel.name,
+                                channel.backend,
+                                channel.type
+                            )]: {
+                                [beginTimestamp]: NaN,
+                                [endTimeStamp]: NaN,
+                            },
+                            // Empty data initially, only showing range
+                        },
+                    };
+
                     // Add the new channel with empty data first so it appears in the legend
                     setCurves((prevCurves) => {
                         const existingCurveIndex = prevCurves.findIndex(
@@ -476,19 +490,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 {
                                     backend: channel.backend,
                                     type: channel.type,
-                                    curveData: {
-                                        curve: {
-                                            [getLabelForChannelAttributes(
-                                                channel.name,
-                                                channel.backend,
-                                                channel.type
-                                            )]: {
-                                                [beginTimestamp]: NaN,
-                                                [endTimeStamp]: NaN,
-                                            },
-                                            // Empty data initially, only showing range
-                                        },
-                                    },
+                                    curveData: emptyCurveData,
                                     isLoading: true,
                                     error: null,
                                 },
@@ -496,6 +498,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         } else {
                             prevCurves[existingCurveIndex].isLoading = true;
                             prevCurves[existingCurveIndex].error = null;
+                            // delete data
+                            prevCurves[existingCurveIndex].curveData =
+                                emptyCurveData;
                         }
                         return prevCurves;
                     });
