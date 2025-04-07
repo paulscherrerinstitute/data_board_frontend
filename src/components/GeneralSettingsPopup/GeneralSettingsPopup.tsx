@@ -37,7 +37,7 @@ import {
 import Plot from "react-plotly.js";
 import { InitialSidebarState } from "../Sidebar/Sidebar.types";
 import { debounce } from "lodash";
-import showSnackbar from "../../helpers/showSnackbar";
+import showSnackbarAndLog from "../../helpers/showSnackbar";
 import { useThemeSettings } from "../../themes/themes";
 import { AvailableTheme } from "../../themes/themes.types";
 
@@ -205,8 +205,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     setTheme(imported.theme);
                 }
             } catch (error) {
-                console.error("Error importing settings:", error);
-                showSnackbar("Failed to import settings", "error");
+                showSnackbarAndLog("Failed to import settings", "error", error);
             }
         };
         reader.readAsText(file);
