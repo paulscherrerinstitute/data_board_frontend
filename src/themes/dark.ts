@@ -26,7 +26,7 @@ export const darkTheme: ThemeOptions = createTheme({
                 background: {
                     primary: "#000000",
                     secondary: "#353839",
-                    tertiary: "#00000",
+                    tertiary: "#000000",
                 },
                 results: {
                     primary: "rgba(80, 83, 85, 1)",
