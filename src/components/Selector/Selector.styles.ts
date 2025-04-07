@@ -34,7 +34,6 @@ export const searchBoxStyle: SxProps<Theme> = {
 
 export const buttonStyle: SxProps<Theme> = {
     marginBottom: 2,
-    color: (theme) => theme.palette.primary.secondary,
 };
 
 export const listBoxStyle: SxProps<Theme> = {
