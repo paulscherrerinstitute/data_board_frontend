@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import {
     Dialog,
     DialogTitle,
@@ -124,6 +124,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const isManualThemeChange = useRef(false);
+
     const { setTheme, currentTheme } = useThemeSettings();
     const theme = useTheme();
 
@@ -214,9 +216,19 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         }
     };
 
-    const updateTheme = (theme: AvailableTheme) => {
-        setTheme(theme);
+    const updateTheme = (selectedTheme: AvailableTheme) => {
+        isManualThemeChange.current = true;
+        setTheme(selectedTheme);
     };
+
+    useEffect(() => {
+        if (isManualThemeChange.current) {
+            setPlotBackgroundColor(theme.palette.custom.plot.background);
+            setXAxisGridColor(theme.palette.custom.plot.xAxisGrid);
+            setYAxisGridColor(theme.palette.custom.plot.yAxisGrid);
+            isManualThemeChange.current = false;
+        }
+    }, [theme, setPlotBackgroundColor, setXAxisGridColor, setYAxisGridColor]);
 
     return (
         <Dialog
@@ -453,7 +465,11 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                         <InputLabel>Y-Axis Scaling</InputLabel>
                         <Select
                             value={yAxisScaling}
-                            onChange={(e) => setYAxisScaling(e.target.value)}
+                            onChange={(e) =>
+                                setYAxisScaling(
+                                    e.target.value as Plotly.AxisType
+                                )
+                            }
                             label="Y-Axis Scaling"
                         >
                             <MenuItem value="linear">Linear</MenuItem>
@@ -472,7 +488,12 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                         >
                             <Select
                                 value={curveShape}
-                                onChange={(e) => setCurveShape(e.target.value)}
+                                onChange={(e) =>
+                                    setCurveShape(
+                                        e.target
+                                            .value as Plotly.ScatterLine["shape"]
+                                    )
+                                }
                                 label="Curve Shape"
                             >
                                 <MenuItem value="linear">
@@ -496,7 +517,12 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                         >
                             <Select
                                 value={curveMode}
-                                onChange={(e) => setCurveMode(e.target.value)}
+                                onChange={(e) =>
+                                    setCurveMode(
+                                        e.target
+                                            .value as Plotly.PlotData["mode"]
+                                    )
+                                }
                                 label="Curve Mode"
                             >
                                 <MenuItem value="lines+markers">

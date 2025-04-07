@@ -1083,10 +1083,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     b: 70,
                 },
                 xaxis: {
-                    gridcolor:
-                        xAxisGridColor == defaultXAxisGridColor
-                            ? theme.palette.custom.plot.xAxisGrid
-                            : xAxisGridColor,
+                    gridcolor: xAxisGridColor,
                     title: {
                         text: xLabel,
                     },
@@ -1102,10 +1099,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     },
                 },
                 yaxis: {
-                    gridcolor:
-                        yAxisGridColor == defaultYAxisGridColor
-                            ? theme.palette.custom.plot.yAxisGrid
-                            : yAxisGridColor,
+                    gridcolor: yAxisGridColor,
                     type: yAxisAttributes[0].scaling,
                     title: {
                         text:
@@ -1117,14 +1111,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 ...Object.assign({}, ...yAxes), // Merge all y-axis definitions into layout
                 showlegend: false,
                 uirevision: "time",
-                plot_bgcolor:
-                    plotBackgroundColor == defaultPlotBackgroundColor
-                        ? theme.palette.custom.plot.background
-                        : plotBackgroundColor,
-                paper_bgcolor:
-                    plotBackgroundColor == defaultPlotBackgroundColor
-                        ? theme.palette.background.paper
-                        : plotBackgroundColor,
+                plot_bgcolor: plotBackgroundColor,
+                paper_bgcolor: plotBackgroundColor,
                 font: {
                     color: theme.palette.text.primary,
                 },

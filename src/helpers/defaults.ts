@@ -1,9 +1,10 @@
 import { InitialSidebarState } from "../components/Sidebar/Sidebar.types";
+import { AvailableTheme } from "../themes/themes.types";
 
 export const defaultPlotBackgroundColor = "#fcfcfc";
 export const defaultXAxisGridColor = "#ebebeb";
 export const defaultYAxisGridColor = "#ebebeb";
-export const defaultTheme = "default";
+export const defaultTheme: AvailableTheme = "default";
 export const defaultUseWebGL = true;
 
 export const defaultCurveColors = [
@@ -18,9 +19,9 @@ export const defaultCurveColors = [
     "#bcbd22",
     "#17becf",
 ];
-export const defaultYAxisScaling = "linear";
-export const defaultCurveShape = "linear";
-export const defaultCurveMode = "lines+markers";
+export const defaultYAxisScaling: Plotly.AxisType = "linear";
+export const defaultCurveShape: Plotly.ScatterLine["shape"] = "linear";
+export const defaultCurveMode: Plotly.PlotData["mode"] = "lines+markers";
 
 export const defaultWidgetWidth = 6;
 export const defaultWidgetHeight = 12;
