@@ -67,7 +67,7 @@
         "stream-browserify": "^3.0.0",
         "stream-parser": "^0.3.1",
         "typescript": "~5.8.2",
-        "typescript-eslint": "^8.29.0",
+        "typescript-eslint": "^8.29.1",
         "util": "^0.12.5",
         "vite": "^6.2.5",
         "vite-plugin-compression": "^0.5.1",
