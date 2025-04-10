@@ -25,7 +25,7 @@ import { useApiUrls } from "../ApiContext/ApiContext";
 import * as styles from "./Selector.styles";
 import { throttle } from "lodash";
 import { Channel, StoredChannel } from "./Selector.types";
-import showSnackbar from "../../helpers/showSnackbar";
+import showSnackbarAndLog from "../../helpers/showSnackbar";
 
 const Selector: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -47,12 +47,15 @@ const Selector: React.FC = () => {
 
     const filteredChannels = useMemo(() => {
         let regex: RegExp | null = null;
-
         if (searchRegex) {
             try {
                 regex = new RegExp(searchRegex, "i");
-            } catch {
-                // ignore invalid regex
+            } catch (error) {
+                showSnackbarAndLog(
+                    "Invalid search regex, treating it as plain string search!",
+                    "warning",
+                    error
+                );
             }
         }
 
@@ -64,7 +67,9 @@ const Selector: React.FC = () => {
                 selectedTypes.length === 0 ||
                 selectedTypes.includes(channel.attributes.type);
             const matchesSearch =
-                !searchRegex || (regex && regex.test(channel.attributes.name));
+                !searchRegex ||
+                (regex && regex.test(channel.attributes.name)) ||
+                (!regex && channel.attributes.name.includes(searchRegex));
 
             return matchesBackend && matchesType && matchesSearch;
         });
@@ -131,8 +136,11 @@ const Selector: React.FC = () => {
             setSelectedBackends(backends);
             setSelectedTypes(types);
         } catch (error) {
-            console.error(error);
-            showSnackbar("Failed to fetch recent channels", "error");
+            showSnackbarAndLog(
+                "Failed to fetch recent channels",
+                "error",
+                error
+            );
         }
     }, [backendUrl]);
 
@@ -154,7 +162,7 @@ const Selector: React.FC = () => {
                 setError(null);
                 setLoading(true);
                 try {
-                    setSearchRegex(term);
+                    setSearchRegex(term.trim());
 
                     const response = await axios.get<{
                         channels: Channel[];
@@ -227,9 +235,12 @@ const Selector: React.FC = () => {
 
                     setSearchResultsIsRecent(false);
                 } catch (error) {
-                    console.error(error);
                     setError("Error fetching channels");
-                    showSnackbar("Failed to fetch channels", "error");
+                    showSnackbarAndLog(
+                        "Failed to fetch channels",
+                        "error",
+                        error
+                    );
                 }
                 setLoading(false);
                 searchIsRunningRef.current = false;

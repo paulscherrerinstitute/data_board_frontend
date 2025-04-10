@@ -41,11 +41,35 @@ const SnackbarContainer = ({
     );
 };
 
-const showSnackbar = (
+export const logToConsole = (
+    message: string,
+    type: AlertColor,
+    details?: unknown
+) => {
+    const timestamp = new Date().toISOString();
+    const formattedMessage = `[${timestamp}] ${message}`;
+
+    if (type === "warning" || type === "error") {
+        console.error(formattedMessage);
+        if (details) {
+            console.error(details);
+        }
+    } else {
+        console.log(formattedMessage);
+        if (details) {
+            console.log(details);
+        }
+    }
+};
+
+const showSnackbarAndLog = (
     message: string,
     type: AlertColor = "info",
+    details?: unknown,
     duration: number = 3000
 ) => {
+    logToConsole(message, type, details);
+
     const snackbarRoot = document.createElement("div");
     document.body.appendChild(snackbarRoot);
     const root = ReactDOM.createRoot(snackbarRoot);
@@ -65,4 +89,4 @@ const showSnackbar = (
     );
 };
 
-export default showSnackbar;
+export default showSnackbarAndLog;
