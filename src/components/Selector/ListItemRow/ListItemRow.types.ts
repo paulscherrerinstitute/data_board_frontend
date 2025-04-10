@@ -1,3 +1,4 @@
+import { Theme } from "@mui/material";
 import { StoredChannel } from "../Selector.types";
 
 export interface ListItemRowProps {
@@ -9,5 +10,6 @@ export interface ListItemRowProps {
         onDeselect: (seriesId: string) => void;
         onDragStart: (event: React.DragEvent, seriesId: string) => void;
         isDraggable: boolean;
+        theme: Theme;
     };
 }

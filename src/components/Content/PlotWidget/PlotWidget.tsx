@@ -5,7 +5,7 @@ import React, {
     useRef,
     useState,
 } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import {
     PlotWidgetProps,
     CurveData,
@@ -124,6 +124,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             true
         );
         const [useWebGL] = useLocalStorage("useWebGL", defaultUseWebGL, true);
+
+        const theme = useTheme();
 
         const isCtrlPressed = useRef(false);
         const containerRef = useRef<HTMLDivElement | null>(null);
@@ -1152,6 +1154,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 showlegend: false,
                 uirevision: "time",
                 plot_bgcolor: plotBackgroundColor,
+                paper_bgcolor: plotBackgroundColor,
+                font: {
+                    color: theme.palette.text.primary,
+                },
             } as Plotly.Layout;
             return layout;
         }, [
@@ -1164,6 +1170,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             xAxisGridColor,
             yAxisGridColor,
             plotTitle,
+            theme,
         ]);
 
         const config = useMemo(() => {

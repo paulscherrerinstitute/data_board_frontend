@@ -7,7 +7,7 @@ export const timeSelectorContainerStyle: SxProps<Theme> = {
     width: "100%",
     height: "100%",
     padding: "0px 16px 0px 100px",
-    backgroundColor: "#f0f0f0",
+    backgroundColor: (theme) => theme.palette.background.default,
     borderBottom: "1px solid #ccc",
     minWidth: "1035px",
 };
@@ -28,7 +28,7 @@ export const toggleContainerStyle: SxProps<Theme> = {
     alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    border: "solid 1px #B8B8B8",
+    border: (theme) => `solid 1px ${theme.palette.divider}`,
     borderRadius: "4px",
     padding: "4px",
 };

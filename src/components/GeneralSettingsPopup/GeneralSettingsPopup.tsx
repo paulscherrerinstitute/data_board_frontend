@@ -19,6 +19,7 @@ import {
     InputLabel,
     Tooltip,
     Button,
+    useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
@@ -31,6 +32,7 @@ import {
     defaultCurveShape,
     defaultInitialSidebarState,
     defaultPlotBackgroundColor,
+    defaultTheme,
     defaultUseWebGL,
     defaultWidgetHeight,
     defaultWidgetWidth,
@@ -43,6 +45,8 @@ import { debounce } from "lodash";
 import showSnackbarAndLog from "../../helpers/showSnackbar";
 import { PlotlyHTMLElement } from "../Content/PlotWidget/PlotWidget.types";
 import Plotly from "plotly.js";
+import { useThemeSettings } from "../../themes/themes";
+import { AvailableTheme } from "../../themes/themes.types";
 
 const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     open,
@@ -130,6 +134,11 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const plotRef = useRef<PlotlyHTMLElement | null>(null);
 
+    const isManualThemeChange = useRef(false);
+
+    const { setTheme, currentTheme } = useThemeSettings();
+    const theme = useTheme();
+
     const resetToDefaults = () => {
         setInitialSidebarState(defaultInitialSidebarState);
         setPlotBackgroundColor(defaultPlotBackgroundColor);
@@ -142,6 +151,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setYAxisScaling(defaultYAxisScaling);
         setCurveShape(defaultCurveShape);
         setCurveMode(defaultCurveMode);
+        setTheme(defaultTheme);
     };
 
     const exportSettings = () => {
@@ -157,6 +167,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
             yAxisScaling,
             curveShape,
             curveMode,
+            currentTheme,
         };
         const blob = new Blob([JSON.stringify(settings, null, 2)], {
             type: "application/json",
@@ -200,6 +211,9 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     setCurveShape(imported.curveShape);
                 if (imported.curveMode !== undefined)
                     setCurveMode(imported.curveMode);
+                if (imported.currentTheme !== undefined) {
+                    setTheme(imported.currentTheme);
+                }
             } catch (error) {
                 showSnackbarAndLog("Failed to import settings", "error", error);
             }
@@ -210,6 +224,20 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
             fileInputRef.current.value = "";
         }
     };
+
+    const updateTheme = (selectedTheme: AvailableTheme) => {
+        isManualThemeChange.current = true;
+        setTheme(selectedTheme);
+    };
+
+    useEffect(() => {
+        if (isManualThemeChange.current) {
+            setPlotBackgroundColor(theme.palette.custom.plot.background);
+            setXAxisGridColor(theme.palette.custom.plot.xAxisGrid);
+            setYAxisGridColor(theme.palette.custom.plot.yAxisGrid);
+            isManualThemeChange.current = false;
+        }
+    }, [theme, setPlotBackgroundColor, setXAxisGridColor, setYAxisGridColor]);
 
     useEffect(() => {
         const data = [
@@ -334,6 +362,27 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                             <MenuItem value="alwaysOpen">Always Open</MenuItem>
                             <MenuItem value="alwaysClosed">
                                 Always Closed
+                            </MenuItem>
+                        </Select>
+                    </FormControl>
+                </Box>
+
+                <Box sx={styles.settingBoxStyle}>
+                    <FormControl fullWidth>
+                        <InputLabel>Theme</InputLabel>
+                        <Select
+                            value={currentTheme ?? defaultTheme}
+                            onChange={(e) => {
+                                updateTheme(e.target.value as AvailableTheme);
+                            }}
+                            label="Theme"
+                        >
+                            <MenuItem value="default">Classic</MenuItem>
+                            <MenuItem value="dark">Dark</MenuItem>
+                            <MenuItem value="light">Light</MenuItem>
+                            <MenuItem value="nicole">Nicole</MenuItem>
+                            <MenuItem value="highContrast">
+                                High Contrast
                             </MenuItem>
                         </Select>
                     </FormControl>
@@ -499,7 +548,11 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                         <InputLabel>Y-Axis Scaling</InputLabel>
                         <Select
                             value={yAxisScaling}
-                            onChange={(e) => setYAxisScaling(e.target.value)}
+                            onChange={(e) =>
+                                setYAxisScaling(
+                                    e.target.value as Plotly.AxisType
+                                )
+                            }
                             label="Y-Axis Scaling"
                         >
                             <MenuItem value="linear">Linear</MenuItem>
@@ -518,7 +571,12 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                         >
                             <Select
                                 value={curveShape}
-                                onChange={(e) => setCurveShape(e.target.value)}
+                                onChange={(e) =>
+                                    setCurveShape(
+                                        e.target
+                                            .value as Plotly.ScatterLine["shape"]
+                                    )
+                                }
                                 label="Curve Shape"
                             >
                                 <MenuItem value="linear">
@@ -542,7 +600,12 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                         >
                             <Select
                                 value={curveMode}
-                                onChange={(e) => setCurveMode(e.target.value)}
+                                onChange={(e) =>
+                                    setCurveMode(
+                                        e.target
+                                            .value as Plotly.PlotData["mode"]
+                                    )
+                                }
                                 label="Curve Mode"
                             >
                                 <MenuItem value="lines+markers">
