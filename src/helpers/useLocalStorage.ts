@@ -21,7 +21,11 @@ export const useLocalStorage = <T>(
     key: string,
     initialValue?: T,
     readOnly: boolean = false
-): [T, React.Dispatch<React.SetStateAction<T>>] => {
+): [
+    T,
+    React.Dispatch<React.SetStateAction<T>>,
+    React.Dispatch<React.SetStateAction<T>>,
+] => {
     // Retrieve and parse the stored value, or use the initial value if not present.
     const storedValue = localStorage.getItem(key);
     let parsedValue: T;
@@ -87,5 +91,5 @@ export const useLocalStorage = <T>(
         };
     }, [key, initialValue]);
 
-    return [value, setValueWithStorage];
+    return [value, setValueWithStorage, setValue];
 };
