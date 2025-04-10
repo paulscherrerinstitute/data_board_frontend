@@ -24,10 +24,9 @@ jobs:
               env:
                   CI: true
             - name: Lint
-              uses: sibiraj-s/action-eslint@v3
-              with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
-                  eslint-args: "src --ext js,jsx --report-unused-disable-directives --max-warnings 100"
+              run: npm run lint
+              env:
+                  CI: true
     test:
         runs-on: ubuntu-latest
 
