@@ -23,7 +23,6 @@
         "dayjs": "^1.11.13",
         "lodash": "^4.17.21",
         "plotly.js": "^3.0.1",
-        "plotly.js-dist": "^3.0.1",
         "re-resizable": "^6.11.2",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
