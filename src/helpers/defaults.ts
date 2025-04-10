@@ -1,6 +1,7 @@
 import { InitialSidebarState } from "../components/Sidebar/Sidebar.types";
 import { AvailableTheme } from "../themes/themes.types";
 
+export const defaultWatermarkOpacity = 0.0;
 export const defaultPlotBackgroundColor = "#fcfcfc";
 export const defaultXAxisGridColor = "#ebebeb";
 export const defaultYAxisGridColor = "#ebebeb";

@@ -34,6 +34,7 @@ import {
     defaultPlotBackgroundColor,
     defaultTheme,
     defaultUseWebGL,
+    defaultWatermarkOpacity,
     defaultWidgetHeight,
     defaultWidgetWidth,
     defaultXAxisGridColor,
@@ -73,6 +74,10 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     const [initialSidebarState, setInitialSidebarState] = useLocalStorage(
         "initialSidebarState",
         defaultInitialSidebarState
+    );
+    const [watermarkOpacity, setWatermarkOpacity] = useLocalStorage(
+        "watermarkOpacity",
+        defaultWatermarkOpacity
     );
     const [plotBackgroundColor, setPlotBackgroundColor] = useLocalStorage(
         "plotBackgroundColor",
@@ -240,30 +245,30 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     }, [theme, setPlotBackgroundColor, setXAxisGridColor, setYAxisGridColor]);
 
     useEffect(() => {
-        const data = [
-            {
-                x: [1, 50, 120, 230, 310, 450, 520, 630, 740, 850, 920],
-                y: [1, 100, 250, 400, 320, 510, 600, 720, 800, 910, 980],
+        const data = Array.from({ length: 8 }, (_, idx) => {
+            const curveIndex = idx + 3;
+            const xOffset = curveIndex * 5;
+            const yOffset = curveIndex * 100;
+
+            const baseX = [
+                1, 45, 110, 220, 300, 430, 500, 610, 720, 810, 900,
+            ].map((v) => v + xOffset);
+            const baseY = [
+                1, 95, 240, 380, 310, 490, 570, 680, 770, 860, 920,
+            ].map((v) => v + yOffset);
+
+            return {
+                x: baseX,
+                y: baseY,
                 type: useWebGL ? "scattergl" : "scatter",
                 mode: curveMode as Plotly.PlotData["mode"],
                 line: {
-                    color: curveColors[0],
+                    color: curveColors[curveIndex % curveColors.length],
                     shape: curveShape as Plotly.ScatterLine["shape"],
                 },
-                name: "Curve 1",
-            },
-            {
-                x: [1, 30, 140, 260, 340, 460, 540, 650, 760, 870, 950],
-                y: [1, 90, 220, 390, 310, 480, 580, 690, 770, 890, 950],
-                type: useWebGL ? "scattergl" : "scatter",
-                mode: curveMode as Plotly.PlotData["mode"],
-                line: {
-                    color: curveColors[1],
-                    shape: curveShape as Plotly.ScatterLine["shape"],
-                },
-                name: "Curve 2",
-            },
-        ] as Plotly.Data[];
+                name: `Curve ${curveIndex}`,
+            };
+        }) as Plotly.Data[];
 
         const layout = {
             paper_bgcolor: plotBackgroundColor,
@@ -275,6 +280,24 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                 gridcolor: yAxisGridColor,
                 type: yAxisScaling as Plotly.AxisType,
             },
+            images:
+                watermarkOpacity > 0
+                    ? [
+                          {
+                              layer: "below",
+                              opacity: watermarkOpacity,
+                              source: theme.palette.custom.plot.watermark,
+                              xref: "paper",
+                              yref: "paper",
+                              x: 0.5,
+                              y: 0.5,
+                              sizex: 1,
+                              sizey: 1,
+                              xanchor: "center",
+                              yanchor: "middle",
+                          },
+                      ]
+                    : undefined,
         } as Plotly.Layout;
 
         const config = {
@@ -295,6 +318,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         curveMode,
         curveColors,
         curveShape,
+        theme,
+        watermarkOpacity,
         plotBackgroundColor,
         xAxisGridColor,
         yAxisGridColor,
@@ -380,12 +405,38 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                             <MenuItem value="default">Classic</MenuItem>
                             <MenuItem value="dark">Dark</MenuItem>
                             <MenuItem value="light">Light</MenuItem>
-                            <MenuItem value="nicole">Nicole</MenuItem>
                             <MenuItem value="highContrast">
                                 High Contrast
                             </MenuItem>
+                            <MenuItem value="unicorn">Unicorn</MenuItem>
                         </Select>
                     </FormControl>
+                </Box>
+
+                <Box sx={styles.settingBoxStyle}>
+                    <Tooltip
+                        title="0 means no watermark will be visible"
+                        arrow
+                        placement="top"
+                    >
+                        <Typography variant="h6">Watermark Opacity</Typography>
+                    </Tooltip>
+                    <Input
+                        type="number"
+                        inputProps={{
+                            min: 0,
+                            max: 1,
+                            step: 0.01,
+                        }}
+                        value={watermarkOpacity}
+                        onChange={(e) => {
+                            const newValue = Math.min(
+                                1,
+                                Math.max(0, Number(e.target.value))
+                            );
+                            setWatermarkOpacity(newValue);
+                        }}
+                    />
                 </Box>
 
                 <Box sx={styles.settingBoxStyle}>

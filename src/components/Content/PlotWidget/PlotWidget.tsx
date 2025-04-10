@@ -30,6 +30,7 @@ import {
     defaultCurveShape,
     defaultPlotBackgroundColor,
     defaultUseWebGL,
+    defaultWatermarkOpacity,
     defaultXAxisGridColor,
     defaultYAxisGridColor,
     defaultYAxisScaling,
@@ -108,6 +109,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const [plotTitle, setPlotTitle] = useState(`New Plot`);
         const [openPlotSettings, setOpenPlotSettings] = useState(false);
 
+        const [watermarkOpacity] = useLocalStorage(
+            "watermarkOpacity",
+            defaultWatermarkOpacity,
+            true
+        );
         const [plotBackgroundColor] = useLocalStorage(
             "plotBackgroundColor",
             defaultPlotBackgroundColor,
@@ -1158,11 +1164,42 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 font: {
                     color: theme.palette.text.primary,
                 },
+                images:
+                    watermarkOpacity > 0
+                        ? [
+                              {
+                                  layer: "below",
+                                  opacity: watermarkOpacity,
+                                  source: theme.palette.custom.plot.watermark,
+                                  xref: "paper",
+                                  yref: "paper",
+
+                                  ...(curves.length === 0
+                                      ? {
+                                            x: 0.5,
+                                            y: 0.5,
+                                            sizex: 1,
+                                            sizey: 1,
+                                            xanchor: "center",
+                                            yanchor: "middle",
+                                        }
+                                      : {
+                                            x: 0.5,
+                                            y: 1,
+                                            sizex: 0.2,
+                                            sizey: 0.2,
+                                            xanchor: "center",
+                                            yanchor: "top",
+                                        }),
+                              },
+                          ]
+                        : undefined,
             } as Plotly.Layout;
             return layout;
         }, [
             curves,
             containerDimensions,
+            watermarkOpacity,
             plotBackgroundColor,
             manualAxisAssignment,
             curveAttributes,

@@ -1,5 +1,6 @@
 import { createTheme, ThemeOptions } from "@mui/material";
 import baseTheme from "./base";
+import psiCasBlack from "../media/psi_cas_black.svg";
 
 export const lightTheme: ThemeOptions = createTheme({
     ...baseTheme,
@@ -47,6 +48,7 @@ export const lightTheme: ThemeOptions = createTheme({
                 background: "#ffffff",
                 xAxisGrid: "#e3f0ff",
                 yAxisGrid: "#e3f0ff",
+                watermark: psiCasBlack,
             },
         },
     },

@@ -1,5 +1,6 @@
 import { createTheme, ThemeOptions } from "@mui/material";
 import baseTheme from "./base";
+import psiCasWhite from "../media/psi_cas_white.svg";
 
 export const highContrastTheme: ThemeOptions = createTheme({
     ...baseTheme,
@@ -47,6 +48,7 @@ export const highContrastTheme: ThemeOptions = createTheme({
                 background: "#000000", // Black for plot background
                 xAxisGrid: "#ffffff", // White for x-axis grid
                 yAxisGrid: "#ffffff", // White for y-axis grid
+                watermark: psiCasWhite,
             },
         },
     },

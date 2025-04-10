@@ -1,7 +1,8 @@
 import { ThemeOptions, createTheme } from "@mui/material";
 import baseTheme from "./base";
+import unicorn from "../media/unicorn.gif";
 
-export const nicoleTheme: ThemeOptions = createTheme({
+export const unicornTheme: ThemeOptions = createTheme({
     ...baseTheme,
     palette: {
         mode: "light",
@@ -46,9 +47,10 @@ export const nicoleTheme: ThemeOptions = createTheme({
                 background: "#fce4ec", // Very light pink
                 xAxisGrid: "#f8bbd0", // Softer pink
                 yAxisGrid: "#f8bbd0", // Softer pink
+                watermark: unicorn,
             },
         },
     },
 });
 
-export default nicoleTheme;
+export default unicornTheme;
