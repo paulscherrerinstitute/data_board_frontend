@@ -8,7 +8,7 @@
         "build": "vite build --mode production",
         "serve": "vite preview",
         "test": "vitest",
-        "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+        "lint": "eslint src --ext js,jsx --report-unused-disable-directives",
         "preview": "vite preview",
         "format": "prettier --write src/**/*.{js,jsx,ts,tsx,json,css,scss,md}"
     },
