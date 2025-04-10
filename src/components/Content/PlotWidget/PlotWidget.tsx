@@ -21,7 +21,8 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 import { cloneDeep, debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
-import gearIcon from "../../../media/gear.svg?raw";
+import gearIconWhite from "../../../media/gear_white.svg?raw";
+import gearIconBlack from "../../../media/gear_black.svg?raw";
 import Plotly from "plotly.js";
 import { useLocalStorage } from "../../../helpers/useLocalStorage";
 import {
@@ -1244,14 +1245,17 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             name: "plotSettings",
                             title: "Open Plot Settings",
                             icon: {
-                                svg: gearIcon,
+                                svg:
+                                    theme.palette.mode == "dark"
+                                        ? gearIconWhite
+                                        : gearIconBlack,
                             },
                             click: () => setOpenPlotSettings(true),
                         },
                     ],
                 ],
             } as Plotly.Config;
-        }, [downloadDataCSV, downloadDataJSON]);
+        }, [downloadDataCSV, downloadDataJSON, theme]);
 
         useEffect(() => {
             if (plotRef.current) {
