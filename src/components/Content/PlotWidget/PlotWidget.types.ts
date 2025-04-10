@@ -15,6 +15,13 @@ export interface PlotWidgetProps {
     ) => void;
 }
 
+export interface PlotlyHTMLElement extends HTMLDivElement {
+    on(
+        event: "plotly_relayout",
+        callback: (data: Readonly<Plotly.PlotRelayoutEvent>) => void
+    ): void;
+}
+
 export type CurveData = {
     curve: {
         [channel: string]: {
