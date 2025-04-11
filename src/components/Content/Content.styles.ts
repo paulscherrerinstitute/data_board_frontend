@@ -1,5 +1,6 @@
 import { SxProps, Theme } from "@mui/material";
-import Background from "../../media/plus.svg";
+import plusWhite from "../../media/plus_white.svg";
+import plusBlack from "../../media/plus_black.svg";
 
 export const contentContainerStyle: SxProps<Theme> = {
     flexGrow: 1,
@@ -44,11 +45,11 @@ export const gridItemStyle: SxProps<Theme> = {
     justifyContent: "center",
     alignItems: "center",
     borderRadius: "8px",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    boxShadow: (theme) => `0 2px 4px ${theme.palette.divider}`,
     transition: "filter 0.3s ease",
-    background: "#e0e0e0",
+    background: (theme) => theme.palette.background.paper,
     "&:hover": {
-        backgroundColor: "rgba(0, 0, 0, 0.1)",
+        backgroundColor: (theme) => theme.palette.action.hover,
     },
 };
 
@@ -57,7 +58,10 @@ export const CreateWidgetStyle: SxProps<Theme> = {
     height: "5vh",
     minHeight: "5vh",
     width: "10vw",
-    backgroundImage: `url("${Background}")`,
+    backgroundImage: (theme) =>
+        theme.palette.mode === "dark"
+            ? `url("${plusWhite}")`
+            : `url("${plusBlack}")`,
     backgroundSize: "contain",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",

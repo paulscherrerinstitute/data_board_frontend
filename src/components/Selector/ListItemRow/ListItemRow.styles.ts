@@ -2,8 +2,8 @@ import { SxProps, Theme } from "@mui/system";
 
 export const checkboxStyle: SxProps<Theme> = {
     "&.MuiCheckbox-root": {
-        color: "black",
-        background: "white",
+        color: (theme) => theme.palette.text.primary,
+        background: (theme) => theme.palette.background.paper,
         borderRadius: 0,
         padding: 0,
     },
@@ -37,6 +37,6 @@ export const listItemButtonStyle: SxProps<Theme> = {
 
 export const dragIconStyle: SxProps<Theme> = {
     cursor: "grab",
-    color: "white",
+    color: (theme) => theme.palette.custom.sidebar.text,
     minWidth: 40,
 };

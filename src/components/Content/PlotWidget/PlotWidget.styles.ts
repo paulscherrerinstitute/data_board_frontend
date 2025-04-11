@@ -19,7 +19,7 @@ export const plotContainerStyle: SxProps<Theme> = {
 };
 
 export const legendStyle: SxProps<Theme> = {
-    background: "#f4f4f4",
+    background: (theme) => theme.palette.custom.plot.legend.background,
     paddingTop: "30px",
     width: "20%",
     height: "100%",

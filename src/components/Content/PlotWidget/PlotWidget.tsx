@@ -5,7 +5,7 @@ import React, {
     useRef,
     useState,
 } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import {
     PlotWidgetProps,
     CurveData,
@@ -14,15 +14,16 @@ import {
     YAxisAssignment,
     CurveAttributes,
     YAxisAttributes,
+    AxisLimit,
 } from "./PlotWidget.types";
-import Plot from "react-plotly.js";
 import { useApiUrls } from "../../ApiContext/ApiContext";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { cloneDeep, debounce } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
-import gearIcon from "../../../media/gear.svg?raw";
-import Plotly, { Root } from "plotly.js";
+import gearIconWhite from "../../../media/gear_white.svg?raw";
+import gearIconBlack from "../../../media/gear_black.svg?raw";
+import Plotly from "plotly.js";
 import { useLocalStorage } from "../../../helpers/useLocalStorage";
 import {
     defaultCurveColors,
@@ -30,6 +31,7 @@ import {
     defaultCurveShape,
     defaultPlotBackgroundColor,
     defaultUseWebGL,
+    defaultWatermarkOpacity,
     defaultXAxisGridColor,
     defaultYAxisGridColor,
     defaultYAxisScaling,
@@ -40,6 +42,7 @@ import LegendEntry from "./LegendEntry/LegendEntry";
 import showSnackbarAndLog, {
     logToConsole,
 } from "../../../helpers/showSnackbar";
+import { PlotlyHTMLElement } from "./PlotWidget.types";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -107,6 +110,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const [plotTitle, setPlotTitle] = useState(`New Plot`);
         const [openPlotSettings, setOpenPlotSettings] = useState(false);
 
+        const [watermarkOpacity] = useLocalStorage(
+            "watermarkOpacity",
+            defaultWatermarkOpacity,
+            true
+        );
         const [plotBackgroundColor] = useLocalStorage(
             "plotBackgroundColor",
             defaultPlotBackgroundColor,
@@ -124,12 +132,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         );
         const [useWebGL] = useLocalStorage("useWebGL", defaultUseWebGL, true);
 
+        const theme = useTheme();
+
         const isCtrlPressed = useRef(false);
         const containerRef = useRef<HTMLDivElement | null>(null);
         const curvesRef = useRef(curves);
         const colorMap = useRef<Map<string, string>>(new Map());
         const previousTimeValues = useRef(timeValues);
-        const plotRef = useRef<Root | null>(null);
+        const plotRef = useRef<PlotlyHTMLElement | null>(null);
         const settingsInitialized = useRef(false);
 
         const numBins = 1000;
@@ -456,6 +466,20 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         (timeValues.endTime * 1e6).toString()
                     );
 
+                    const emptyCurveData = {
+                        curve: {
+                            [getLabelForChannelAttributes(
+                                channel.name,
+                                channel.backend,
+                                channel.type
+                            )]: {
+                                [beginTimestamp]: NaN,
+                                [endTimeStamp]: NaN,
+                            },
+                            // Empty data initially, only showing range
+                        },
+                    };
+
                     // Add the new channel with empty data first so it appears in the legend
                     setCurves((prevCurves) => {
                         const existingCurveIndex = prevCurves.findIndex(
@@ -475,19 +499,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 {
                                     backend: channel.backend,
                                     type: channel.type,
-                                    curveData: {
-                                        curve: {
-                                            [getLabelForChannelAttributes(
-                                                channel.name,
-                                                channel.backend,
-                                                channel.type
-                                            )]: {
-                                                [beginTimestamp]: NaN,
-                                                [endTimeStamp]: NaN,
-                                            },
-                                            // Empty data initially, only showing range
-                                        },
-                                    },
+                                    curveData: emptyCurveData,
                                     isLoading: true,
                                     error: null,
                                 },
@@ -495,6 +507,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         } else {
                             prevCurves[existingCurveIndex].isLoading = true;
                             prevCurves[existingCurveIndex].error = null;
+                            // delete data
+                            prevCurves[existingCurveIndex].curveData =
+                                emptyCurveData;
                         }
                         return prevCurves;
                     });
@@ -971,17 +986,36 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         ) as YAxisAssignment[]; // Since the assignment is not manual, we know the X-Axis isn't assigned.
 
                     sortedAssignments.forEach((assignment, index) => {
-                        const scaling =
-                            yAxisAttributes.find(
-                                (attributes) => attributes.label === assignment
-                            )?.scaling || "linear";
+                        const attributes = yAxisAttributes.find(
+                            (attributes) => attributes.label === assignment
+                        );
+
+                        const scaling = attributes?.scaling || "linear";
                         const displayLabel =
-                            yAxisAttributes.find(
-                                (attributes) => attributes.label === assignment
-                            )?.displayLabel || assignment;
+                            attributes?.displayLabel || assignment;
+
+                        const range: { [key: string]: AxisLimit[] } = {};
+                        let autorange: "min" | "max" | boolean = true;
+                        if (
+                            attributes &&
+                            (attributes.min !== null || attributes.max !== null)
+                        ) {
+                            if (
+                                attributes.min !== null &&
+                                attributes.max != null
+                            ) {
+                                autorange = false;
+                            } else {
+                                autorange =
+                                    attributes.min == null ? "min" : "max";
+                            }
+                            range.range = [attributes.min, attributes.max];
+                        }
+
                         yAxes.push({
                             [`yaxis${index === 0 ? "" : index + 1}`]: {
                                 type: scaling,
+                                autorange: autorange,
                                 gridcolor: yAxisGridColor,
                                 title: { text: displayLabel },
                                 overlaying: index === 0 ? undefined : "y", // overlay all except the first axis
@@ -994,6 +1028,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         : 1 -
                                           index /
                                               (40 * (window.innerWidth / 2560)),
+                                ...range,
                             },
                         });
                     });
@@ -1018,21 +1053,31 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                 uniqueAssignments.forEach((assignment) => {
                     const index = parseInt(assignment.slice(1), 10) - 1;
-                    const scaling =
-                        yAxisAttributes.find(
-                            (attributes) => attributes.label === assignment
-                        )?.scaling || "linear";
-                    const displayLabel =
-                        yAxisAttributes.find(
-                            (attributes) => attributes.label === assignment
-                        )?.displayLabel || assignment;
+                    const attributes = yAxisAttributes.find(
+                        (attr) => attr.label === assignment
+                    );
+
+                    const scaling = attributes?.scaling || "linear";
+                    const displayLabel = attributes?.displayLabel || assignment;
+
+                    const range: { [key: string]: AxisLimit[] } = {};
+                    let autorange: "min" | "max" | boolean = true;
+                    if (
+                        attributes &&
+                        (attributes.min !== null || attributes.max !== null)
+                    ) {
+                        if (attributes.min !== null && attributes.max != null) {
+                            autorange = false;
+                        } else {
+                            autorange = attributes.min == null ? "min" : "max";
+                        }
+                        range.range = [attributes.min, attributes.max];
+                    }
+
                     yAxes.push({
                         [`yaxis${index === 0 ? "" : index + 1}`]: {
                             type: scaling,
-                            range: [
-                                yAxisAttributes[index].min,
-                                yAxisAttributes[index].max,
-                            ],
+                            autorange: autorange,
                             gridcolor: yAxisGridColor,
                             title: { text: displayLabel },
                             overlaying: index === 0 ? undefined : "y",
@@ -1043,6 +1088,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     ? index / (40 * (window.innerWidth / 2560))
                                     : 1 -
                                       index / (40 * (window.innerWidth / 2560)),
+                            ...range,
                         },
                     });
                 });
@@ -1115,11 +1161,46 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 showlegend: false,
                 uirevision: "time",
                 plot_bgcolor: plotBackgroundColor,
+                paper_bgcolor: plotBackgroundColor,
+                font: {
+                    color: theme.palette.text.primary,
+                },
+                images:
+                    watermarkOpacity > 0
+                        ? [
+                              {
+                                  layer: "below",
+                                  opacity: watermarkOpacity,
+                                  source: theme.palette.custom.plot.watermark,
+                                  xref: "paper",
+                                  yref: "paper",
+
+                                  ...(curves.length === 0
+                                      ? {
+                                            x: 0.5,
+                                            y: 0.5,
+                                            sizex: 1,
+                                            sizey: 1,
+                                            xanchor: "center",
+                                            yanchor: "middle",
+                                        }
+                                      : {
+                                            x: 0.5,
+                                            y: 1,
+                                            sizex: 0.2,
+                                            sizey: 0.2,
+                                            xanchor: "center",
+                                            yanchor: "top",
+                                        }),
+                              },
+                          ]
+                        : undefined,
             } as Plotly.Layout;
             return layout;
         }, [
             curves,
             containerDimensions,
+            watermarkOpacity,
             plotBackgroundColor,
             manualAxisAssignment,
             curveAttributes,
@@ -1127,6 +1208,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             xAxisGridColor,
             yAxisGridColor,
             plotTitle,
+            theme,
         ]);
 
         const config = useMemo(() => {
@@ -1163,14 +1245,30 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             name: "plotSettings",
                             title: "Open Plot Settings",
                             icon: {
-                                svg: gearIcon,
+                                svg:
+                                    theme.palette.mode == "dark"
+                                        ? gearIconWhite
+                                        : gearIconBlack,
                             },
                             click: () => setOpenPlotSettings(true),
                         },
                     ],
                 ],
             } as Plotly.Config;
-        }, [downloadDataCSV, downloadDataJSON]);
+        }, [downloadDataCSV, downloadDataJSON, theme]);
+
+        useEffect(() => {
+            if (plotRef.current) {
+                Plotly.newPlot(plotRef.current, data, layout, config);
+
+                plotRef.current.on("plotly_relayout", handleRelayout);
+
+                const currentPlotDiv = plotRef.current;
+                return () => {
+                    Plotly.purge(currentPlotDiv);
+                };
+            }
+        }, [data, layout, config]);
 
         const handleRemoveCurve = (label: string) => {
             setCurves((prevCurves) =>
@@ -1230,18 +1328,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 onTouchEnd={handleEventPropagation}
             >
                 <Box ref={containerRef} sx={styles.plotContainerStyle}>
-                    <Plot
-                        onInitialized={(_, graphDiv) => {
-                            plotRef.current = graphDiv;
-                        }}
-                        data={data}
-                        layout={layout}
-                        config={config}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                        }}
-                        onRelayout={handleRelayout}
+                    <div
+                        ref={plotRef}
+                        style={{ width: "100%", height: "100%" }}
                     />
                 </Box>
                 <Box sx={styles.legendStyle}>
