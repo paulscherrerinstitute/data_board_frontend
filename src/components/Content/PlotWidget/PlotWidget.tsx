@@ -141,6 +141,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const previousTimeValues = useRef(timeValues);
         const plotRef = useRef<PlotlyHTMLElement | null>(null);
         const settingsInitialized = useRef(false);
+        const channelsLastFetchRange = useRef<
+            Map<string, [string, string] | undefined>
+        >(new Map());
 
         const numBins = 1000;
         const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
@@ -457,13 +460,22 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         );
 
         useEffect(() => {
+            const beginTimestamp = convertTimestamp(
+                (timeValues.startTime * 1e6).toString()
+            );
+            const endTimeStamp = convertTimestamp(
+                (timeValues.endTime * 1e6).toString()
+            );
+
             const fetchData = async (channel: Channel) => {
                 try {
-                    const beginTimestamp = convertTimestamp(
-                        (timeValues.startTime * 1e6).toString()
-                    );
-                    const endTimeStamp = convertTimestamp(
-                        (timeValues.endTime * 1e6).toString()
+                    channelsLastFetchRange.current.set(
+                        getLabelForChannelAttributes(
+                            channel.name,
+                            channel.backend,
+                            channel.type
+                        ),
+                        [beginTimestamp, endTimeStamp]
                     );
 
                     const emptyCurveData = {
@@ -695,10 +707,36 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         "error",
                         error
                     );
+
+                    channelsLastFetchRange.current.set(
+                        getLabelForChannelAttributes(
+                            channel.name,
+                            channel.backend,
+                            channel.type
+                        ),
+                        undefined
+                    );
                 }
             };
 
             for (const channel of channels) {
+                const label = getLabelForChannelAttributes(
+                    channel.name,
+                    channel.backend,
+                    channel.type
+                );
+
+                // If data has already been fetched / is currently fetching for the current timeframe, dont request again
+                const lastRange = channelsLastFetchRange.current.get(label);
+                if (
+                    lastRange &&
+                    lastRange[0] === beginTimestamp &&
+                    lastRange[1] === endTimeStamp
+                ) {
+                    continue;
+                }
+
+                // Else either no data has been fetched for this timerange yet, or there was an error other than no data found, on which we retry.
                 fetchData(channel);
             }
         }, [
