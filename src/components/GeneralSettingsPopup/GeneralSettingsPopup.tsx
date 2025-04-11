@@ -280,6 +280,9 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     const updateTheme = (selectedTheme: AvailableTheme) => {
         isManualThemeChange.current = true;
         setPreviewTheme(selectedTheme);
+        if (selectedTheme === "unicorn") {
+            setWatermarkOpacity(1);
+        }
     };
 
     useEffect(() => {
