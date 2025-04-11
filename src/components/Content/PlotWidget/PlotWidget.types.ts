@@ -17,9 +17,10 @@ export interface PlotWidgetProps {
 
 export interface PlotlyHTMLElement extends HTMLDivElement {
     on(
-        event: "plotly_relayout",
+        event: "plotly_relayout" | "plotly_doubleclick",
         callback: (data: Readonly<Plotly.PlotRelayoutEvent>) => void
     ): void;
+    removeAllListeners(): void;
 }
 
 export type CurveData = {
@@ -45,6 +46,8 @@ export type ContainerDimensions = {
 
 export type YAxisAssignment = "y1" | "y2" | "y3" | "y4";
 export type AxisAssignment = YAxisAssignment | "x";
+
+export type UsedYAxis = "yaxis" | "yaxis2" | "yaxis3" | "yaxis4";
 
 export type CurveAttributes = {
     channel: Channel;
