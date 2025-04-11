@@ -44,6 +44,7 @@ import showSnackbarAndLog, {
     logToConsole,
 } from "../../../helpers/showSnackbar";
 import { PlotlyHTMLElement } from "./PlotWidget.types";
+import html2canvas from "html2canvas";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -148,6 +149,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const plotlyDataRef = useRef<Plotly.Data[]>(null);
         const plotlyLayoutRef = useRef<Plotly.Layout>(null);
         const plotlyConfigRef = useRef<Plotly.Config>(null);
+        const legendRef = useRef<HTMLDivElement>(null);
 
         const numBins = 1000;
         const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
@@ -258,6 +260,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             }
 
             if (plotCanvas.closest(".legendEntry")) {
+                e.stopPropagation();
+            }
+
+            if (plotCanvas.closest(".modebar")) {
                 e.stopPropagation();
             }
         };
@@ -909,9 +915,86 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             downloadBlob(blob, fileName);
         }, [downloadBlob]);
 
+        const downloadImage = useCallback(() => {
+            const plotElement = plotRef.current;
+            const legendElement = legendRef.current;
+
+            if (plotElement && legendElement) {
+                try {
+                    // Capture plot using Plotly's method, since html2canvas won't get our beautiful watermark (if shown)
+                    Plotly.toImage(plotElement, {
+                        format: "png",
+                        width: null,
+                        height: null,
+                        scale: 4,
+                    }).then((plotImgData) => {
+                        // Capture the legend using html2canvas (Our custom legend is outside of Plotly, so we can't make Plotly capture it)
+                        html2canvas(legendElement, {
+                            scale: 4,
+                        }).then((legendCanvas) => {
+                            const legendImgData =
+                                legendCanvas.toDataURL("image/png");
+
+                            // Create a new canvas to combine the plot and the legend
+                            const combinedCanvas =
+                                document.createElement("canvas");
+                            const context = combinedCanvas.getContext("2d");
+                            if (!context) {
+                                throw new Error("Failed to create canvas");
+                            }
+                            const plotImage = new Image();
+                            const legendImage = new Image();
+
+                            plotImage.onload = () => {
+                                // Set the combined canvas size (plot + legend side by side)
+                                combinedCanvas.width =
+                                    plotImage.width + legendImage.width + 20; // Add space between the plot and legend
+                                combinedCanvas.height = Math.max(
+                                    plotImage.height,
+                                    legendImage.height
+                                ); // Take the taller height
+
+                                // Draw the plot image on the combined canvas on the left
+                                context.drawImage(plotImage, 0, 0);
+
+                                // Draw the legend image on the combined canvas on the right
+                                context.drawImage(
+                                    legendImage,
+                                    plotImage.width + 10,
+                                    0
+                                );
+
+                                // Download the combined image
+                                const combinedImgData =
+                                    combinedCanvas.toDataURL("image/png");
+                                const link = document.createElement("a");
+                                link.href = combinedImgData;
+                                link.download = `${plotTitle.replace(" ", "_") || "Plot"}.png`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            };
+
+                            // Make sure both images load before our artistic little journey starts
+                            legendImage.onload = () => {
+                                plotImage.src = plotImgData;
+                            };
+                            legendImage.src = legendImgData;
+                        });
+                    });
+                } catch (error) {
+                    showSnackbarAndLog(
+                        "Failed to create plot image, maybe just take a screenshot",
+                        "error",
+                        error
+                    );
+                }
+            }
+        }, [plotTitle]);
+
         const onPlotSettingsSave = useCallback(
             (newPlotSettings: PlotSettings) => {
-                setPlotTitle(String(newPlotSettings.plotTitle));
+                setPlotTitle(cloneDeep(newPlotSettings.plotTitle));
 
                 if (
                     [...newPlotSettings.curveAttributes].some(
@@ -1276,12 +1359,19 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             title: "Download data as json",
                             icon: Plotly.Icons.disk,
                             click: () => {
-                                return downloadDataJSON();
+                                downloadDataJSON();
                             },
                         },
                     ],
                     [
-                        "toImage",
+                        {
+                            name: "toImage",
+                            title: "Download Picture of the current Plot as PNG",
+                            icon: Plotly.Icons["camera"],
+                            click: () => {
+                                downloadImage();
+                            },
+                        },
                         "zoomIn2d",
                         "zoomOut2d",
                         "autoScale2d",
@@ -1303,7 +1393,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 ],
                 doubleClick: false,
             } as Plotly.Config;
-        }, [downloadDataCSV, downloadDataJSON, theme]);
+        }, [downloadDataCSV, downloadDataJSON, downloadImage, theme]);
 
         const handleRelayout = useCallback(
             (e: Readonly<Plotly.PlotRelayoutEvent>) => {
@@ -1461,7 +1551,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         style={{ width: "100%", height: "100%" }}
                     />
                 </Box>
-                <Box sx={styles.legendStyle}>
+                <Box ref={legendRef} sx={styles.legendStyle}>
                     <Typography variant="h5" sx={styles.legendTitleStyle}>
                         Legend
                     </Typography>
