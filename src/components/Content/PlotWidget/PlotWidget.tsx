@@ -15,6 +15,7 @@ import {
     CurveAttributes,
     YAxisAttributes,
     AxisLimit,
+    UsedYAxis,
 } from "./PlotWidget.types";
 import { useApiUrls } from "../../ApiContext/ApiContext";
 import axios, { AxiosError, AxiosResponse } from "axios";
@@ -144,6 +145,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const channelsLastFetchRange = useRef<
             Map<string, [string, string] | undefined>
         >(new Map());
+        const plotlyDataRef = useRef<Plotly.Data[]>(null);
+        const plotlyLayoutRef = useRef<Plotly.Layout>(null);
+        const plotlyConfigRef = useRef<Plotly.Config>(null);
 
         const numBins = 1000;
         const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
@@ -731,7 +735,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 if (
                     lastRange &&
                     lastRange[0] === beginTimestamp &&
-                    lastRange[1] === endTimeStamp
+                    lastRange[1] === endTimeStamp &&
+                    curves.some((curve) => getLabelForCurve(curve) === label)
                 ) {
                     continue;
                 }
@@ -746,23 +751,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             backendUrl,
             convertTimestamp,
             getLabelForChannelAttributes,
+            getLabelForCurve,
             setErrorCurve,
             handleResponseError,
         ]);
-
-        const handleRelayout = (e: Readonly<Plotly.PlotRelayoutEvent>) => {
-            if (isCtrlPressed.current) {
-                // If ctrl is pressed update the time range to the new range
-                if (e["xaxis.range[0]"] && e["xaxis.range[1]"]) {
-                    timeValues.startTime = e["xaxis.range[0]"];
-                    timeValues.endTime = e["xaxis.range[1]"];
-                    const startUnix = new Date(timeValues.startTime).getTime();
-                    const endUnix = new Date(timeValues.endTime).getTime();
-                    onZoomTimeRangeChange(startUnix, endUnix);
-                    return;
-                }
-            }
-        };
 
         useEffect(() => {
             curvesRef.current = curves;
@@ -776,9 +768,22 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 timeValues.startTime !== previousTimeValuesRef?.startTime ||
                 timeValues.endTime !== previousTimeValuesRef?.endTime
             ) {
-                if (plotRef.current && !isCtrlPressed.current) {
-                    // recalculates and resets the zoom
-                    Plotly.react(plotRef.current, data, layout, config);
+                const currentPlotDiv = plotRef.current;
+                const currentPlotLayout = plotlyLayoutRef.current;
+                if (
+                    currentPlotDiv &&
+                    currentPlotLayout &&
+                    !isCtrlPressed.current
+                ) {
+                    // update the existing layout to reset the xaxis zoom
+                    const newLayout = currentPlotLayout;
+                    if (newLayout) {
+                        newLayout.xaxis = {
+                            ...newLayout.xaxis,
+                            autorange: true,
+                        };
+                    }
+                    Plotly.relayout(currentPlotDiv, newLayout);
                 }
 
                 previousTimeValues.current = timeValues;
@@ -928,6 +933,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 ? true
                                 : value.manualDisplayLabel,
                     }));
+
                 setYAxisAttributes([...newPlotSettings.yAxisAttributes]);
             },
             [curveAttributes, yAxisAttributes]
@@ -1011,7 +1017,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             const yAxes: { [key: string]: Partial<Plotly.LayoutAxis> }[] = [];
 
             if (!manualAxisAssignment) {
-                if (curves.length > 4) {
+                if (channels.length > 4) {
                     // More than 4 curves: no new axes are created, they are all in one.
                 } else {
                     // Sort assignments by value (alphabetically) and create axes.
@@ -1040,12 +1046,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         ) {
                             if (
                                 attributes.min !== null &&
-                                attributes.max != null
+                                attributes.max !== null
                             ) {
                                 autorange = false;
                             } else {
                                 autorange =
-                                    attributes.min == null ? "min" : "max";
+                                    attributes.min === null ? "min" : "max";
                             }
                             range.range = [attributes.min, attributes.max];
                         }
@@ -1104,10 +1110,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         attributes &&
                         (attributes.min !== null || attributes.max !== null)
                     ) {
-                        if (attributes.min !== null && attributes.max != null) {
+                        if (
+                            attributes.min !== null &&
+                            attributes.max !== null
+                        ) {
                             autorange = false;
                         } else {
-                            autorange = attributes.min == null ? "min" : "max";
+                            autorange = attributes.min === null ? "min" : "max";
                         }
                         range.range = [attributes.min, attributes.max];
                     }
@@ -1190,7 +1199,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     type: yAxisAttributes[0].scaling,
                     title: {
                         text:
-                            curves.length == 0
+                            channels.length === 0
                                 ? "Value"
                                 : yAxisAttributes[0].displayLabel,
                     }, // Remove the default "Click to add title"
@@ -1213,7 +1222,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                   xref: "paper",
                                   yref: "paper",
 
-                                  ...(curves.length === 0
+                                  ...(channels.length === 0
                                       ? {
                                             x: 0.5,
                                             y: 0.5,
@@ -1236,7 +1245,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             } as Plotly.Layout;
             return layout;
         }, [
-            curves,
+            channels,
             containerDimensions,
             watermarkOpacity,
             plotBackgroundColor,
@@ -1284,7 +1293,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             title: "Open Plot Settings",
                             icon: {
                                 svg:
-                                    theme.palette.mode == "dark"
+                                    theme.palette.mode === "dark"
                                         ? gearIconWhite
                                         : gearIconBlack,
                             },
@@ -1292,21 +1301,102 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         },
                     ],
                 ],
+                doubleClick: false,
             } as Plotly.Config;
         }, [downloadDataCSV, downloadDataJSON, theme]);
 
+        const handleRelayout = useCallback(
+            (e: Readonly<Plotly.PlotRelayoutEvent>) => {
+                if (isCtrlPressed.current) {
+                    // If ctrl is pressed update the time range to the new range
+                    if (e["xaxis.range[0]"] && e["xaxis.range[1]"]) {
+                        timeValues.startTime = e["xaxis.range[0]"];
+                        timeValues.endTime = e["xaxis.range[1]"];
+                        const startUnix = new Date(
+                            timeValues.startTime
+                        ).getTime();
+                        const endUnix = new Date(timeValues.endTime).getTime();
+                        onZoomTimeRangeChange(startUnix, endUnix);
+                        return;
+                    }
+                }
+            },
+            [onZoomTimeRangeChange, timeValues]
+        );
+
+        const handleDoubleClick = useCallback(() => {
+            const currentPlotDiv = plotRef.current;
+            const currentPlotLayout = plotlyLayoutRef.current;
+            if (currentPlotDiv && currentPlotLayout) {
+                const newLayout = currentPlotLayout;
+
+                newLayout["xaxis"] = {
+                    ...currentPlotLayout.xaxis,
+                    autorange: true,
+                };
+
+                // Add default layout settings for each used Y-axis
+                for (let i = 1; i <= 4; i++) {
+                    const axisKey =
+                        i === 1 ? "yaxis" : (`yaxis${i}` as UsedYAxis);
+                    const axisConfig = layout[axisKey] as Plotly.LayoutAxis;
+
+                    if (axisConfig) {
+                        newLayout[axisKey] = {
+                            ...currentPlotLayout[axisKey],
+                            autorange: axisConfig.autorange,
+                            range: axisConfig.range,
+                        };
+                    }
+                }
+
+                Plotly.relayout(currentPlotDiv, newLayout);
+            }
+        }, [layout]);
+
         useEffect(() => {
-            if (plotRef.current) {
-                Plotly.newPlot(plotRef.current, data, layout, config);
+            const currentPlotDiv = plotRef.current;
+            if (currentPlotDiv) {
+                plotlyDataRef.current = cloneDeep(data);
+                plotlyConfigRef.current = cloneDeep(config);
 
-                plotRef.current.on("plotly_relayout", handleRelayout);
+                Plotly.react(
+                    currentPlotDiv,
+                    plotlyDataRef.current,
+                    plotlyLayoutRef.current || {},
+                    plotlyConfigRef.current
+                );
 
-                const currentPlotDiv = plotRef.current;
+                // Unfortunately, Plotly.react invalidates our layout range, so we have to set it manually based on whatever it was previously
+                // If there is no existing layout, simply emulate a double click
+                if (plotlyLayoutRef.current) {
+                    Plotly.relayout(currentPlotDiv, plotlyLayoutRef.current);
+                } else {
+                    handleDoubleClick();
+                }
+            }
+        }, [data, config]);
+
+        useEffect(() => {
+            const currentPlotDiv = plotRef.current;
+
+            if (currentPlotDiv) {
+                plotlyLayoutRef.current = cloneDeep(layout);
+                Plotly.relayout(currentPlotDiv, plotlyLayoutRef.current);
+            }
+        }, [layout]);
+
+        useEffect(() => {
+            const currentPlotDiv = plotRef.current;
+            if (currentPlotDiv) {
+                currentPlotDiv.on("plotly_relayout", handleRelayout);
+                currentPlotDiv.on("plotly_doubleclick", handleDoubleClick);
+
                 return () => {
-                    Plotly.purge(currentPlotDiv);
+                    currentPlotDiv.removeAllListeners();
                 };
             }
-        }, [data, layout, config]);
+        }, [handleRelayout, handleDoubleClick]);
 
         const handleRemoveCurve = (label: string) => {
             setCurves((prevCurves) =>
