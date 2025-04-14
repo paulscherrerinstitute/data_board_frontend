@@ -19,15 +19,15 @@ export const themes: Record<
 > = {
     default: {
         theme: defaultTheme,
-        displayName: "Default",
+        displayName: "Classic",
     },
     dark: {
         theme: darkTheme,
-        displayName: "Dark Mode",
+        displayName: "Dark",
     },
     light: {
         theme: lightTheme,
-        displayName: "Light Mode",
+        displayName: "Light",
     },
     highContrast: {
         theme: highContrastTheme,
