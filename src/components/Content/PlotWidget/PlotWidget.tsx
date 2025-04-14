@@ -1087,8 +1087,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                         let i = 0,
                             j = 0;
-                        const mergedX: any[] = [];
-                        const mergedY: any[] = [];
+                        const mergedX: number[] = [];
+                        const mergedY: number[] = [];
 
                         // Goes through the timestamps of the curve assigned to x, and the curve currently being processed in O(n)
                         // It results in a merged list, where the points are correlated, so points that have the same timestamp in both the x curve and the current curve
