@@ -288,13 +288,13 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     useEffect(() => {
         if (isManualThemeChange.current) {
             setPlotBackgroundColor(
-                themes[previewTheme].palette!.custom.plot.background
+                themes[previewTheme].theme.palette!.custom.plot.background
             );
             setXAxisGridColor(
-                themes[previewTheme].palette!.custom.plot.xAxisGrid
+                themes[previewTheme].theme.palette!.custom.plot.xAxisGrid
             );
             setYAxisGridColor(
-                themes[previewTheme].palette!.custom.plot.yAxisGrid
+                themes[previewTheme].theme.palette!.custom.plot.yAxisGrid
             );
             isManualThemeChange.current = false;
         }
@@ -347,8 +347,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                           {
                               layer: "below",
                               opacity: watermarkOpacity,
-                              source: themes[previewTheme].palette!.custom.plot
-                                  .watermark,
+                              source: themes[previewTheme].theme.palette!.custom
+                                  .plot.watermark,
                               xref: "paper",
                               yref: "paper",
                               x: 0.5,
@@ -416,7 +416,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     );
 
     return (
-        <ThemeProvider theme={themes[previewTheme]}>
+        <ThemeProvider theme={themes[previewTheme].theme}>
             <Dialog
                 open={open}
                 onClose={saveAndClose}
@@ -484,13 +484,13 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                 }}
                                 label="Theme"
                             >
-                                <MenuItem value="default">Classic</MenuItem>
-                                <MenuItem value="dark">Dark</MenuItem>
-                                <MenuItem value="light">Light</MenuItem>
-                                <MenuItem value="highContrast">
-                                    High Contrast
-                                </MenuItem>
-                                <MenuItem value="unicorn">Unicorn</MenuItem>
+                                {Object.entries(themes).map(
+                                    ([key, { displayName }]) => (
+                                        <MenuItem key={key} value={key}>
+                                            {displayName}
+                                        </MenuItem>
+                                    )
+                                )}
                             </Select>
                         </FormControl>
                     </Box>
