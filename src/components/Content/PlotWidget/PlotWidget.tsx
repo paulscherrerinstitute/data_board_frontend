@@ -186,6 +186,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 setYAxisAttributes(
                     cloneDeep(initialPlotSettings.yAxisAttributes)
                 );
+                setManualAxisAssignment(
+                    cloneDeep(initialPlotSettings.manualAxisAssignment)
+                );
             }
         }
 
@@ -273,8 +276,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 plotTitle: plotTitle,
                 curveAttributes: curveAttributes,
                 yAxisAttributes: yAxisAttributes,
+                manualAxisAssignment: manualAxisAssignment,
             });
-        }, [plotTitle, curveAttributes, yAxisAttributes]);
+        }, [plotTitle, curveAttributes, yAxisAttributes, manualAxisAssignment]);
 
         useEffect(() => {
             const newAxisOptions: YAxisAssignment[] = ["y1", "y2", "y3", "y4"];
@@ -1031,69 +1035,185 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         };
 
         const data = useMemo(() => {
-            const values: Plotly.Data[] = [];
-            const result: Plotly.Data[] = [];
+            try {
+                const isCorrelationPlot = [...curveAttributes.values()].some(
+                    (curveAttributes) => {
+                        return curveAttributes.axisAssignment === "x";
+                    }
+                );
 
-            for (let index = 0; index < curves.length; index++) {
-                const curve = curves[index];
-                const keyName = Object.keys(curve.curveData.curve)[0];
+                const values: Plotly.Data[] = [];
+                const result: Plotly.Data[] = [];
 
-                if (keyName.endsWith("_min") || keyName.endsWith("_max")) {
-                    continue; // Skip processing if it's a min/max entry itself
+                if (isCorrelationPlot) {
+                    const xCurveIndex = curves.findIndex((curve) => {
+                        const label = getLabelForCurve(curve);
+                        return (
+                            curveAttributes.get(label)?.axisAssignment === "x"
+                        );
+                    });
+
+                    // Check if data is loaded yet
+                    if (xCurveIndex == -1) {
+                        return [];
+                    }
+
+                    const xCurve = curves[xCurveIndex];
+                    const xKeyName = Object.keys(xCurve.curveData.curve).find(
+                        (key) => !key.endsWith("_min") && !key.endsWith("_max")
+                    );
+                    if (!xKeyName) return [];
+
+                    const xCurveData = xCurve.curveData.curve[xKeyName];
+                    const xTimestamps = Object.keys(xCurveData);
+                    const xValues = Object.values(xCurveData);
+
+                    for (let index = 0; index < curves.length; index++) {
+                        if (index === xCurveIndex) continue;
+
+                        const curve = curves[index];
+                        const keyName = Object.keys(curve.curveData.curve)[0];
+
+                        if (
+                            keyName.endsWith("_min") ||
+                            keyName.endsWith("_max")
+                        ) {
+                            continue; // Skip processing if it's a min/max entry itself
+                        }
+
+                        const baseData = curve.curveData.curve[keyName] || {};
+                        const curveTimestamps = Object.keys(baseData);
+                        const curveValues = Object.values(baseData);
+
+                        let i = 0,
+                            j = 0;
+                        const mergedX: any[] = [];
+                        const mergedY: any[] = [];
+
+                        // Goes through the timestamps of the curve assigned to x, and the curve currently being processed in O(n)
+                        // It results in a merged list, where the points are correlated, so points that have the same timestamp in both the x curve and the current curve
+                        // are combined into points that take their x value from the x curve, and the y value from the current curve.
+                        while (
+                            i < xTimestamps.length &&
+                            j < curveTimestamps.length
+                        ) {
+                            const xTime = xTimestamps[i];
+                            const yTime = curveTimestamps[j];
+
+                            if (xTime === yTime) {
+                                mergedX.push(xValues[i]);
+                                mergedY.push(curveValues[j]);
+                                i++;
+                                j++;
+                            } else if (xTime < yTime) {
+                                i++;
+                            } else {
+                                j++;
+                            }
+                        }
+
+                        const label = getLabelForCurve(curve);
+                        const displayLabel =
+                            curveAttributes.get(label)?.displayLabel;
+                        const color =
+                            curveAttributes.get(label)?.color || "#ffffff";
+                        const yAxis =
+                            curveAttributes.get(label)?.axisAssignment || "y1";
+                        const shape =
+                            curveAttributes.get(label)?.curveShape || "label";
+                        const mode =
+                            curveAttributes.get(label)?.curveMode ||
+                            "lines+markers";
+
+                        values.push({
+                            name: displayLabel,
+                            x: mergedX,
+                            y: mergedY,
+                            type: useWebGL ? "scattergl" : "scatter",
+                            mode: mode,
+                            yaxis: yAxis === "y1" ? "y" : yAxis,
+                            line: { color: color, shape: shape },
+                        } as Plotly.Data);
+                    }
+                } else {
+                    for (let index = 0; index < curves.length; index++) {
+                        const curve = curves[index];
+                        const keyName = Object.keys(curve.curveData.curve)[0];
+
+                        if (
+                            keyName.endsWith("_min") ||
+                            keyName.endsWith("_max")
+                        ) {
+                            continue; // Skip processing if it's a min/max entry itself
+                        }
+
+                        const label = getLabelForCurve(curve);
+                        const displayLabel =
+                            curveAttributes.get(label)?.displayLabel;
+                        const color =
+                            curveAttributes.get(label)?.color || "#ffffff";
+                        const yAxis =
+                            curveAttributes.get(label)?.axisAssignment || "y1";
+                        const shape =
+                            curveAttributes.get(label)?.curveShape || "label";
+                        const mode =
+                            curveAttributes.get(label)?.curveMode ||
+                            "lines+markers";
+
+                        const baseData = curve.curveData.curve[keyName] || {};
+                        const minData =
+                            curve.curveData.curve[`${keyName}_min`] || {};
+                        const maxData =
+                            curve.curveData.curve[`${keyName}_max`] || {};
+
+                        const xValues = Object.keys(baseData);
+                        const yBase = Object.values(baseData);
+                        const yMin = Object.values(minData);
+                        const yMax = Object.values(maxData);
+
+                        // Build a polygon to enclose the area between min and max
+                        // Then, plotly can render the area filled using scattergl. It breaks when filling tonexty while using scattergl
+                        // Because the x values contain two NaNs (one to mark the begin, and one for the end), slice them away, otherwise the polygon would break.
+                        const xPolygon = xValues
+                            .slice(1, -1)
+                            .concat(xValues.slice(1, -1).reverse());
+                        const yPolygon = yMax.concat(yMin.reverse());
+
+                        values.push({
+                            name: displayLabel,
+                            x: xValues,
+                            y: yBase,
+                            type: useWebGL ? "scattergl" : "scatter",
+                            mode: mode,
+                            yaxis: yAxis === "y1" ? "y" : yAxis,
+                            line: { color: color, shape: shape },
+                        } as Plotly.Data);
+                        result.push({
+                            x: xPolygon,
+                            y: yPolygon,
+                            type: useWebGL ? "scattergl" : "scatter",
+                            mode: "lines",
+                            fill: "toself",
+                            fillcolor: hexToRgba(color, 0.3),
+                            line: { color: "transparent", shape: "vh" },
+                            showlegend: false,
+                            showscale: false,
+                            yaxis: yAxis === "y1" ? "y" : yAxis,
+                            hoverinfo: "skip",
+                        } as Plotly.Data);
+                    }
                 }
 
-                const label = getLabelForCurve(curve);
-                const displayLabel = curveAttributes.get(label)?.displayLabel;
-                const color = curveAttributes.get(label)?.color || "#ffffff";
-                const yAxis =
-                    curveAttributes.get(label)?.axisAssignment || "y1";
-                const shape = curveAttributes.get(label)?.curveShape || "label";
-                const mode =
-                    curveAttributes.get(label)?.curveMode || "lines+markers";
-
-                const baseData = curve.curveData.curve[keyName] || {};
-                const minData = curve.curveData.curve[`${keyName}_min`] || {};
-                const maxData = curve.curveData.curve[`${keyName}_max`] || {};
-
-                const xValues = Object.keys(baseData);
-                const yBase = Object.values(baseData);
-                const yMin = Object.values(minData);
-                const yMax = Object.values(maxData);
-
-                // Build a polygon to enclose the area between min and max
-                // Then, plotly can render the area filled using scattergl. It breaks when filling tonexty while using scattergl
-                // Because the x values contain two NaNs (one to mark the begin, and one for the end), slice them away, otherwise the polygon would break.
-                const xPolygon = xValues
-                    .slice(1, -1)
-                    .concat(xValues.slice(1, -1).reverse());
-                const yPolygon = yMax.concat(yMin.reverse());
-
-                values.push({
-                    name: displayLabel,
-                    x: xValues,
-                    y: yBase,
-                    type: useWebGL ? "scattergl" : "scatter",
-                    mode: mode,
-                    yaxis: yAxis === "y1" ? "y" : yAxis,
-                    line: { color: color, shape: shape },
-                } as Plotly.Data);
-                result.push({
-                    x: xPolygon,
-                    y: yPolygon,
-                    type: useWebGL ? "scattergl" : "scatter",
-                    mode: "lines",
-                    fill: "toself",
-                    fillcolor: hexToRgba(color, 0.3),
-                    line: { color: "transparent", shape: "vh" },
-                    showlegend: false,
-                    showscale: false,
-                    yaxis: yAxis === "y1" ? "y" : yAxis,
-                    hoverinfo: "skip",
-                } as Plotly.Data);
+                result.push(...values);
+                return result;
+            } catch (error) {
+                showSnackbarAndLog(
+                    "Failed to parse channel data",
+                    "error",
+                    error
+                );
             }
-
-            result.push(...values);
-            return result;
+            return [];
         }, [curves, curveAttributes, useWebGL, getLabelForCurve]);
 
         const layout = useMemo(() => {
@@ -1581,6 +1701,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         plotTitle: cloneDeep(plotTitle),
                         curveAttributes: cloneDeep(curveAttributes),
                         yAxisAttributes: cloneDeep(yAxisAttributes),
+                        manualAxisAssignment: cloneDeep(manualAxisAssignment),
                     }}
                     onSave={onPlotSettingsSave}
                 />
