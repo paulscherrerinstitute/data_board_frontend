@@ -24,7 +24,7 @@ export const defaultYAxisScaling: Plotly.AxisType = "linear";
 export const defaultCurveShape: Plotly.ScatterLine["shape"] = "linear";
 export const defaultCurveMode: Plotly.PlotData["mode"] = "lines+markers";
 
-export const defaultWidgetWidth = 6;
+export const defaultWidgetWidth = 12;
 export const defaultWidgetHeight = 12;
 
 export const defaultInitialSidebarState: InitialSidebarState =
