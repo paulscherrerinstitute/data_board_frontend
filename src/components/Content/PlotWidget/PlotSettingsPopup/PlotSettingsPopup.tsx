@@ -21,6 +21,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { PlotSettingsPopupProps } from "./PlotSettingsPopup.types";
 import * as styles from "./PlotSettingsPopup.styles";
 import { CurveAttributes } from "../PlotWidget.types";
+import showSnackbarAndLog from "../../../../helpers/showSnackbar";
 
 const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
     open,
@@ -99,10 +100,32 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                 if (attr) {
                     newCurveAttributes.set(key, { ...attr, [field]: value });
                 }
+
+                if (field === "axisAssignment" && value === "x") {
+                    // Check if there is already another x axis assignment
+                    for (const [
+                        entryKey,
+                        entryValue,
+                    ] of newCurveAttributes.entries()) {
+                        if (
+                            entryKey != key &&
+                            entryValue.axisAssignment === "x"
+                        ) {
+                            newCurveAttributes.set(entryKey, {
+                                ...entryValue,
+                                axisAssignment: "y1",
+                            });
+                            showSnackbarAndLog(
+                                "Cannot have more than one curve assigned to 'x'. Other assigned curves have been set to first axis.",
+                                "warning"
+                            );
+                        }
+                    }
+                }
                 return { ...prev, curveAttributes: newCurveAttributes };
             });
         },
-        []
+        [setLocalPlotSettings]
     );
 
     return (
