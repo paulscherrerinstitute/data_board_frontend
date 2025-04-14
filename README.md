@@ -81,25 +81,24 @@ Adding a custom theme can be done by opening a PR with the following changes:
 
 3.  **Extend the `themes.ts` List**
 
-        - Open [`src/themes/themes.ts`](./src/themes/themes.ts)
-        - Add your new theme to the `themes` record:
+    - Open [`src/themes/themes.ts`](./src/themes/themes.ts)
+    - Add your new theme to the `themes` record:
 
-            ````ts
-            import myCustomTheme from "./myCustomTheme"; // Import your new theme
+        ```ts
+        import myCustomTheme from "./myCustomTheme"; // Import your new theme
 
-                   export const themes: Record<AvailableTheme, { theme: ThemeOptions; displayName: string }> = {
-                       default: {
-                           theme: defaultTheme,
-                           displayName: "Default",
-                       },
-                       ...,
-                       myCustomTheme: {
-                           theme: myCustomTheme,  // Add your theme here
-                           displayName: "My Custom Theme",  // Set a display name for the theme, which will be displayed in settings
-                       },
-                   };
-                   ```
-            ````
+                export const themes: Record<AvailableTheme, { theme: ThemeOptions; displayName: string }> = {
+                    default: {
+                        theme: defaultTheme,
+                        displayName: "Default",
+                    },
+                    ...,
+                    myCustomTheme: {
+                        theme: myCustomTheme,  // Add your theme here
+                        displayName: "My Custom Theme",  // Set a display name for the theme, which will be displayed in settings
+                    },
+                };
+        ```
 
     And just like that, your new theme should be selectable. Please test it thoroughly before opening the PR; sometimes themes can have quite an impact on performance.
 
