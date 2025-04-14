@@ -1125,10 +1125,17 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             curveAttributes.get(label)?.curveMode ||
                             "lines+markers";
 
+                        const hoverText = mergedX.map(
+                            (xValue, i) =>
+                                `${displayLabel}<br>Time: ${xTimestamps[i]}<br>x: ${xValue}<br>y: ${mergedY[i]}`
+                        );
+
                         values.push({
                             name: displayLabel,
                             x: mergedX,
                             y: mergedY,
+                            text: hoverText,
+                            hovertemplate: "%{text}<extra></extra>",
                             type: useWebGL ? "scattergl" : "scatter",
                             mode: mode,
                             yaxis: yAxis === "y1" ? "y" : yAxis,
@@ -1179,10 +1186,17 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             .concat(xValues.slice(1, -1).reverse());
                         const yPolygon = yMax.concat(yMin.reverse());
 
+                        const hoverText = xValues.map(
+                            (timestamp, i) =>
+                                `${displayLabel}<br>Time: ${timestamp}<br>Value: ${yBase[i]}`
+                        );
+
                         values.push({
                             name: displayLabel,
                             x: xValues,
                             y: yBase,
+                            text: hoverText,
+                            hovertemplate: "%{text}<extra></extra>",
                             type: useWebGL ? "scattergl" : "scatter",
                             mode: mode,
                             yaxis: yAxis === "y1" ? "y" : yAxis,
