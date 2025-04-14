@@ -103,6 +103,7 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
 
                 if (field === "axisAssignment" && value === "x") {
                     // Check if there is already another x axis assignment
+                    let collidingAssignmentFound = false;
                     for (const [
                         entryKey,
                         entryValue,
@@ -115,11 +116,15 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                 ...entryValue,
                                 axisAssignment: "y1",
                             });
-                            showSnackbarAndLog(
-                                "Cannot have more than one curve assigned to 'x'. Other assigned curves have been set to first axis.",
-                                "warning"
-                            );
+                            collidingAssignmentFound = true;
                         }
+                    }
+
+                    if (collidingAssignmentFound) {
+                        showSnackbarAndLog(
+                            "Cannot have more than one curve assigned to 'x'. Other assigned curves have been set to first axis.",
+                            "warning"
+                        );
                     }
                 }
                 return { ...prev, curveAttributes: newCurveAttributes };
