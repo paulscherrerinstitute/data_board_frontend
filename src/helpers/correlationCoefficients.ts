@@ -1,6 +1,6 @@
 /**
  * Calculates the Pearson correlation coefficient between two arrays.
- * Code adapted into TypeScript fro:m https://gist.github.com/matt-west/6500993?permalink_comment_id=3718526#gistcomment-3718526
+ * Code adapted into TypeScript from https://gist.github.com/matt-west/6500993?permalink_comment_id=3718526#gistcomment-3718526
  */
 export function pearsonCoefficient(x: number[], y: number[]) {
     let n = x.length;
