@@ -7,6 +7,7 @@ export const defaultXAxisGridColor = "#ebebeb";
 export const defaultYAxisGridColor = "#ebebeb";
 export const defaultTheme: AvailableTheme = "default";
 export const defaultUseWebGL = true;
+export const defaultUseVirtualWebGL = false;
 
 export const defaultCurveColors = [
     "#1f77b4",
