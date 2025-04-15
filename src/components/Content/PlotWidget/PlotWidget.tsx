@@ -1488,6 +1488,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const config = useMemo(() => {
             return {
                 displaylogo: false,
+                displayModeBar: true,
                 modeBarButtons: [
                     [
                         {
