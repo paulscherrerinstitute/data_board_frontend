@@ -88,8 +88,7 @@ The general section contains settings that affect all plots.
 
 - **Watermark Opacity:** The opacity of the watermark in the plot. Use 0 for no watermark.
 
-- **Plot Background Color:** Affects all Pplots even existing ones. This is overwritten when a theme is selected but can be changed back manually.
-
+- **Plot Background Color:** Affects all plots even existing ones. This is overwritten when a theme is selected but can be changed back manually.
 - **X-Axis / Y-Axis Grid Color:** These two settings behave the same way as plot background color.
 
 - **Use WebGL:** Decides whether or not the graphics card should be used to render curves. Highly recommended, it allows for somewhat performant rendering of even bigger curves.
