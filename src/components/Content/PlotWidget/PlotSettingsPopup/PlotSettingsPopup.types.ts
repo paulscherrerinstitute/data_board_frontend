@@ -11,4 +11,5 @@ export type PlotSettings = {
     plotTitle: string;
     curveAttributes: Map<string, CurveAttributes>;
     yAxisAttributes: YAxisAttributes[];
+    manualAxisAssignment: boolean;
 };

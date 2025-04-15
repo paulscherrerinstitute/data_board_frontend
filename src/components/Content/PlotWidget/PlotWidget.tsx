@@ -15,6 +15,7 @@ import {
     CurveAttributes,
     YAxisAttributes,
     AxisLimit,
+    UsedYAxis,
 } from "./PlotWidget.types";
 import { useApiUrls } from "../../ApiContext/ApiContext";
 import axios, { AxiosError, AxiosResponse } from "axios";
@@ -43,6 +44,11 @@ import showSnackbarAndLog, {
     logToConsole,
 } from "../../../helpers/showSnackbar";
 import { PlotlyHTMLElement } from "./PlotWidget.types";
+import html2canvas from "html2canvas";
+import {
+    pearsonCoefficient,
+    spearmanCoefficient,
+} from "../../../helpers/correlationCoefficients";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -141,6 +147,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const previousTimeValues = useRef(timeValues);
         const plotRef = useRef<PlotlyHTMLElement | null>(null);
         const settingsInitialized = useRef(false);
+        const channelsLastFetchRange = useRef<
+            Map<string, [string, string] | undefined>
+        >(new Map());
+        const plotlyDataRef = useRef<Plotly.Data[]>(null);
+        const plotlyLayoutRef = useRef<Plotly.Layout>(null);
+        const plotlyConfigRef = useRef<Plotly.Config>(null);
+        const legendRef = useRef<HTMLDivElement>(null);
 
         const numBins = 1000;
         const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
@@ -176,6 +189,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 );
                 setYAxisAttributes(
                     cloneDeep(initialPlotSettings.yAxisAttributes)
+                );
+                setManualAxisAssignment(
+                    cloneDeep(initialPlotSettings.manualAxisAssignment)
                 );
             }
         }
@@ -253,6 +269,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             if (plotCanvas.closest(".legendEntry")) {
                 e.stopPropagation();
             }
+
+            if (plotCanvas.closest(".modebar")) {
+                e.stopPropagation();
+            }
         };
 
         useEffect(() => {
@@ -260,8 +280,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 plotTitle: plotTitle,
                 curveAttributes: curveAttributes,
                 yAxisAttributes: yAxisAttributes,
+                manualAxisAssignment: manualAxisAssignment,
             });
-        }, [plotTitle, curveAttributes, yAxisAttributes]);
+        }, [plotTitle, curveAttributes, yAxisAttributes, manualAxisAssignment]);
 
         useEffect(() => {
             const newAxisOptions: YAxisAssignment[] = ["y1", "y2", "y3", "y4"];
@@ -457,13 +478,22 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         );
 
         useEffect(() => {
+            const beginTimestamp = convertTimestamp(
+                (timeValues.startTime * 1e6).toString()
+            );
+            const endTimeStamp = convertTimestamp(
+                (timeValues.endTime * 1e6).toString()
+            );
+
             const fetchData = async (channel: Channel) => {
                 try {
-                    const beginTimestamp = convertTimestamp(
-                        (timeValues.startTime * 1e6).toString()
-                    );
-                    const endTimeStamp = convertTimestamp(
-                        (timeValues.endTime * 1e6).toString()
+                    channelsLastFetchRange.current.set(
+                        getLabelForChannelAttributes(
+                            channel.name,
+                            channel.backend,
+                            channel.type
+                        ),
+                        [beginTimestamp, endTimeStamp]
                     );
 
                     const emptyCurveData = {
@@ -695,10 +725,37 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         "error",
                         error
                     );
+
+                    channelsLastFetchRange.current.set(
+                        getLabelForChannelAttributes(
+                            channel.name,
+                            channel.backend,
+                            channel.type
+                        ),
+                        undefined
+                    );
                 }
             };
 
             for (const channel of channels) {
+                const label = getLabelForChannelAttributes(
+                    channel.name,
+                    channel.backend,
+                    channel.type
+                );
+
+                // If data has already been fetched / is currently fetching for the current timeframe, dont request again
+                const lastRange = channelsLastFetchRange.current.get(label);
+                if (
+                    lastRange &&
+                    lastRange[0] === beginTimestamp &&
+                    lastRange[1] === endTimeStamp &&
+                    curves.some((curve) => getLabelForCurve(curve) === label)
+                ) {
+                    continue;
+                }
+
+                // Else either no data has been fetched for this timerange yet, or there was an error other than no data found, on which we retry.
                 fetchData(channel);
             }
         }, [
@@ -708,23 +765,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             backendUrl,
             convertTimestamp,
             getLabelForChannelAttributes,
+            getLabelForCurve,
             setErrorCurve,
             handleResponseError,
         ]);
-
-        const handleRelayout = (e: Readonly<Plotly.PlotRelayoutEvent>) => {
-            if (isCtrlPressed.current) {
-                // If ctrl is pressed update the time range to the new range
-                if (e["xaxis.range[0]"] && e["xaxis.range[1]"]) {
-                    timeValues.startTime = e["xaxis.range[0]"];
-                    timeValues.endTime = e["xaxis.range[1]"];
-                    const startUnix = new Date(timeValues.startTime).getTime();
-                    const endUnix = new Date(timeValues.endTime).getTime();
-                    onZoomTimeRangeChange(startUnix, endUnix);
-                    return;
-                }
-            }
-        };
 
         useEffect(() => {
             curvesRef.current = curves;
@@ -738,9 +782,22 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 timeValues.startTime !== previousTimeValuesRef?.startTime ||
                 timeValues.endTime !== previousTimeValuesRef?.endTime
             ) {
-                if (plotRef.current && !isCtrlPressed.current) {
-                    // recalculates and resets the zoom
-                    Plotly.react(plotRef.current, data, layout, config);
+                const currentPlotDiv = plotRef.current;
+                const currentPlotLayout = plotlyLayoutRef.current;
+                if (
+                    currentPlotDiv &&
+                    currentPlotLayout &&
+                    !isCtrlPressed.current
+                ) {
+                    // update the existing layout to reset the xaxis zoom
+                    const newLayout = currentPlotLayout;
+                    if (newLayout) {
+                        newLayout.xaxis = {
+                            ...newLayout.xaxis,
+                            autorange: true,
+                        };
+                    }
+                    Plotly.relayout(currentPlotDiv, newLayout);
                 }
 
                 previousTimeValues.current = timeValues;
@@ -866,9 +923,86 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             downloadBlob(blob, fileName);
         }, [downloadBlob]);
 
+        const downloadImage = useCallback(() => {
+            const plotElement = plotRef.current;
+            const legendElement = legendRef.current;
+
+            if (plotElement && legendElement) {
+                try {
+                    // Capture plot using Plotly's method, since html2canvas won't get our beautiful watermark (if shown)
+                    Plotly.toImage(plotElement, {
+                        format: "png",
+                        width: null,
+                        height: null,
+                        scale: 4,
+                    }).then((plotImgData) => {
+                        // Capture the legend using html2canvas (Our custom legend is outside of Plotly, so we can't make Plotly capture it)
+                        html2canvas(legendElement, {
+                            scale: 4,
+                        }).then((legendCanvas) => {
+                            const legendImgData =
+                                legendCanvas.toDataURL("image/png");
+
+                            // Create a new canvas to combine the plot and the legend
+                            const combinedCanvas =
+                                document.createElement("canvas");
+                            const context = combinedCanvas.getContext("2d");
+                            if (!context) {
+                                throw new Error("Failed to create canvas");
+                            }
+                            const plotImage = new Image();
+                            const legendImage = new Image();
+
+                            plotImage.onload = () => {
+                                // Set the combined canvas size (plot + legend side by side)
+                                combinedCanvas.width =
+                                    plotImage.width + legendImage.width + 20; // Add space between the plot and legend
+                                combinedCanvas.height = Math.max(
+                                    plotImage.height,
+                                    legendImage.height
+                                ); // Take the taller height
+
+                                // Draw the plot image on the combined canvas on the left
+                                context.drawImage(plotImage, 0, 0);
+
+                                // Draw the legend image on the combined canvas on the right
+                                context.drawImage(
+                                    legendImage,
+                                    plotImage.width + 10,
+                                    0
+                                );
+
+                                // Download the combined image
+                                const combinedImgData =
+                                    combinedCanvas.toDataURL("image/png");
+                                const link = document.createElement("a");
+                                link.href = combinedImgData;
+                                link.download = `${plotTitle.replace(" ", "_") || "Plot"}.png`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            };
+
+                            // Make sure both images load before our artistic little journey starts
+                            legendImage.onload = () => {
+                                plotImage.src = plotImgData;
+                            };
+                            legendImage.src = legendImgData;
+                        });
+                    });
+                } catch (error) {
+                    showSnackbarAndLog(
+                        "Failed to create plot image, maybe just take a screenshot",
+                        "error",
+                        error
+                    );
+                }
+            }
+        }, [plotTitle]);
+
         const onPlotSettingsSave = useCallback(
             (newPlotSettings: PlotSettings) => {
-                setPlotTitle(String(newPlotSettings.plotTitle));
+                setPlotTitle(cloneDeep(newPlotSettings.plotTitle));
 
                 if (
                     [...newPlotSettings.curveAttributes].some(
@@ -890,6 +1024,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 ? true
                                 : value.manualDisplayLabel,
                     }));
+
                 setYAxisAttributes([...newPlotSettings.yAxisAttributes]);
             },
             [curveAttributes, yAxisAttributes]
@@ -904,76 +1039,215 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         };
 
         const data = useMemo(() => {
-            const values: Plotly.Data[] = [];
-            const result: Plotly.Data[] = [];
+            try {
+                const isCorrelationPlot = [...curveAttributes.values()].some(
+                    (curveAttributes) => {
+                        return curveAttributes.axisAssignment === "x";
+                    }
+                );
 
-            for (let index = 0; index < curves.length; index++) {
-                const curve = curves[index];
-                const keyName = Object.keys(curve.curveData.curve)[0];
+                const values: Plotly.Data[] = [];
+                const result: Plotly.Data[] = [];
 
-                if (keyName.endsWith("_min") || keyName.endsWith("_max")) {
-                    continue; // Skip processing if it's a min/max entry itself
+                if (isCorrelationPlot) {
+                    const xCurveIndex = curves.findIndex((curve) => {
+                        const label = getLabelForCurve(curve);
+                        return (
+                            curveAttributes.get(label)?.axisAssignment === "x"
+                        );
+                    });
+
+                    // Check if data is loaded yet
+                    if (xCurveIndex == -1) {
+                        return [];
+                    }
+
+                    const xCurve = curves[xCurveIndex];
+                    const xKeyName = Object.keys(xCurve.curveData.curve).find(
+                        (key) => !key.endsWith("_min") && !key.endsWith("_max")
+                    );
+                    if (!xKeyName) return [];
+
+                    const xCurveData = xCurve.curveData.curve[xKeyName];
+                    const xTimestamps = Object.keys(xCurveData);
+                    const xValues = Object.values(xCurveData);
+
+                    for (let index = 0; index < curves.length; index++) {
+                        if (index === xCurveIndex) continue;
+
+                        const curve = curves[index];
+                        const keyName = Object.keys(curve.curveData.curve)[0];
+
+                        if (
+                            keyName.endsWith("_min") ||
+                            keyName.endsWith("_max")
+                        ) {
+                            continue; // Skip processing if it's a min/max entry itself
+                        }
+
+                        const baseData = curve.curveData.curve[keyName] || {};
+                        const curveTimestamps = Object.keys(baseData);
+                        const curveValues = Object.values(baseData);
+
+                        let i = 0,
+                            j = 0;
+                        const mergedX: number[] = [];
+                        const mergedY: number[] = [];
+
+                        // Goes through the timestamps of the curve assigned to x, and the curve currently being processed in O(n)
+                        // It results in a merged list, where the points are correlated, so points that have the same timestamp in both the x curve and the current curve
+                        // are combined into points that take their x value from the x curve, and the y value from the current curve.
+                        while (
+                            i < xTimestamps.length &&
+                            j < curveTimestamps.length
+                        ) {
+                            const xTime = xTimestamps[i];
+                            const yTime = curveTimestamps[j];
+
+                            if (xTime === yTime) {
+                                mergedX.push(xValues[i]);
+                                mergedY.push(curveValues[j]);
+                                i++;
+                                j++;
+                            } else if (xTime < yTime) {
+                                i++;
+                            } else {
+                                j++;
+                            }
+                        }
+
+                        const label = getLabelForCurve(curve);
+                        const displayLabel =
+                            curveAttributes.get(label)?.displayLabel;
+                        const color =
+                            curveAttributes.get(label)?.color || "#ffffff";
+                        const yAxis =
+                            curveAttributes.get(label)?.axisAssignment || "y1";
+                        const shape =
+                            curveAttributes.get(label)?.curveShape || "label";
+                        const mode =
+                            curveAttributes.get(label)?.curveMode ||
+                            "lines+markers";
+
+                        // Calculate correlation coefficients.
+                        const pearson: number = pearsonCoefficient(
+                            cloneDeep(mergedX).slice(1, -1),
+                            cloneDeep(mergedY).slice(1, -1)
+                        );
+                        const spearman: number = spearmanCoefficient(
+                            cloneDeep(mergedX).slice(1, -1),
+                            cloneDeep(mergedY).slice(1, -1)
+                        );
+
+                        const hoverText = mergedX.map((xValue, i) => {
+                            return `${displayLabel}<br>Time: ${xTimestamps[i]}<br>x: ${xValue}<br>y: ${mergedY[i]}<br><br>Pearson: ${pearson.toFixed(3)}<br>Spearman: ${spearman.toFixed(3)}`;
+                        });
+
+                        values.push({
+                            name: displayLabel,
+                            x: mergedX,
+                            y: mergedY,
+                            text: hoverText,
+                            hovertemplate: "%{text}<extra></extra>",
+                            type: useWebGL ? "scattergl" : "scatter",
+                            mode: mode,
+                            yaxis: yAxis === "y1" ? "y" : yAxis,
+                            line: { color: color, shape: shape },
+                        } as Plotly.Data);
+                    }
+                } else {
+                    for (let index = 0; index < curves.length; index++) {
+                        const curve = curves[index];
+                        const keyName = Object.keys(curve.curveData.curve)[0];
+
+                        if (
+                            keyName.endsWith("_min") ||
+                            keyName.endsWith("_max")
+                        ) {
+                            continue; // Skip processing if it's a min/max entry itself
+                        }
+
+                        const label = getLabelForCurve(curve);
+                        const displayLabel =
+                            curveAttributes.get(label)?.displayLabel;
+                        const color =
+                            curveAttributes.get(label)?.color || "#ffffff";
+                        const yAxis =
+                            curveAttributes.get(label)?.axisAssignment || "y1";
+                        const shape =
+                            curveAttributes.get(label)?.curveShape || "label";
+                        const mode =
+                            curveAttributes.get(label)?.curveMode ||
+                            "lines+markers";
+
+                        const baseData = curve.curveData.curve[keyName] || {};
+                        const minData =
+                            curve.curveData.curve[`${keyName}_min`] || {};
+                        const maxData =
+                            curve.curveData.curve[`${keyName}_max`] || {};
+
+                        const xValues = Object.keys(baseData);
+                        const yBase = Object.values(baseData);
+                        const yMin = Object.values(minData);
+                        const yMax = Object.values(maxData);
+
+                        // Build a polygon to enclose the area between min and max
+                        // Then, plotly can render the area filled using scattergl. It breaks when filling tonexty while using scattergl
+                        // Because the x values contain two NaNs (one to mark the begin, and one for the end), slice them away, otherwise the polygon would break.
+                        const xPolygon = xValues
+                            .slice(1, -1)
+                            .concat(xValues.slice(1, -1).reverse());
+                        const yPolygon = yMax.concat(yMin.reverse());
+
+                        const hoverText = xValues.map(
+                            (timestamp, i) =>
+                                `${displayLabel}<br>Time: ${timestamp}<br>Value: ${yBase[i]}`
+                        );
+
+                        values.push({
+                            name: displayLabel,
+                            x: xValues,
+                            y: yBase,
+                            text: hoverText,
+                            hovertemplate: "%{text}<extra></extra>",
+                            type: useWebGL ? "scattergl" : "scatter",
+                            mode: mode,
+                            yaxis: yAxis === "y1" ? "y" : yAxis,
+                            line: { color: color, shape: shape },
+                        } as Plotly.Data);
+                        result.push({
+                            x: xPolygon,
+                            y: yPolygon,
+                            type: useWebGL ? "scattergl" : "scatter",
+                            mode: "lines",
+                            fill: "toself",
+                            fillcolor: hexToRgba(color, 0.3),
+                            line: { color: "transparent", shape: "vh" },
+                            showlegend: false,
+                            showscale: false,
+                            yaxis: yAxis === "y1" ? "y" : yAxis,
+                            hoverinfo: "skip",
+                        } as Plotly.Data);
+                    }
                 }
 
-                const label = getLabelForCurve(curve);
-                const displayLabel = curveAttributes.get(label)?.displayLabel;
-                const color = curveAttributes.get(label)?.color || "#ffffff";
-                const yAxis =
-                    curveAttributes.get(label)?.axisAssignment || "y1";
-                const shape = curveAttributes.get(label)?.curveShape || "label";
-                const mode =
-                    curveAttributes.get(label)?.curveMode || "lines+markers";
-
-                const baseData = curve.curveData.curve[keyName] || {};
-                const minData = curve.curveData.curve[`${keyName}_min`] || {};
-                const maxData = curve.curveData.curve[`${keyName}_max`] || {};
-
-                const xValues = Object.keys(baseData);
-                const yBase = Object.values(baseData);
-                const yMin = Object.values(minData);
-                const yMax = Object.values(maxData);
-
-                // Build a polygon to enclose the area between min and max
-                // Then, plotly can render the area filled using scattergl. It breaks when filling tonexty while using scattergl
-                // Because the x values contain two NaNs (one to mark the begin, and one for the end), slice them away, otherwise the polygon would break.
-                const xPolygon = xValues
-                    .slice(1, -1)
-                    .concat(xValues.slice(1, -1).reverse());
-                const yPolygon = yMax.concat(yMin.reverse());
-
-                values.push({
-                    name: displayLabel,
-                    x: xValues,
-                    y: yBase,
-                    type: useWebGL ? "scattergl" : "scatter",
-                    mode: mode,
-                    yaxis: yAxis === "y1" ? "y" : yAxis,
-                    line: { color: color, shape: shape },
-                } as Plotly.Data);
-                result.push({
-                    x: xPolygon,
-                    y: yPolygon,
-                    type: useWebGL ? "scattergl" : "scatter",
-                    mode: "lines",
-                    fill: "toself",
-                    fillcolor: hexToRgba(color, 0.3),
-                    line: { color: "transparent", shape: "vh" },
-                    showlegend: false,
-                    showscale: false,
-                    yaxis: yAxis === "y1" ? "y" : yAxis,
-                    hoverinfo: "skip",
-                } as Plotly.Data);
+                result.push(...values);
+                return result;
+            } catch (error) {
+                showSnackbarAndLog(
+                    "Failed to parse channel data",
+                    "error",
+                    error
+                );
             }
-
-            result.push(...values);
-            return result;
+            return [];
         }, [curves, curveAttributes, useWebGL, getLabelForCurve]);
 
         const layout = useMemo(() => {
             const yAxes: { [key: string]: Partial<Plotly.LayoutAxis> }[] = [];
 
             if (!manualAxisAssignment) {
-                if (curves.length > 4) {
+                if (channels.length > 4) {
                     // More than 4 curves: no new axes are created, they are all in one.
                 } else {
                     // Sort assignments by value (alphabetically) and create axes.
@@ -1002,12 +1276,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         ) {
                             if (
                                 attributes.min !== null &&
-                                attributes.max != null
+                                attributes.max !== null
                             ) {
                                 autorange = false;
                             } else {
                                 autorange =
-                                    attributes.min == null ? "min" : "max";
+                                    attributes.min === null ? "min" : "max";
                             }
                             range.range = [attributes.min, attributes.max];
                         }
@@ -1066,10 +1340,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         attributes &&
                         (attributes.min !== null || attributes.max !== null)
                     ) {
-                        if (attributes.min !== null && attributes.max != null) {
+                        if (
+                            attributes.min !== null &&
+                            attributes.max !== null
+                        ) {
                             autorange = false;
                         } else {
-                            autorange = attributes.min == null ? "min" : "max";
+                            autorange = attributes.min === null ? "min" : "max";
                         }
                         range.range = [attributes.min, attributes.max];
                     }
@@ -1152,7 +1429,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     type: yAxisAttributes[0].scaling,
                     title: {
                         text:
-                            curves.length == 0
+                            channels.length === 0
                                 ? "Value"
                                 : yAxisAttributes[0].displayLabel,
                     }, // Remove the default "Click to add title"
@@ -1165,40 +1442,37 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 font: {
                     color: theme.palette.text.primary,
                 },
-                images:
-                    watermarkOpacity > 0
-                        ? [
-                              {
-                                  layer: "below",
-                                  opacity: watermarkOpacity,
-                                  source: theme.palette.custom.plot.watermark,
-                                  xref: "paper",
-                                  yref: "paper",
+                images: [
+                    {
+                        layer: "below",
+                        opacity: watermarkOpacity,
+                        source: theme.palette.custom.plot.watermark,
+                        xref: "paper",
+                        yref: "paper",
 
-                                  ...(curves.length === 0
-                                      ? {
-                                            x: 0.5,
-                                            y: 0.5,
-                                            sizex: 1,
-                                            sizey: 1,
-                                            xanchor: "center",
-                                            yanchor: "middle",
-                                        }
-                                      : {
-                                            x: 0.5,
-                                            y: 1,
-                                            sizex: 0.2,
-                                            sizey: 0.2,
-                                            xanchor: "center",
-                                            yanchor: "top",
-                                        }),
-                              },
-                          ]
-                        : undefined,
+                        ...(channels.length === 0
+                            ? {
+                                  x: 0.5,
+                                  y: 0.5,
+                                  sizex: 1,
+                                  sizey: 1,
+                                  xanchor: "center",
+                                  yanchor: "middle",
+                              }
+                            : {
+                                  x: 0.5,
+                                  y: 1,
+                                  sizex: 0.2,
+                                  sizey: 0.2,
+                                  xanchor: "center",
+                                  yanchor: "top",
+                              }),
+                    },
+                ],
             } as Plotly.Layout;
             return layout;
         }, [
-            curves,
+            channels,
             containerDimensions,
             watermarkOpacity,
             plotBackgroundColor,
@@ -1214,6 +1488,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const config = useMemo(() => {
             return {
                 displaylogo: false,
+                displayModeBar: true,
                 modeBarButtons: [
                     [
                         {
@@ -1229,12 +1504,19 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             title: "Download data as json",
                             icon: Plotly.Icons.disk,
                             click: () => {
-                                return downloadDataJSON();
+                                downloadDataJSON();
                             },
                         },
                     ],
                     [
-                        "toImage",
+                        {
+                            name: "toImage",
+                            title: "Download Picture of the current Plot as PNG",
+                            icon: Plotly.Icons["camera"],
+                            click: () => {
+                                downloadImage();
+                            },
+                        },
                         "zoomIn2d",
                         "zoomOut2d",
                         "autoScale2d",
@@ -1246,7 +1528,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             title: "Open Plot Settings",
                             icon: {
                                 svg:
-                                    theme.palette.mode == "dark"
+                                    theme.palette.mode === "dark"
                                         ? gearIconWhite
                                         : gearIconBlack,
                             },
@@ -1254,21 +1536,102 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         },
                     ],
                 ],
+                doubleClick: false,
             } as Plotly.Config;
-        }, [downloadDataCSV, downloadDataJSON, theme]);
+        }, [downloadDataCSV, downloadDataJSON, downloadImage, theme]);
+
+        const handleRelayout = useCallback(
+            (e: Readonly<Plotly.PlotRelayoutEvent>) => {
+                if (isCtrlPressed.current) {
+                    // If ctrl is pressed update the time range to the new range
+                    if (e["xaxis.range[0]"] && e["xaxis.range[1]"]) {
+                        timeValues.startTime = e["xaxis.range[0]"];
+                        timeValues.endTime = e["xaxis.range[1]"];
+                        const startUnix = new Date(
+                            timeValues.startTime
+                        ).getTime();
+                        const endUnix = new Date(timeValues.endTime).getTime();
+                        onZoomTimeRangeChange(startUnix, endUnix);
+                        return;
+                    }
+                }
+            },
+            [onZoomTimeRangeChange, timeValues]
+        );
+
+        const handleDoubleClick = useCallback(() => {
+            const currentPlotDiv = plotRef.current;
+            const currentPlotLayout = plotlyLayoutRef.current;
+            if (currentPlotDiv && currentPlotLayout) {
+                const newLayout = currentPlotLayout;
+
+                newLayout["xaxis"] = {
+                    ...currentPlotLayout.xaxis,
+                    autorange: true,
+                };
+
+                // Add default layout settings for each used Y-axis
+                for (let i = 1; i <= 4; i++) {
+                    const axisKey =
+                        i === 1 ? "yaxis" : (`yaxis${i}` as UsedYAxis);
+                    const axisConfig = layout[axisKey] as Plotly.LayoutAxis;
+
+                    if (axisConfig) {
+                        newLayout[axisKey] = {
+                            ...currentPlotLayout[axisKey],
+                            autorange: axisConfig.autorange,
+                            range: axisConfig.range,
+                        };
+                    }
+                }
+
+                Plotly.relayout(currentPlotDiv, newLayout);
+            }
+        }, [layout]);
 
         useEffect(() => {
-            if (plotRef.current) {
-                Plotly.newPlot(plotRef.current, data, layout, config);
+            const currentPlotDiv = plotRef.current;
+            if (currentPlotDiv) {
+                plotlyDataRef.current = cloneDeep(data);
+                plotlyConfigRef.current = cloneDeep(config);
 
-                plotRef.current.on("plotly_relayout", handleRelayout);
+                Plotly.react(
+                    currentPlotDiv,
+                    plotlyDataRef.current,
+                    plotlyLayoutRef.current || {},
+                    plotlyConfigRef.current
+                );
 
-                const currentPlotDiv = plotRef.current;
+                // Unfortunately, Plotly.react invalidates our layout range, so we have to set it manually based on whatever it was previously
+                // If there is no existing layout, simply emulate a double click
+                if (plotlyLayoutRef.current) {
+                    Plotly.relayout(currentPlotDiv, plotlyLayoutRef.current);
+                } else {
+                    handleDoubleClick();
+                }
+            }
+        }, [data, config]);
+
+        useEffect(() => {
+            const currentPlotDiv = plotRef.current;
+
+            if (currentPlotDiv) {
+                plotlyLayoutRef.current = cloneDeep(layout);
+                Plotly.relayout(currentPlotDiv, plotlyLayoutRef.current);
+            }
+        }, [layout]);
+
+        useEffect(() => {
+            const currentPlotDiv = plotRef.current;
+            if (currentPlotDiv) {
+                currentPlotDiv.on("plotly_relayout", handleRelayout);
+                currentPlotDiv.on("plotly_doubleclick", handleDoubleClick);
+
                 return () => {
-                    Plotly.purge(currentPlotDiv);
+                    currentPlotDiv.removeAllListeners();
                 };
             }
-        }, [data, layout, config]);
+        }, [handleRelayout, handleDoubleClick]);
 
         const handleRemoveCurve = (label: string) => {
             setCurves((prevCurves) =>
@@ -1333,7 +1696,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         style={{ width: "100%", height: "100%" }}
                     />
                 </Box>
-                <Box sx={styles.legendStyle}>
+                <Box ref={legendRef} sx={styles.legendStyle}>
                     <Typography variant="h5" sx={styles.legendTitleStyle}>
                         Legend
                     </Typography>
@@ -1363,6 +1726,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         plotTitle: cloneDeep(plotTitle),
                         curveAttributes: cloneDeep(curveAttributes),
                         yAxisAttributes: cloneDeep(yAxisAttributes),
+                        manualAxisAssignment: cloneDeep(manualAxisAssignment),
                     }}
                     onSave={onPlotSettingsSave}
                 />

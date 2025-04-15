@@ -17,7 +17,7 @@ export const CustomThemeProvider: React.FC<CustomThemeProviderProps> = ({
         localStorage.setItem("theme", theme);
     };
 
-    const getTheme = useMemo(() => themes[currentTheme], [currentTheme]);
+    const getTheme = useMemo(() => themes[currentTheme].theme, [currentTheme]);
 
     return (
         <ThemeContext.Provider value={{ currentTheme, setTheme }}>

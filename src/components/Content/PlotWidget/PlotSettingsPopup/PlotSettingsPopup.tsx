@@ -21,6 +21,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { PlotSettingsPopupProps } from "./PlotSettingsPopup.types";
 import * as styles from "./PlotSettingsPopup.styles";
 import { CurveAttributes } from "../PlotWidget.types";
+import showSnackbarAndLog from "../../../../helpers/showSnackbar";
 
 const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
     open,
@@ -99,10 +100,54 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                 if (attr) {
                     newCurveAttributes.set(key, { ...attr, [field]: value });
                 }
+
+                if (field === "axisAssignment" && value === "x") {
+                    let collidingAssignmentFound = false;
+                    let notAllLinesWereMarkers = false;
+                    for (const [
+                        entryKey,
+                        entryValue,
+                    ] of newCurveAttributes.entries()) {
+                        // Check if there is already another x axis assignment, and remove it
+                        if (
+                            entryKey != key &&
+                            entryValue.axisAssignment === "x"
+                        ) {
+                            newCurveAttributes.set(entryKey, {
+                                ...entryValue,
+                                axisAssignment: "y1",
+                            });
+                            collidingAssignmentFound = true;
+                        }
+
+                        // Check if any curve has a different mode than markers, if yes reset it
+                        if (entryValue.curveMode !== "markers") {
+                            newCurveAttributes.set(entryKey, {
+                                ...entryValue,
+                                curveMode: "markers",
+                            });
+                            notAllLinesWereMarkers = true;
+                        }
+                    }
+
+                    if (collidingAssignmentFound) {
+                        showSnackbarAndLog(
+                            "Cannot have more than one curve assigned to 'x'. Other assigned curves have been set to first axis.",
+                            "warning"
+                        );
+                    }
+
+                    if (notAllLinesWereMarkers) {
+                        showSnackbarAndLog(
+                            "By default, all curve modes have been reset to markers, since correlation plot was activated",
+                            "info"
+                        );
+                    }
+                }
                 return { ...prev, curveAttributes: newCurveAttributes };
             });
         },
-        []
+        [setLocalPlotSettings]
     );
 
     return (
