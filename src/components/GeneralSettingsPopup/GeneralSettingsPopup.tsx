@@ -33,6 +33,7 @@ import {
     defaultInitialSidebarState,
     defaultPlotBackgroundColor,
     defaultTheme,
+    defaultUseVirtualWebGL,
     defaultUseWebGL,
     defaultWatermarkOpacity,
     defaultWidgetHeight,
@@ -48,6 +49,10 @@ import { PlotlyHTMLElement } from "../Content/PlotWidget/PlotWidget.types";
 import Plotly from "plotly.js";
 import { themes, useThemeSettings } from "../../themes/themes";
 import { AvailableTheme } from "../../themes/themes.types";
+import {
+    loadVirtualWebGLScript,
+    unloadVirtualWebGLScript,
+} from "../../helpers/loadVirtualWebGLScript";
 
 const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     open,
@@ -103,6 +108,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         "useWebGL",
         isWebGLSupported ? defaultUseWebGL : false
     );
+    const [useVirtualWebGL, setUseVirtualWebGLStorage, setUseVirtualWebGL] =
+        useLocalStorage("useVirtualWebGL", defaultUseVirtualWebGL);
     const [
         initialWidgetHeight,
         setInitialWidgetHeightStorage,
@@ -132,13 +139,22 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const plotRef = useRef<PlotlyHTMLElement | null>(null);
-
     const isManualThemeChange = useRef(false);
 
     const { setTheme, currentTheme } = useThemeSettings();
     const [previewTheme, setPreviewTheme] = useState<AvailableTheme>(
         currentTheme ?? defaultTheme
     );
+
+    // Initially set up virtual webGL context, if applicable
+    useEffect(() => {
+        const localStorageEntry = localStorage.getItem("useVirtualWebGL");
+        if (localStorageEntry !== null && JSON.parse(localStorageEntry)) {
+            loadVirtualWebGLScript();
+        } else if (defaultUseVirtualWebGL) {
+            loadVirtualWebGLScript();
+        }
+    }, []);
 
     const saveAndClose = useCallback(() => {
         setInitialSidebarStateStorage(initialSidebarState);
@@ -154,6 +170,14 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setCurveShapeStorage(curveShape);
         setCurveModeStorage(curveMode);
 
+        // Apply the virtual webGL contexts, if applicable
+        setUseVirtualWebGLStorage(useVirtualWebGL);
+        if (useVirtualWebGL) {
+            loadVirtualWebGLScript();
+        } else {
+            unloadVirtualWebGLScript();
+        }
+
         setTheme(previewTheme);
         onClose();
     }, [
@@ -163,6 +187,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         xAxisGridColor,
         yAxisGridColor,
         useWebGL,
+        useVirtualWebGL,
         initialWidgetHeight,
         initialWidgetWidth,
         curveColors,
@@ -178,6 +203,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setXAxisGridColorStorage,
         setYAxisGridColorStorage,
         setUseWebGLStorage,
+        setUseVirtualWebGLStorage,
         setInitialWidgetHeightStorage,
         setInitialWidgetWidthStorage,
         setCurveColorsStorage,
@@ -192,6 +218,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setXAxisGridColor(defaultXAxisGridColor);
         setYAxisGridColor(defaultYAxisGridColor);
         setUseWebGL(isWebGLSupported ? defaultUseWebGL : false);
+        setUseVirtualWebGL(defaultUseVirtualWebGL);
         setInitialWidgetHeight(defaultWidgetHeight);
         setInitialWidgetWidth(defaultWidgetWidth);
         setCurveColors(defaultCurveColors);
@@ -209,6 +236,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
             xAxisGridColor,
             yAxisGridColor,
             useWebGL,
+            useVirtualWebGL,
             initialWidgetHeight,
             initialWidgetWidth,
             curveColors,
@@ -248,6 +276,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     setYAxisGridColor(imported.yAxisGridColor);
                 if (imported.useWebGL !== undefined)
                     setUseWebGL(imported.useWebGL);
+                if (imported.useVirtualWebGL !== undefined)
+                    setUseVirtualWebGL(imported.useVirtualWebGL);
                 if (imported.initialWidgetHeight !== undefined)
                     setInitialWidgetHeight(imported.initialWidgetHeight);
                 if (imported.initialWidgetWidth !== undefined)
@@ -288,13 +318,13 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     useEffect(() => {
         if (isManualThemeChange.current) {
             setPlotBackgroundColor(
-                themes[previewTheme].palette!.custom.plot.background
+                themes[previewTheme].theme.palette!.custom.plot.background
             );
             setXAxisGridColor(
-                themes[previewTheme].palette!.custom.plot.xAxisGrid
+                themes[previewTheme].theme.palette!.custom.plot.xAxisGrid
             );
             setYAxisGridColor(
-                themes[previewTheme].palette!.custom.plot.yAxisGrid
+                themes[previewTheme].theme.palette!.custom.plot.yAxisGrid
             );
             isManualThemeChange.current = false;
         }
@@ -347,8 +377,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                           {
                               layer: "below",
                               opacity: watermarkOpacity,
-                              source: themes[previewTheme].palette!.custom.plot
-                                  .watermark,
+                              source: themes[previewTheme].theme.palette!.custom
+                                  .plot.watermark,
                               xref: "paper",
                               yref: "paper",
                               x: 0.5,
@@ -368,12 +398,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         } as Plotly.Config;
 
         if (plotRef.current) {
-            Plotly.newPlot(plotRef.current, data, layout, config);
-
-            const currentPlotDiv = plotRef.current;
-            return () => {
-                Plotly.purge(currentPlotDiv);
-            };
+            Plotly.react(plotRef.current, data, layout, config);
         }
     }, [
         useWebGL,
@@ -394,29 +419,34 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
             if (node !== null) {
                 plotRef.current = node;
 
-                new IntersectionObserver(
-                    ([entry]) => {
-                        if (open && !isPlotDivRendered) {
-                            setIsPlotDivRendered(() => {
+                setTimeout(() => {
+                    new IntersectionObserver(
+                        ([entry]) => {
+                            if (open && !isPlotDivRendered) {
+                                setIsPlotDivRendered(() => {
+                                    if (plotRef.current) {
+                                        return true;
+                                    } else {
+                                        return entry.isIntersecting;
+                                    }
+                                });
+                            } else if (!open) {
+                                setIsPlotDivRendered(false);
                                 if (plotRef.current) {
-                                    return true;
-                                } else {
-                                    return entry.isIntersecting;
+                                    Plotly.purge(plotRef.current);
                                 }
-                            });
-                        } else if (!open) {
-                            setIsPlotDivRendered(false);
-                        }
-                    },
-                    { threshold: 0 }
-                ).observe(node);
+                            }
+                        },
+                        { threshold: 0 }
+                    ).observe(node);
+                }, 100);
             }
         },
         [open, isPlotDivRendered, setIsPlotDivRendered]
     );
 
     return (
-        <ThemeProvider theme={themes[previewTheme]}>
+        <ThemeProvider theme={themes[previewTheme].theme}>
             <Dialog
                 open={open}
                 onClose={saveAndClose}
@@ -484,13 +514,13 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                 }}
                                 label="Theme"
                             >
-                                <MenuItem value="default">Classic</MenuItem>
-                                <MenuItem value="dark">Dark</MenuItem>
-                                <MenuItem value="light">Light</MenuItem>
-                                <MenuItem value="highContrast">
-                                    High Contrast
-                                </MenuItem>
-                                <MenuItem value="unicorn">Unicorn</MenuItem>
+                                {Object.entries(themes).map(
+                                    ([key, { displayName }]) => (
+                                        <MenuItem key={key} value={key}>
+                                            {displayName}
+                                        </MenuItem>
+                                    )
+                                )}
                             </Select>
                         </FormControl>
                     </Box>
@@ -570,7 +600,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                 placement="top"
                             >
                                 <Select
-                                    label="UseWebGL"
+                                    label="Use WebGL"
                                     value={useWebGL ? "enabled" : "disabled"}
                                     onChange={(e) =>
                                         setUseWebGL(
@@ -599,6 +629,44 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                             >
                                 ⚠ WebGL is disabled. Enabling it can
                                 drastically improve performance.
+                            </Typography>
+                        )}
+                    </Box>
+
+                    <Box sx={styles.settingBoxStyle}>
+                        <FormControl fullWidth>
+                            <InputLabel>Use Virtual WebGL Contexts</InputLabel>
+                            <Tooltip
+                                title="If enabled, all plots will share one WebGL Context. This can fix the issue that too many WebGL Contexts are created, which can happen with many plots. To apply, you may need to refresh this browser tab."
+                                arrow
+                                placement="top"
+                            >
+                                <Select
+                                    label="Use Virtual WebGL Contexts"
+                                    value={
+                                        useVirtualWebGL ? "enabled" : "disabled"
+                                    }
+                                    onChange={(e) =>
+                                        setUseVirtualWebGL(
+                                            e.target.value === "enabled"
+                                        )
+                                    }
+                                >
+                                    <MenuItem value="enabled">Enabled</MenuItem>
+                                    <MenuItem value="disabled">
+                                        Disabled
+                                    </MenuItem>
+                                </Select>
+                            </Tooltip>
+                        </FormControl>
+                        {useVirtualWebGL && (
+                            <Typography
+                                variant="body2"
+                                sx={styles.warningStyle}
+                            >
+                                ⚠ This is an experimental setting using an
+                                unmaintained Script. This may very well break
+                                some things.
                             </Typography>
                         )}
                     </Box>
