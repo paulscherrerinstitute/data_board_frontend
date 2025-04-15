@@ -13,10 +13,28 @@ export const ThemeContext = createContext<ThemeContextType>(
 
 export const useThemeSettings = () => useContext(ThemeContext);
 
-export const themes: Record<AvailableTheme, ThemeOptions> = {
-    default: defaultTheme,
-    dark: darkTheme,
-    light: lightTheme,
-    unicorn: unicornTheme,
-    highContrast: highContrastTheme,
+export const themes: Record<
+    AvailableTheme,
+    { theme: ThemeOptions; displayName: string }
+> = {
+    default: {
+        theme: defaultTheme,
+        displayName: "Classic",
+    },
+    dark: {
+        theme: darkTheme,
+        displayName: "Dark",
+    },
+    light: {
+        theme: lightTheme,
+        displayName: "Light",
+    },
+    highContrast: {
+        theme: highContrastTheme,
+        displayName: "High Contrast",
+    },
+    unicorn: {
+        theme: unicornTheme,
+        displayName: "Unicorn",
+    },
 };

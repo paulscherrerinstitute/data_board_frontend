@@ -7,6 +7,7 @@ export const defaultXAxisGridColor = "#ebebeb";
 export const defaultYAxisGridColor = "#ebebeb";
 export const defaultTheme: AvailableTheme = "default";
 export const defaultUseWebGL = true;
+export const defaultUseVirtualWebGL = false;
 
 export const defaultCurveColors = [
     "#1f77b4",
@@ -24,7 +25,7 @@ export const defaultYAxisScaling: Plotly.AxisType = "linear";
 export const defaultCurveShape: Plotly.ScatterLine["shape"] = "linear";
 export const defaultCurveMode: Plotly.PlotData["mode"] = "lines+markers";
 
-export const defaultWidgetWidth = 6;
+export const defaultWidgetWidth = 12;
 export const defaultWidgetHeight = 12;
 
 export const defaultInitialSidebarState: InitialSidebarState =
