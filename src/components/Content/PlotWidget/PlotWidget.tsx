@@ -45,6 +45,10 @@ import showSnackbarAndLog, {
 } from "../../../helpers/showSnackbar";
 import { PlotlyHTMLElement } from "./PlotWidget.types";
 import html2canvas from "html2canvas";
+import {
+    pearsonCoefficient,
+    spearmanCoefficient,
+} from "../../../helpers/correlationCoefficients";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -1125,10 +1129,19 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             curveAttributes.get(label)?.curveMode ||
                             "lines+markers";
 
-                        const hoverText = mergedX.map(
-                            (xValue, i) =>
-                                `${displayLabel}<br>Time: ${xTimestamps[i]}<br>x: ${xValue}<br>y: ${mergedY[i]}`
+                        // Calculate correlation coefficients.
+                        const pearson: number = pearsonCoefficient(
+                            cloneDeep(mergedX).slice(1, -1),
+                            cloneDeep(mergedY).slice(1, -1)
                         );
+                        const spearman: number = spearmanCoefficient(
+                            cloneDeep(mergedX).slice(1, -1),
+                            cloneDeep(mergedY).slice(1, -1)
+                        );
+
+                        const hoverText = mergedX.map((xValue, i) => {
+                            return `${displayLabel}<br>Time: ${xTimestamps[i]}<br>x: ${xValue}<br>y: ${mergedY[i]}<br><br>Pearson: ${pearson.toFixed(3)}<br>Spearman: ${spearman.toFixed(3)}`;
+                        });
 
                         values.push({
                             name: displayLabel,
