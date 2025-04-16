@@ -3,13 +3,13 @@ import { Channel } from "../Selector/Selector.types";
 import { PlotSettings } from "./PlotWidget/PlotSettingsPopup/PlotSettingsPopup.types";
 import { CurveAttributes } from "./PlotWidget/PlotWidget.types";
 
-export type StoredPlotSettings = PlotSettings & {
+export type StoredPlotSettings = Omit<PlotSettings, "curveAttributes"> & {
     curveAttributes: { [k: string]: CurveAttributes };
 };
 
 export type Widget = {
     channels: Channel[];
-    plotSettings?: PlotSettings;
+    plotSettings?: StoredPlotSettings;
     layout: ReactGridLayout.Layout;
 };
 
