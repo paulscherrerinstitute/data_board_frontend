@@ -33,8 +33,7 @@ The destination can be one of the following:
 2. The button at the bottom of the plots, containing a plus. This will create a new plot with the dragged channel(s).
 
 3. If your browser supports it, you can also drag the channel outside of the browser tab and, e.g., drop it into a notepad app.
-
-    > _Hint_: You can also do the inverse if your browser supports it (add channels by dragging from outside the browser); the DragEvent utilises simple text data.
+    > _Hint_: You can also do the inverse if your browser supports it (add channels by dragging from outside the browser); the DragEvent utilises simple text data.
 
 ### Set Query Parameters
 
@@ -189,14 +188,17 @@ You can save a dashboard to URL by clicking one of the following buttons at the 
 
 - `SAVE LAYOUT`: Stores a copy of the dashboard to the DataBoard server. The ID of said dashboard is stored in the URL. This button overwrites any other dashboards with that ID, so only use it if you want to overwrite another dashboard.
 
-- `SAVE AS NEW LAYOUT`: Creates a new entry on the DataBoard server and stores a copy of the dashboard there. The ID of this new dashboard entry is saved to the URL.
+- `SAVE AS NEW LAYOUT`: Creates a new entry on the DataBoard server and stores a copy of the dashboard there. The ID of this new dashboard entry is saved to the URL as `dashboardId`.
 
 If a page is loaded and a dashboard ID is present in the URL, it will be fetched from the DataBoard server.
 
 > ⚠️ **Warning:**
 >
-> - Dashboard storage to DataBoard's server is provided at best-effort. There is absolutely **NO** guarantee that the dashboards will persist. They will most certainly persist for a while, but after some time, when our storage is at capacity, we have to recycle old, dashboards. To save a dashboard for multiple months, [export to JSON](#export-dashboard).
+> - Dashboard storage to DataBoard's server is provided at best-effort. There is absolutely **NO** guarantee that the dashboards will persist. They will most certainly persist for a while, but after some time, when our storage is at capacity, we have to recycle old dashboards. To save a dashboard for multiple months, [export to JSON](#export-dashboard).
 > - Dashboard storage is **NOT** protected. Someone could at any time delete any dashboard, or overwrite any dashboard. This doesn't need to be maliciously, but could also happen accidentally.
+>     - To help detect if a dashboard retrieved from the DataBoard server has been modified, they are hashed upon save. This hash is then stored in the URL as `dashboardHash`.
+>     - When an URL is loaded that contains a this hash parameter (and obviously a `dashboardId`), the hash is compared to the retrieved data, and an error id displayed if there is a mismatch. If the hash matches, you get a success message after the stored dashboard has been retrieved. This way, you can be sure the retrieved dashboard is still in the state you saved it as, and was not overwritten externally.
+>     - The hash stored in the URL is updated if you save the dashboard layout again, either as a new entry on the Server, or to overwrite an existing one.
 
 #### Export Dashboard
 

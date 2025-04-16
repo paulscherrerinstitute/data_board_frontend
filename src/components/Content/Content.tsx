@@ -32,6 +32,8 @@ import {
     defaultWidgetWidth,
 } from "../../helpers/defaults";
 import showSnackbarAndLog from "../../helpers/showSnackbar";
+import hash from "object-hash";
+import { stripUndefined } from "../../helpers/stripUndefined";
 
 const Content: React.FC = () => {
     const { backendUrl } = useApiUrls();
@@ -292,10 +294,32 @@ const Content: React.FC = () => {
                         if (dashboard) {
                             setWidgets(dashboard.widgets);
                         }
+                        const retrievedDashboardHash = hash(
+                            stripUndefined(dashboard)
+                        );
+                        const dashboardHash = searchParams.get("dashboardHash");
+                        if (!dashboardHash) {
+                            showSnackbarAndLog(
+                                "Could not find hash parameter in URL, cannot verify dashboard integrity",
+                                "warning"
+                            );
+                        } else if (dashboardHash !== retrievedDashboardHash) {
+                            showSnackbarAndLog(
+                                "Dashboard hash from URL does NOT match retrieved dashboard, meaning it was modified since last save",
+                                "error",
+                                undefined,
+                                10000
+                            );
+                        } else {
+                            showSnackbarAndLog(
+                                "Dashboard hash from URL matches retrieved dashboard, integrity verified",
+                                "success"
+                            );
+                        }
                         return;
                     } catch (error) {
                         showSnackbarAndLog(
-                            "Failed to fetch the dashboard provided in the url",
+                            "Failed to fetch the dashboard provided in the URL",
                             "error",
                             error
                         );
@@ -343,6 +367,12 @@ const Content: React.FC = () => {
                 newSearchParams.set("dashboardId", dashboardId);
                 return newSearchParams;
             });
+            const dashboardHash = hash(stripUndefined(dashboardData.dashboard));
+            setSearchParams((searchParams) => {
+                const newSearchParams = searchParams;
+                newSearchParams.set("dashboardHash", dashboardHash);
+                return newSearchParams;
+            });
             showSnackbarAndLog(
                 "Successfully saved dashboard to server! We don't guarantee persistent storage, export to JSON if needed.",
                 "success"
@@ -364,6 +394,14 @@ const Content: React.FC = () => {
                     `${backendUrl}/dashboard/${dashboardId}`,
                     dashboardData
                 );
+                const dashboardHash = hash(
+                    stripUndefined(dashboardData.dashboard)
+                );
+                setSearchParams((searchParams) => {
+                    const newSearchParams = searchParams;
+                    newSearchParams.set("dashboardHash", dashboardHash);
+                    return newSearchParams;
+                });
                 showSnackbarAndLog(
                     "Successfully saved dashboard to server! We don't guarantee persistent storage, export to JSON if needed.",
                     "success"
