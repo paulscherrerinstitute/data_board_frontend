@@ -42,9 +42,9 @@ The query parameters are defined for all plots and can be set in the topbar.
 
 - **Timerange:** The timerange can be defined using local time. If your browser's date/time picker doesn't support seconds, you can click in the text field and set the seconds there.
 
-    > ⚠️ **Important:** The time displayed in the plots will also be in **local time**, _not_ UTC!
+    > ⚠️ **Important:** The time displayed in the plots will also be in **local time**, _not_ UTC!
 
-    - **Quick Select:** You can also utilise quick select to get an absolute timestamp for relative time. If you apply the query parameters, relative times will be recalculated, if quick select is active.
+- **Quick Select:** You can also utilise quick select to get an absolute timestamp for relative time. If you apply the query parameters, relative times will be recalculated, if quick select is active.
 
 - **Raw when sparse:** This toggle defines if the curves should be drawn using raw data if there are not enough points for binned data. This simply removes unnecessary min/max curves and is highly recommended to stay activated.
 
@@ -95,7 +95,7 @@ The general section contains settings that affect all plots.
 
 - **Use Virtual WebGL Contexts:** Since the number of WebGL contexts (proportional to the number of plots) is limited on most browsers, they might break if too many plots are drawn. As a workaround, this setting can be enabled to make all plots share one WebGL context.
 
-    > ⚠️ **Warning:** This setting is an experimental _workaround_ and may break the plotting.
+    > ⚠️ **Warning:** This setting is an experimental _workaround_ and may break the plotting.
 
 - **Initial Widget Height / Width:** Initial dimensions new plots take when they are created. Does not affect the very first plot.
 
@@ -121,7 +121,7 @@ The modebar buttons are buttons that define some quick actions you can perform o
 
 - **Download Picture as PNG:** Downloads a picture of the plot and legend as PNG. The resolution is 4x the display resolution; therefore, the generating process may take a second or two.
 
-    > ⚠️ **Warning**: If the legend is scrollable due to its size, only the visible area will be captured. Zooming out may help capture more of the legend.
+    > ⚠️ **Warning**: If the legend is scrollable due to its size, only the visible area will be captured. Zooming out may help capture more of the legend.
 
 - **Zoom In/ Zoom Out, Autoscale, Reset Axes:** These are default Plotly buttons.
 
@@ -142,7 +142,7 @@ In these settings, you can define properties that only affect the current plot, 
 
     - **Axis:** On which axis this curve is drawn.
 
-        > ⚠️ **Warning:** As soon as one curve is manually assigned to an axis, all new curves will be added to the first axis; automatic assignments are therefore off for this plot. Until then, new curves are put on succeeding Y-axes until more than 4 curves are in the plot, upon which all curves are drawn on the first Y-axis.
+> ⚠️ **Warning:** As soon as one curve is manually assigned to an axis, all new curves will be added to the first axis; automatic assignments are therefore off for this plot. Until then, new curves are put on succeeding Y-axes until more than 4 curves are in the plot, upon which all curves are drawn on the first Y-axis.
 
     - **Everything else:** See [Plot Defaults](#plot-defaults)
 
