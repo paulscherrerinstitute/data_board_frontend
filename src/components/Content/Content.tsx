@@ -31,7 +31,7 @@ import {
     defaultWidgetHeight,
     defaultWidgetWidth,
 } from "../../helpers/defaults";
-import showSnackbarAndLog from "../../helpers/showSnackbar";
+import showSnackbarAndLog, { logToConsole } from "../../helpers/showSnackbar";
 import hash from "object-hash";
 import { stripUndefined } from "../../helpers/stripUndefined";
 
@@ -301,19 +301,21 @@ const Content: React.FC = () => {
                         if (!dashboardHash) {
                             showSnackbarAndLog(
                                 "Could not find hash parameter in URL, cannot verify dashboard integrity",
-                                "warning"
+                                "warning",
+                                `Hash stored in URL: ${dashboardHash}\nHash calculated from retrieved dashboard: ${retrievedDashboardHash}`
                             );
                         } else if (dashboardHash !== retrievedDashboardHash) {
                             showSnackbarAndLog(
                                 "Dashboard hash from URL does NOT match retrieved dashboard, meaning it was modified since last save",
                                 "error",
-                                undefined,
+                                `Hash stored in URL: ${dashboardHash}\nHash calculated from retrieved dashboard: ${retrievedDashboardHash}`,
                                 10000
                             );
                         } else {
                             showSnackbarAndLog(
                                 "Dashboard hash from URL matches retrieved dashboard, integrity verified",
-                                "success"
+                                "success",
+                                `Hash stored in URL: ${dashboardHash}\nHash calculated from retrieved dashboard: ${retrievedDashboardHash}`
                             );
                         }
                         return;
@@ -375,7 +377,8 @@ const Content: React.FC = () => {
             });
             showSnackbarAndLog(
                 "Successfully saved dashboard to server! We don't guarantee persistent storage, export to JSON if needed.",
-                "success"
+                "success",
+                `Hash saved to URL: ${dashboardHash}`
             );
         } catch (error) {
             showSnackbarAndLog(
@@ -404,7 +407,8 @@ const Content: React.FC = () => {
                 });
                 showSnackbarAndLog(
                     "Successfully saved dashboard to server! We don't guarantee persistent storage, export to JSON if needed.",
-                    "success"
+                    "success",
+                    `Hash saved to URL: ${dashboardHash}`
                 );
                 return;
             } catch (error) {
