@@ -31,7 +31,7 @@ import {
     defaultWidgetHeight,
     defaultWidgetWidth,
 } from "../../helpers/defaults";
-import showSnackbarAndLog, { logToConsole } from "../../helpers/showSnackbar";
+import showSnackbarAndLog from "../../helpers/showSnackbar";
 import hash from "object-hash";
 import { stripUndefined } from "../../helpers/stripUndefined";
 
@@ -420,7 +420,13 @@ const Content: React.FC = () => {
             }
         }
         handleCreateDashboard();
-    }, [backendUrl, searchParams, dashboardData, handleCreateDashboard]);
+    }, [
+        backendUrl,
+        searchParams,
+        dashboardData,
+        setSearchParams,
+        handleCreateDashboard,
+    ]);
 
     const handleDownloadDashboard = useCallback(async () => {
         // We need to create  the data like this, otherwise the curveAttributes Map couldn't be parsed.
