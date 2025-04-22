@@ -1,0 +1,49 @@
+name: Verify Schema
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    schema:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+
+            - name: Install dependencies
+              run: npm ci
+              env:
+                  CI: true
+
+            - name: Backup old schemas
+              run: |
+                  mkdir -p $HOME/schema-old
+                  cp schema/*.schema.json $HOME/schema-old/
+
+            - name: Regenerate schemas
+              run: npm run schema
+              env:
+                  CI: true
+
+            - name: Backup new schemas
+              run: |
+                  mkdir -p $HOME/schema-new
+                  cp schema/*.schema.json $HOME/schema-new/
+
+            - name: Diff schemas
+              run: |
+                  if ! diff -r $HOME/schema-old $HOME/schema-new; then
+                    echo "❌ Schemas are out of date. please regenerate and commit." >&2
+                    exit 1
+                  fi
