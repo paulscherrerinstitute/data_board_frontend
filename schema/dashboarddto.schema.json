@@ -1,0 +1,347 @@
+{
+  "$ref": "#/definitions/DashboardDTO",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "AxisAssignment": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/YAxisAssignment"
+        },
+        {
+          "const": "x",
+          "type": "string"
+        }
+      ]
+    },
+    "AxisLimit": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "AxisType": {
+      "enum": [
+        "-",
+        "linear",
+        "log",
+        "date",
+        "category",
+        "multicategory"
+      ],
+      "type": "string"
+    },
+    "Channel": {
+      "additionalProperties": false,
+      "properties": {
+        "backend": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "seriesId": {
+          "type": "string"
+        },
+        "shape": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "backend",
+        "name",
+        "seriesId",
+        "source",
+        "type",
+        "shape",
+        "unit",
+        "description"
+      ],
+      "type": "object"
+    },
+    "CurveAttributes": {
+      "additionalProperties": false,
+      "properties": {
+        "axisAssignment": {
+          "$ref": "#/definitions/AxisAssignment"
+        },
+        "channel": {
+          "$ref": "#/definitions/Channel"
+        },
+        "color": {
+          "type": "string"
+        },
+        "curveMode": {
+          "enum": [
+            "lines",
+            "markers",
+            "text",
+            "lines+markers",
+            "text+markers",
+            "text+lines",
+            "text+lines+markers",
+            "none",
+            "gauge",
+            "number",
+            "delta",
+            "number+delta",
+            "gauge+number",
+            "gauge+number+delta",
+            "gauge+delta"
+          ],
+          "type": "string"
+        },
+        "curveShape": {
+          "enum": [
+            "linear",
+            "spline",
+            "hv",
+            "vh",
+            "hvh",
+            "vhv"
+          ],
+          "type": "string"
+        },
+        "displayLabel": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "channel",
+        "color",
+        "curveShape",
+        "curveMode",
+        "displayLabel",
+        "axisAssignment"
+      ],
+      "type": "object"
+    },
+    "Dashboard": {
+      "additionalProperties": false,
+      "properties": {
+        "widgets": {
+          "items": {
+            "$ref": "#/definitions/Widget"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "widgets"
+      ],
+      "type": "object"
+    },
+    "DashboardDTO": {
+      "additionalProperties": false,
+      "properties": {
+        "dashboard": {
+          "$ref": "#/definitions/Dashboard"
+        }
+      },
+      "required": [
+        "dashboard"
+      ],
+      "type": "object"
+    },
+    "ReactGridLayout.Layout": {
+      "additionalProperties": false,
+      "properties": {
+        "h": {
+          "description": "Height in grid units.",
+          "type": "number"
+        },
+        "i": {
+          "description": "A string corresponding to the component key. Uses the index of components instead if not provided.",
+          "type": "string"
+        },
+        "isBounded": {
+          "description": "If true and draggable, item will be moved only within grid.",
+          "type": "boolean"
+        },
+        "isDraggable": {
+          "description": "If false, will not be draggable. Overrides `static`.",
+          "type": "boolean"
+        },
+        "isResizable": {
+          "description": "If false, will not be resizable. Overrides `static`.",
+          "type": "boolean"
+        },
+        "maxH": {
+          "description": "Maximum height in grid units.",
+          "type": "number"
+        },
+        "maxW": {
+          "description": "Maximum width in grid units.",
+          "type": "number"
+        },
+        "minH": {
+          "description": "Minimum height in grid units.",
+          "type": "number"
+        },
+        "minW": {
+          "description": "Minimum width in grid units.",
+          "type": "number"
+        },
+        "moved": {
+          "description": "set by DragEvents (onDragStart, onDrag, onDragStop) and ResizeEvents (onResizeStart, onResize, onResizeStop)",
+          "type": "boolean"
+        },
+        "resizeHandles": {
+          "description": "By default, a handle is only shown on the bottom-right (southeast) corner. Note that resizing from the top or left is generally not intuitive.",
+          "items": {
+            "enum": [
+              "s",
+              "w",
+              "e",
+              "n",
+              "sw",
+              "nw",
+              "se",
+              "ne"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "static": {
+          "description": "If true, equal to `isDraggable: false` and `isResizable: false`.",
+          "type": "boolean"
+        },
+        "w": {
+          "description": "Width in grid units.",
+          "type": "number"
+        },
+        "x": {
+          "description": "X position in grid units.",
+          "type": "number"
+        },
+        "y": {
+          "description": "Y position in grid units.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "i",
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "type": "object"
+    },
+    "StoredPlotSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "curveAttributes": {
+          "additionalProperties": {
+            "$ref": "#/definitions/CurveAttributes"
+          },
+          "type": "object"
+        },
+        "manualAxisAssignment": {
+          "type": "boolean"
+        },
+        "plotTitle": {
+          "type": "string"
+        },
+        "yAxisAttributes": {
+          "items": {
+            "$ref": "#/definitions/YAxisAttributes"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "curveAttributes",
+        "manualAxisAssignment",
+        "plotTitle",
+        "yAxisAttributes"
+      ],
+      "type": "object"
+    },
+    "Widget": {
+      "additionalProperties": false,
+      "properties": {
+        "channels": {
+          "items": {
+            "$ref": "#/definitions/Channel"
+          },
+          "type": "array"
+        },
+        "layout": {
+          "$ref": "#/definitions/ReactGridLayout.Layout"
+        },
+        "plotSettings": {
+          "$ref": "#/definitions/StoredPlotSettings"
+        }
+      },
+      "required": [
+        "channels",
+        "layout"
+      ],
+      "type": "object"
+    },
+    "YAxisAssignment": {
+      "enum": [
+        "y1",
+        "y2",
+        "y3",
+        "y4"
+      ],
+      "type": "string"
+    },
+    "YAxisAttributes": {
+      "additionalProperties": false,
+      "properties": {
+        "displayLabel": {
+          "type": "string"
+        },
+        "label": {
+          "$ref": "#/definitions/YAxisAssignment"
+        },
+        "manualDisplayLabel": {
+          "type": "boolean"
+        },
+        "max": {
+          "$ref": "#/definitions/AxisLimit"
+        },
+        "min": {
+          "$ref": "#/definitions/AxisLimit"
+        },
+        "scaling": {
+          "$ref": "#/definitions/AxisType"
+        }
+      },
+      "required": [
+        "label",
+        "scaling",
+        "min",
+        "max",
+        "displayLabel",
+        "manualDisplayLabel"
+      ],
+      "type": "object"
+    }
+  }
+}

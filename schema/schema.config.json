@@ -1,0 +1,8 @@
+{
+    "types": [
+        {
+            "path": "src/components/Content/Content.types.ts",
+            "types": ["DashboardDTO"]
+        }
+    ]
+}
