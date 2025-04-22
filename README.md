@@ -262,6 +262,10 @@ Formatting is done via Prettier, using the config in [`.prettierrc`](./.prettier
 
 You can lint the project using `npm run lint`. There should not be any errors; warnings are tolerated if reasonable. New warnings should always be read carefully. Usually, it makes sense to fix them.
 
+### Generating Schemas
+
+See [here](./schema/README.md)
+
 ### Deployment Notes
 
 For easy deployment/running of the frontend, there is a [`Dockerfile`](./Dockerfile) available in the root directory. In the [Backend Repository](https://github.com/paulscherrerinstitute/data_board_backend), there are Ansible scripts, as well as a [`docker-compose.yml`](https://github.com/paulscherrerinstitute/data_board_backend/blob/main/docker-compose.yml) to deploy both services together.
