@@ -9,7 +9,7 @@ export type Channel = {
     seriesId: string;
     source: string;
     type: string;
-    shape: string;
+    shape: string | number[];
     unit: string;
     description: string;
 };

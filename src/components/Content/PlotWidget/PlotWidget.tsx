@@ -191,7 +191,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     cloneDeep(initialPlotSettings.yAxisAttributes)
                 );
                 setManualAxisAssignment(
-                    cloneDeep(initialPlotSettings.manualAxisAssignment)
+                    cloneDeep(initialPlotSettings.manualAxisAssignment) || false
                 );
             }
         }
