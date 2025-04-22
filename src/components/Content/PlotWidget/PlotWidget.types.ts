@@ -23,11 +23,23 @@ export interface PlotlyHTMLElement extends HTMLDivElement {
     removeAllListeners(): void;
 }
 
+export type CurvePoints = {
+    [timestamp: string]: number;
+};
+
+export type CurveMeta = {
+    raw: boolean;
+    pointMeta: {
+        [timestamp: string]: {
+            count?: number;
+            pulseId?: number;
+        };
+    };
+};
+
 export type CurveData = {
     curve: {
-        [channel: string]: {
-            [timestamp: string]: number;
-        };
+        [channelName: string]: CurvePoints | CurveMeta;
     };
 };
 

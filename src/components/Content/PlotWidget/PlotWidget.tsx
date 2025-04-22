@@ -16,6 +16,8 @@ import {
     YAxisAttributes,
     AxisLimit,
     UsedYAxis,
+    CurveMeta,
+    CurvePoints,
 } from "./PlotWidget.types";
 import { useApiUrls } from "../../ApiContext/ApiContext";
 import axios, { AxiosError, AxiosResponse } from "axios";
@@ -508,7 +510,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             },
                             // Empty data initially, only showing range
                         },
-                    };
+                    } as CurveData;
 
                     // Add the new channel with empty data first so it appears in the legend
                     setCurves((prevCurves) => {
@@ -614,9 +616,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 response?.data.curve[seriesId + "_min"],
                             [channel.name + "_max"]:
                                 response?.data.curve[seriesId + "_max"],
+                            [channel.name + "_meta"]:
+                                response?.data.curve[seriesId + "_meta"],
                         },
                     };
-
                     if (
                         !responseCurveData.curve[channel.name] ||
                         Object.keys(responseCurveData.curve[channel.name])
@@ -694,6 +697,42 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const newMins = reduceToMap(convertedMins);
                         const newMaxs = reduceToMap(convertedMaxs);
 
+                        const newMeta = (() => {
+                            const metaBlock =
+                                responseCurveData.curve[channelName + "_meta"];
+                            const raw = (metaBlock as CurveMeta).raw as boolean;
+
+                            const pointMeta = Object.entries(metaBlock)
+                                .filter(([timestamp]) => timestamp !== "raw")
+                                .map(([timestamp, meta]) => ({
+                                    convertedTimestamp:
+                                        convertTimestamp(timestamp),
+                                    meta: meta as {
+                                        count?: number;
+                                        pulseId?: number;
+                                    },
+                                }))
+                                .filter(
+                                    ({ convertedTimestamp }) =>
+                                        convertedTimestamp >= beginTimestamp &&
+                                        convertedTimestamp <= endTimeStamp
+                                )
+                                .reduce(
+                                    (acc, { convertedTimestamp, meta }) => {
+                                        acc[convertedTimestamp] = meta;
+                                        return acc;
+                                    },
+                                    {} as {
+                                        [timestamp: string]: {
+                                            count?: number;
+                                            pulseId?: number;
+                                        };
+                                    }
+                                );
+
+                            return { raw, pointMeta };
+                        })();
+
                         const updatedCurveData: CurveData = {
                             curve: {
                                 [keyName]: {
@@ -706,6 +745,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 },
                                 [keyName + "_max"]: {
                                     ...newMaxs,
+                                },
+                                [keyName + "_meta"]: {
+                                    ...newMeta,
                                 },
                             },
                         };
@@ -823,6 +865,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 "Mean",
                 "Min",
                 "Max",
+                "Count",
+                "PulseId",
             ];
             const rows: string[] = [];
 
@@ -831,28 +875,30 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 const channelName = channelKey.split("|")[0].trim();
                 const baseData =
                     Object.entries(curve.curveData.curve[channelKey]) || {};
-                const minData =
-                    Object.entries(
-                        curve.curveData.curve[`${channelKey}_min`]
-                    ) || {};
-                const maxData =
-                    Object.entries(
-                        curve.curveData.curve[`${channelKey}_max`]
-                    ) || {};
+                const minData = (curve.curveData.curve[`${channelKey}_min`] ||
+                    {}) as CurvePoints;
+                const maxData = (curve.curveData.curve[`${channelKey}_max`] ||
+                    {}) as CurvePoints;
+                const pointMetaData =
+                    (
+                        curve.curveData.curve[`${channelKey}_meta`] as
+                            | CurveMeta
+                            | undefined
+                    )?.pointMeta || {};
+
                 // Exclude first and last entries since their our NaN placeholders for the range
                 for (let i = 1; i < baseData.length - 1; i++) {
+                    const timestamp = baseData[i][0];
                     rows.push(
                         [
                             curve.backend,
                             channelName,
-                            baseData[i] === undefined
-                                ? 0
-                                : (baseData[i][0] ?? 0),
-                            baseData[i] === undefined
-                                ? 0
-                                : (baseData[i][1] ?? 0),
-                            minData[i] === undefined ? 0 : (minData[i][1] ?? 0),
-                            maxData[i] === undefined ? 0 : (maxData[i][1] ?? 0),
+                            baseData[i]?.[0] ?? "",
+                            baseData[i]?.[1] ?? "",
+                            minData[timestamp] ?? "",
+                            maxData[timestamp] ?? "",
+                            pointMetaData?.[timestamp].count ?? "",
+                            pointMetaData?.[timestamp].pulseId ?? "",
                         ].join(";")
                     );
                 }
@@ -874,6 +920,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     curve: Object.fromEntries(
                         Object.entries(curve.curveData.curve).map(
                             ([channel, dataPoints]) => {
+                                const isMeta = channel.endsWith("_meta");
                                 const isMin = channel.endsWith("_min");
                                 const isMax = channel.endsWith("_max");
 
@@ -886,23 +933,45 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     if (isMax) {
                                         channel += "_max";
                                     }
+                                    if (isMeta) {
+                                        channel += "_meta";
+                                    }
                                 }
 
-                                const timestamps =
-                                    Object.keys(dataPoints).sort();
-                                if (timestamps.length <= 2) {
-                                    return [channel, {}]; // If only 1 or 2 points exist, remove all
-                                }
-                                // Else take all points except for the first and last ones, them being the range placeholders
-                                const trimmedDataPoints = Object.fromEntries(
-                                    timestamps
-                                        .slice(1, -1)
-                                        .map((timestamp) => [
+                                if (isMeta) {
+                                    // Handle metadata
+                                    const timestamps = Object.keys(
+                                        dataPoints.pointMeta
+                                    ).sort();
+                                    const trimmedMetaData = Object.fromEntries(
+                                        timestamps.map((timestamp) => [
                                             timestamp,
-                                            dataPoints[timestamp],
+                                            (dataPoints as CurveMeta).pointMeta[
+                                                timestamp
+                                            ],
                                         ])
-                                );
-                                return [channel, trimmedDataPoints];
+                                    );
+
+                                    return [channel, trimmedMetaData];
+                                } else {
+                                    const timestamps =
+                                        Object.keys(dataPoints).sort();
+                                    if (timestamps.length <= 2) {
+                                        return [channel, {}]; // If only 1 or 2 points exist, remove all
+                                    }
+                                    const trimmedDataPoints =
+                                        Object.fromEntries(
+                                            timestamps
+                                                .slice(1, -1)
+                                                .map((timestamp) => [
+                                                    timestamp,
+                                                    (dataPoints as CurvePoints)[
+                                                        timestamp
+                                                    ],
+                                                ])
+                                        );
+                                    return [channel, trimmedDataPoints];
+                                }
                             }
                         )
                     ),
@@ -1064,7 +1133,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     const xCurve = curves[xCurveIndex];
                     const xKeyName = Object.keys(xCurve.curveData.curve).find(
-                        (key) => !key.endsWith("_min") && !key.endsWith("_max")
+                        (key) =>
+                            !key.endsWith("_min") &&
+                            !key.endsWith("_max") &&
+                            !key.endsWith("_meta")
                     );
                     if (!xKeyName) return [];
 
@@ -1080,9 +1152,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                         if (
                             keyName.endsWith("_min") ||
-                            keyName.endsWith("_max")
+                            keyName.endsWith("_max") ||
+                            keyName.endsWith("_meta")
                         ) {
-                            continue; // Skip processing if it's a min/max entry itself
+                            continue; // Skip processing if it's a min/max entry itself, or meta information
                         }
 
                         const baseData = curve.curveData.curve[keyName] || {};
@@ -1105,8 +1178,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             const yTime = curveTimestamps[j];
 
                             if (xTime === yTime) {
-                                mergedX.push(xValues[i]);
-                                mergedY.push(curveValues[j]);
+                                mergedX.push(xValues[i].value);
+                                mergedY.push(curveValues[j].value);
                                 i++;
                                 j++;
                             } else if (xTime < yTime) {
@@ -1162,9 +1235,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                         if (
                             keyName.endsWith("_min") ||
-                            keyName.endsWith("_max")
+                            keyName.endsWith("_max") ||
+                            keyName.endsWith("_meta")
                         ) {
-                            continue; // Skip processing if it's a min/max entry itself
+                            continue; // Skip processing if it's a min/max entry itself, or meta information
                         }
 
                         const label = getLabelForCurve(curve);
