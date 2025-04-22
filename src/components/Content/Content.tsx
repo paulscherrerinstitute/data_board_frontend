@@ -13,8 +13,8 @@ import * as uuid from "uuid";
 import {
     Widget,
     TimeValues,
-    DashboardDto,
-    Dashboard,
+    DashboardDTO,
+    DashboardReturnDTO,
     StoredPlotSettings,
 } from "./Content.types";
 import ReactGridLayout from "react-grid-layout";
@@ -287,7 +287,7 @@ const Content: React.FC = () => {
                 const dashboardId = searchParams.get("dashboardId");
                 if (dashboardId) {
                     try {
-                        const response = await axios.get<DashboardDto>(
+                        const response = await axios.get<DashboardDTO>(
                             `${backendUrl}/dashboard/${dashboardId}`
                         );
                         const dashboard = response.data.dashboard;
@@ -353,14 +353,14 @@ const Content: React.FC = () => {
         return {
             dashboard: {
                 widgets: widgets,
-            } as Dashboard,
-        };
+            },
+        } as DashboardDTO;
     }, [widgets]);
 
     const handleCreateDashboard = useCallback(async () => {
         try {
-            const response = await axios.post<DashboardDto>(
-                `${backendUrl}/dashboard`,
+            const response = await axios.post<DashboardReturnDTO>(
+                `${backendUrl}/dashboard/`,
                 dashboardData
             );
             const dashboardId = response.data.id;
@@ -381,6 +381,14 @@ const Content: React.FC = () => {
                 `Hash saved to URL: ${dashboardHash}`
             );
         } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.status === 413) {
+                showSnackbarAndLog(
+                    "Dashboard is too big to save to server, but you can always export as JSON.",
+                    "error",
+                    error
+                );
+                return;
+            }
             showSnackbarAndLog(
                 "Failed to save dashboard to server. Maybe try again, or export to JSON.",
                 "error",
@@ -393,7 +401,7 @@ const Content: React.FC = () => {
         const dashboardId = searchParams.get("dashboardId");
         if (dashboardId) {
             try {
-                await axios.patch<DashboardDto>(
+                await axios.patch<DashboardReturnDTO>(
                     `${backendUrl}/dashboard/${dashboardId}`,
                     dashboardData
                 );
@@ -412,6 +420,17 @@ const Content: React.FC = () => {
                 );
                 return;
             } catch (error) {
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.status === 413
+                ) {
+                    showSnackbarAndLog(
+                        "Dashboard is too big to save to server, but you can always export as JSON.",
+                        "error",
+                        error
+                    );
+                    return;
+                }
                 showSnackbarAndLog(
                     "Failed to save dashboard, creating new one",
                     "error",
