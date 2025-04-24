@@ -84,4 +84,9 @@ export const actionButtonBoxStyle: SxProps<Theme> = {
     justifyContent: "center",
     alignItems: "center",
     gap: "50px",
+    position: "fixed",
+    bottom: 10,
+    left: 0,
+    right: 0,
+    zIndex: 9,
 };
