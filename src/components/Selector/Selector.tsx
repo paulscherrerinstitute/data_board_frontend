@@ -372,7 +372,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                 document.addEventListener("dragend", onDragEnd);
             }
         },
-        [storedChannels]
+        [storedChannels, setSidebarIsFocused]
     );
 
     const handleSelectAll = useCallback(() => {

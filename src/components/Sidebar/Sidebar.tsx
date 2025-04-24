@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         sidebarIsFocused,
         sidebarWidth,
         storedSidbarWidth,
-        setSidebarWidth,
+        minWidth,
         setStoredSidebarWidth,
         setSidebarWidth,
     ]);
