@@ -156,6 +156,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const plotlyLayoutRef = useRef<Plotly.Layout>(null);
         const plotlyConfigRef = useRef<Plotly.Config>(null);
         const legendRef = useRef<HTMLDivElement>(null);
+        const channelIdentifierMap = useRef<Map<string, string>>(new Map());
 
         const numBins = 1000;
         const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
@@ -479,6 +480,47 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             [setErrorCurve]
         );
 
+        const getChannelIdentifier = async (channel: Channel) => {
+            let searchResults: AxiosResponse<{
+                channels: Channel[];
+            }>;
+
+            try {
+                searchResults = await axios.get<{
+                    channels: Channel[];
+                }>(`${backendUrl}/channels/search`, {
+                    params: {
+                        search_text: `^${channel.name}$`,
+                        allow_cached_response: false,
+                    },
+                });
+            } catch (error: AxiosError | unknown) {
+                handleResponseError(error, channel);
+                return;
+            }
+
+            const filteredResults = searchResults.data.channels.filter(
+                (returnedChannel) =>
+                    returnedChannel.backend === channel.backend &&
+                    returnedChannel.name === channel.name &&
+                    returnedChannel.type === channel.type
+            );
+
+            // Now we have our seriesId, if the channel still exists
+            if (filteredResults.length === 0) {
+                showSnackbarAndLog(
+                    `Channel: ${channel.name} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.type}`,
+                    "error"
+                );
+                return;
+            }
+            if (filteredResults.length > 1) {
+                // In that case we don't know which seriesid is the correct one
+                return channel.name;
+            }
+            return filteredResults[0].seriesId;
+        };
+
         useEffect(() => {
             const beginTimestamp = convertTimestamp(
                 (timeValues.startTime * 1e6).toString()
@@ -489,22 +531,20 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
             const fetchData = async (channel: Channel) => {
                 try {
-                    channelsLastFetchRange.current.set(
-                        getLabelForChannelAttributes(
-                            channel.name,
-                            channel.backend,
-                            channel.type
-                        ),
-                        [beginTimestamp, endTimeStamp]
+                    const channelLabel = getLabelForChannelAttributes(
+                        channel.name,
+                        channel.backend,
+                        channel.type
                     );
+
+                    channelsLastFetchRange.current.set(channelLabel, [
+                        beginTimestamp,
+                        endTimeStamp,
+                    ]);
 
                     const emptyCurveData = {
                         curve: {
-                            [getLabelForChannelAttributes(
-                                channel.name,
-                                channel.backend,
-                                channel.type
-                            )]: {
+                            [channelLabel]: {
                                 [beginTimestamp]: NaN,
                                 [endTimeStamp]: NaN,
                             },
@@ -518,11 +558,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             (curve) =>
                                 curve.backend === channel.backend &&
                                 channel.type === curve.type &&
-                                getLabelForChannelAttributes(
-                                    channel.name,
-                                    channel.backend,
-                                    channel.type
-                                ) in curve.curveData.curve
+                                channelLabel in curve.curveData.curve
                         );
 
                         if (existingCurveIndex === -1) {
@@ -546,43 +582,19 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         return prevCurves;
                     });
 
-                    // Fetch data after adding the new channel
-                    // First, get the seriesId by searching for the channel and filtering our values
-                    let searchResults: AxiosResponse<{
-                        channels: Channel[];
-                    }>;
-
-                    try {
-                        searchResults = await axios.get<{
-                            channels: Channel[];
-                        }>(`${backendUrl}/channels/search`, {
-                            params: {
-                                search_text: `^${channel.name}$`,
-                                allow_cached_response: false,
-                            },
-                        });
-                    } catch (error: AxiosError | unknown) {
-                        handleResponseError(error, channel);
-                        return;
-                    }
-
-                    const filteredResults = searchResults.data.channels.filter(
-                        (returnedChannel) =>
-                            returnedChannel.backend === channel.backend &&
-                            returnedChannel.name === channel.name &&
-                            returnedChannel.type === channel.type
-                    );
-
-                    // Now we have our seriesId, if the channel still exists
-                    if (filteredResults.length === 0) {
-                        showSnackbarAndLog(
-                            `Channel: ${channel.name} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.type}`,
-                            "error"
+                    // If not already done, get the channel identifier (either seriesid if unique, or channel name)
+                    if (!channelIdentifierMap.current.has(channelLabel)) {
+                        const channelIdentifier =
+                            (await getChannelIdentifier(channel)) ||
+                            channel.name;
+                        channelIdentifierMap.current.set(
+                            channelLabel,
+                            channelIdentifier
                         );
-                        return;
                     }
 
-                    const seriesId = filteredResults[0].seriesId;
+                    const channelIdentifier =
+                        channelIdentifierMap.current.get(channelLabel)!;
 
                     const newNumBins = window.innerWidth ?? numBins;
 
@@ -593,7 +605,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             `${backendUrl}/channels/curve`,
                             {
                                 params: {
-                                    channel_name: seriesId,
+                                    channel_name: channelIdentifier,
                                     begin_time: timeValues.startTime,
                                     end_time: timeValues.endTime,
                                     backend: channel.backend,
@@ -611,13 +623,20 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     const responseCurveData: CurveData = {
                         curve: {
-                            [channel.name]: response?.data.curve[seriesId],
+                            [channel.name]:
+                                response?.data.curve[channelIdentifier],
                             [channel.name + "_min"]:
-                                response?.data.curve[seriesId + "_min"],
+                                response?.data.curve[
+                                    channelIdentifier + "_min"
+                                ],
                             [channel.name + "_max"]:
-                                response?.data.curve[seriesId + "_max"],
+                                response?.data.curve[
+                                    channelIdentifier + "_max"
+                                ],
                             [channel.name + "_meta"]:
-                                response?.data.curve[seriesId + "_meta"],
+                                response?.data.curve[
+                                    channelIdentifier + "_meta"
+                                ],
                         },
                     };
                     if (
@@ -645,15 +664,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const channelName = Object.keys(
                             responseCurveData.curve
                         )[0];
-                        const keyName = getLabelForChannelAttributes(
-                            channelName,
-                            channel.backend,
-                            channel.type
-                        );
                         const existingCurveIndex = prevCurves.findIndex(
                             (curve) =>
                                 curve.backend === channel.backend &&
-                                keyName in curve.curveData.curve
+                                channelLabel in curve.curveData.curve
                         );
 
                         const convertAndFilter = (key: string) =>
@@ -735,18 +749,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                         const updatedCurveData: CurveData = {
                             curve: {
-                                [keyName]: {
+                                [channelLabel]: {
                                     [beginTimestamp]: NaN,
                                     ...newMeans,
                                     [endTimeStamp]: NaN,
                                 },
-                                [keyName + "_min"]: {
+                                [channelLabel + "_min"]: {
                                     ...newMins,
                                 },
-                                [keyName + "_max"]: {
+                                [channelLabel + "_max"]: {
                                     ...newMaxs,
                                 },
-                                [keyName + "_meta"]: {
+                                [channelLabel + "_meta"]: {
                                     ...newMeta,
                                 },
                             },
