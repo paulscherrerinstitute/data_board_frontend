@@ -1308,7 +1308,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                             if (hasPulseIds) {
                                 const pulseId =
-                                    metaData.pointMeta[xValues[i]]?.pulseId;
+                                    metaData.pointMeta[timestamp]?.pulseId;
                                 if (pulseId !== undefined) {
                                     text += `<br>Pulse ID: ${pulseId}`;
                                 }
