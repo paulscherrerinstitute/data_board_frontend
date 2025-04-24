@@ -16,7 +16,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     const [sidebarWidth, setSidebarWidth] = useState(
         (window.innerWidth * initialWidthPercent) / 100
     );
-    const [storedSidbarWidth, setStoredSidebarWidth] = useState(0);
+    const [storedSidebarWidth, setStoredSidebarWidth] = useState(0);
     const [openSettings, setOpenSettings] = useState(false);
     const [sidebarIsFocused, setSidebarIsFocused] = useState(true);
 
@@ -30,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             prevSidebarIsFocused.current = sidebarIsFocused;
 
             if (sidebarIsFocused) {
-                setSidebarWidth(storedSidbarWidth);
+                setSidebarWidth(storedSidebarWidth);
             } else {
                 setStoredSidebarWidth(sidebarWidth);
                 setSidebarWidth(minWidth);
@@ -39,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     }, [
         sidebarIsFocused,
         sidebarWidth,
-        storedSidbarWidth,
+        storedSidebarWidth,
         minWidth,
         setStoredSidebarWidth,
         setSidebarWidth,
