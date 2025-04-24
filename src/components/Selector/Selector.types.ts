@@ -1,3 +1,7 @@
+export interface SelectorProps {
+    setSidebarIsFocused: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
 export type StoredChannel = {
     attributes: Channel;
     selected: boolean;

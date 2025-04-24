@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
@@ -16,10 +16,34 @@ const Sidebar: React.FC<SidebarProps> = ({
     const [sidebarWidth, setSidebarWidth] = useState(
         (window.innerWidth * initialWidthPercent) / 100
     );
+    const [storedSidbarWidth, setStoredSidebarWidth] = useState(0);
     const [openSettings, setOpenSettings] = useState(false);
+    const [sidebarIsFocused, setSidebarIsFocused] = useState(true);
+
+    const prevSidebarIsFocused = useRef(true);
 
     const maxWidth = (windowWidth * maxWidthPercent) / 100;
     const minWidth = Math.max(30, (windowWidth * 2.5) / 100);
+
+    useEffect(() => {
+        if (prevSidebarIsFocused.current !== sidebarIsFocused) {
+            prevSidebarIsFocused.current = sidebarIsFocused;
+
+            if (sidebarIsFocused) {
+                setSidebarWidth(storedSidbarWidth);
+            } else {
+                setStoredSidebarWidth(sidebarWidth);
+                setSidebarWidth(minWidth);
+            }
+        }
+    }, [
+        sidebarIsFocused,
+        sidebarWidth,
+        storedSidbarWidth,
+        setSidebarWidth,
+        setStoredSidebarWidth,
+        setSidebarWidth,
+    ]);
 
     const renderToggleButton = () => {
         return (
@@ -138,7 +162,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 : "none",
                     }}
                 >
-                    <Selector />
+                    <Selector setSidebarIsFocused={setSidebarIsFocused} />
                 </Box>
             </Resizable>
         </Box>
