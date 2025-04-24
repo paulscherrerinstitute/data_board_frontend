@@ -36,14 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 setSidebarWidth(minWidth);
             }
         }
-    }, [
-        sidebarIsFocused,
-        sidebarWidth,
-        storedSidebarWidth,
-        minWidth,
-        setStoredSidebarWidth,
-        setSidebarWidth,
-    ]);
+    }, [sidebarIsFocused, sidebarWidth, storedSidebarWidth, minWidth]);
 
     const renderToggleButton = () => {
         return (
