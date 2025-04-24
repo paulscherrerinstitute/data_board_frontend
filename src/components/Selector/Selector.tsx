@@ -25,10 +25,10 @@ import ListItemRow from "./ListItemRow/ListItemRow";
 import { useApiUrls } from "../ApiContext/ApiContext";
 import * as styles from "./Selector.styles";
 import { throttle } from "lodash";
-import { Channel, StoredChannel } from "./Selector.types";
+import { Channel, SelectorProps, StoredChannel } from "./Selector.types";
 import showSnackbarAndLog from "../../helpers/showSnackbar";
 
-const Selector: React.FC = () => {
+const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
     const { backendUrl } = useApiUrls();
     const [searchTerm, setSearchTerm] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -350,12 +350,16 @@ const Selector: React.FC = () => {
             document.body.appendChild(dragPreview);
             event.dataTransfer.setDragImage(dragPreview, 0, 0);
 
+            // To allow plots overlayed by the sidebar to be reached
+            setSidebarIsFocused(false);
+
             // Remove the preview after the drag starts
             setTimeout(() => dragPreview.remove(), 0);
 
             // Unselect the channel if it was previously unselected once the drag ends
             if (!initiatorIsSelected) {
                 const onDragEnd = () => {
+                    setSidebarIsFocused(true);
                     newStoredChannels = newStoredChannels.map((channel) =>
                         channel.attributes.seriesId === initiatorSeriesId
                             ? { ...channel, selected: false }
