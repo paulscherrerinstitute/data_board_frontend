@@ -336,7 +336,7 @@ const Content: React.FC = () => {
                             x: 0,
                             y: 0,
                             w: 12,
-                            h: (window.innerHeight * 0.9) / (30 + 10) - 1,
+                            h: (window.innerHeight * 0.85) / (30 + 10) - 1,
                         },
                     },
                 ]);
