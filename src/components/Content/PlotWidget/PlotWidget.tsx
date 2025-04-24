@@ -1144,6 +1144,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     const xTimestamps = Object.keys(xCurveData);
                     const xValues = Object.values(xCurveData);
 
+                    const metaData = (xCurve.curveData.curve[
+                        `${xKeyName}_meta`
+                    ] || {}) as CurveMeta;
+
+                    const hasPulseIds =
+                        metaData.pointMeta &&
+                        Object.values(metaData.pointMeta).some(
+                            (meta) => meta.pulseId
+                        );
+
                     for (let index = 0; index < curves.length; index++) {
                         if (index === xCurveIndex) continue;
 
@@ -1178,8 +1188,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             const yTime = curveTimestamps[j];
 
                             if (xTime === yTime) {
-                                mergedX.push(xValues[i].value);
-                                mergedY.push(curveValues[j].value);
+                                mergedX.push(xValues[i]);
+                                mergedY.push(curveValues[j]);
                                 i++;
                                 j++;
                             } else if (xTime < yTime) {
@@ -1213,7 +1223,17 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         );
 
                         const hoverText = mergedX.map((xValue, i) => {
-                            return `${displayLabel}<br>Time: ${xTimestamps[i]}<br>x: ${xValue}<br>y: ${mergedY[i]}<br><br>Pearson: ${pearson.toFixed(3)}<br>Spearman: ${spearman.toFixed(3)}`;
+                            let text = `${displayLabel}<br>Time: ${xTimestamps[i]}<br>x: ${xValue}<br>y: ${mergedY[i]}<br><br>Pearson: ${pearson.toFixed(3)}<br>Spearman: ${spearman.toFixed(3)}`;
+
+                            if (hasPulseIds) {
+                                const pulseId =
+                                    metaData.pointMeta[xTimestamps[i]]?.pulseId;
+                                if (pulseId !== undefined) {
+                                    text += `<br>Pulse ID: ${pulseId}`;
+                                }
+                            }
+
+                            return text;
                         });
 
                         values.push({
@@ -1273,10 +1293,29 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             .concat(xValues.slice(1, -1).reverse());
                         const yPolygon = yMax.concat(yMin.reverse());
 
-                        const hoverText = xValues.map(
-                            (timestamp, i) =>
-                                `${displayLabel}<br>Time: ${timestamp}<br>Value: ${yBase[i]}`
-                        );
+                        const metaData = (curve.curveData.curve[
+                            `${keyName}_meta`
+                        ] || {}) as CurveMeta;
+
+                        const hasPulseIds =
+                            metaData.pointMeta &&
+                            Object.values(metaData.pointMeta).some(
+                                (meta) => meta.pulseId
+                            );
+
+                        const hoverText = xValues.map((timestamp, i) => {
+                            let text = `${displayLabel}<br>Time: ${timestamp}<br>Value: ${yBase[i]}`;
+
+                            if (hasPulseIds) {
+                                const pulseId =
+                                    metaData.pointMeta[xValues[i]]?.pulseId;
+                                if (pulseId !== undefined) {
+                                    text += `<br>Pulse ID: ${pulseId}`;
+                                }
+                            }
+
+                            return text;
+                        });
 
                         values.push({
                             name: displayLabel,
