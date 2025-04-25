@@ -26,6 +26,7 @@ export type Dashboard = {
 
 export type DashboardDTO = {
     dashboard: Dashboard;
+    test?: string;
 };
 
 export type DashboardReturnDTO = DashboardDTO & {
