@@ -44,6 +44,6 @@ jobs:
             - name: Diff schemas
               run: |
                   if ! diff -r $HOME/schema-old $HOME/schema-new; then
-                    echo "❌ Schemas are out of date. please regenerate and commit." >&2
+                    echo "❌ Schemas are out of date. Run 'npm run schema' locally to regenerate the schemas and commit the changes." >&2
                     exit 1
                   fi
