@@ -1,11 +1,17 @@
 export interface TimeSelectorProps {
-    onTimeChange: (values: {
-        startTime: number;
-        endTime: number;
-        rawWhenSparse: boolean;
-        removeEmptyBins: boolean;
-    }) => void;
+    onTimeChange: (values: TimeValues) => void;
 }
+
+export type TimeValues = {
+    startTime: number;
+    endTime: number;
+    rawWhenSparse: boolean;
+    removeEmptyBins: boolean;
+};
+
+export type AppliedTimeValues = TimeValues & {
+    selectedQuickOption: QuickSelectOption;
+};
 
 export type TimeSelectorHandle = {
     setTimeRange: (startTime: number, endTime: number) => void;

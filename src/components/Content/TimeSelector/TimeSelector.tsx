@@ -23,6 +23,7 @@ import {
     QuickSelectOption,
     TimeSelectorHandle,
     LocalTimeSelectorHandle,
+    AppliedTimeValues,
 } from "./TimeSelector.types";
 import * as styles from "./TimeSelector.styles";
 import { useSearchParams } from "react-router-dom";
@@ -58,6 +59,9 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             useState<QuickSelectOption>(quickOptions[0].value);
         const [autoApply, setAutoApply] = useState<AutoApplyOption>("never");
         const [autoApplyProgress, setAutoApplyProgress] = useState(0);
+        const [appliedTimeValues, setAppliedTimeValues] =
+            useState<AppliedTimeValues>();
+
         const autoApplyIntervalRef = useRef<NodeJS.Timeout | null>(null);
         const autoApplyProgressIntervalRef = useRef<NodeJS.Timeout | null>(
             null
@@ -142,10 +146,10 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             setEndTime(dayjs(end));
         };
 
-        const setTimeSearchParams = useCallback(
-            (startUnixTimeMs: number, endUnixTimeMs: number) => {
-                const startParam = startUnixTimeMs.toString();
-                const endParam = endUnixTimeMs.toString();
+        useEffect(() => {
+            if (appliedTimeValues) {
+                const startParam = appliedTimeValues.startTime.toString();
+                const endParam = appliedTimeValues.endTime.toString();
 
                 setSearchParams((searchParams) => {
                     const newSearchParams = new URLSearchParams(
@@ -157,7 +161,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     if (timeSourceRef.current === "quickselect") {
                         newSearchParams.set(
                             "relativeTime",
-                            selectedQuickOption.toString()
+                            appliedTimeValues.selectedQuickOption.toString()
                         );
                     } else {
                         newSearchParams.set("relativeTime", "false");
@@ -165,52 +169,51 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
 
                     newSearchParams.set(
                         "rawWhenSparse",
-                        rawWhenSparse ? "true" : "false"
+                        appliedTimeValues.rawWhenSparse ? "true" : "false"
                     );
                     newSearchParams.set(
                         "removeEmptyBins",
-                        removeEmptyBins ? "true" : "false"
+                        appliedTimeValues.removeEmptyBins ? "true" : "false"
                     );
                     newSearchParams.set("autoApply", autoApply);
 
                     return newSearchParams;
                 });
-            },
-            [
-                setSearchParams,
-                rawWhenSparse,
-                removeEmptyBins,
-                selectedQuickOption,
-                autoApply,
-            ]
-        );
+            }
+        }, [appliedTimeValues, autoApply, setSearchParams]);
+
+        useEffect(() => {
+            if (appliedTimeValues) {
+                onTimeChange(appliedTimeValues);
+            }
+        }, [appliedTimeValues, onTimeChange]);
 
         const handleApply = useCallback(() => {
             // in case a quickselect option was selected last, recalculate the start and end times based on it
+            let startUnixTimeMs = startTime.valueOf();
+            let endUnixTimeMs = endTime.valueOf();
+
             if (timeSourceRef.current === "quickselect") {
                 const { start, end } =
                     convertQuickOptionToTimestamps(selectedQuickOption);
                 setStartTime(dayjs(start));
                 setEndTime(dayjs(end));
+                startUnixTimeMs = start.valueOf();
+                endUnixTimeMs = end.valueOf();
             } else setSelectedQuickOption(false);
-            const startUnixTimeMs = startTime.valueOf();
-            const endUnixTimeMs = endTime.valueOf();
 
-            onTimeChange({
+            setAppliedTimeValues({
                 startTime: startUnixTimeMs,
                 endTime: endUnixTimeMs,
-                rawWhenSparse,
-                removeEmptyBins,
+                rawWhenSparse: rawWhenSparse,
+                removeEmptyBins: removeEmptyBins,
+                selectedQuickOption: selectedQuickOption,
             });
-
-            setTimeSearchParams(startUnixTimeMs, endUnixTimeMs);
         }, [
             endTime,
-            onTimeChange,
             rawWhenSparse,
             removeEmptyBins,
             selectedQuickOption,
-            setTimeSearchParams,
             startTime,
         ]);
 
@@ -344,15 +347,15 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 setEndTime(dayjs(endTime));
                 timeSourceRef.current = "manual";
                 setSelectedQuickOption(false);
-                onTimeChange({
+                setAppliedTimeValues({
                     startTime: startTime,
                     endTime: endTime,
                     rawWhenSparse: rawWhenSparse,
                     removeEmptyBins: removeEmptyBins,
+                    selectedQuickOption: selectedQuickOption,
                 });
-                setTimeSearchParams(startTime, endTime);
             },
-            [onTimeChange, setTimeSearchParams, rawWhenSparse, removeEmptyBins]
+            [rawWhenSparse, removeEmptyBins, selectedQuickOption]
         );
 
         useImperativeHandle(
