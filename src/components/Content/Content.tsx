@@ -12,7 +12,6 @@ import TimeSelector from "./TimeSelector/TimeSelector";
 import * as uuid from "uuid";
 import {
     Widget,
-    TimeValues,
     DashboardDTO,
     DashboardReturnDTO,
     StoredPlotSettings,
@@ -24,7 +23,10 @@ import PlotWidget from "./PlotWidget/PlotWidget";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useApiUrls } from "../ApiContext/ApiContext";
-import { TimeSelectorHandle } from "./TimeSelector/TimeSelector.types";
+import {
+    TimeSelectorHandle,
+    TimeValues,
+} from "./TimeSelector/TimeSelector.types";
 import { Channel } from "../Selector/Selector.types";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import {

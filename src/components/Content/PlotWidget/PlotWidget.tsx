@@ -21,7 +21,7 @@ import {
 } from "./PlotWidget.types";
 import { useApiUrls } from "../../ApiContext/ApiContext";
 import axios, { AxiosError, AxiosResponse } from "axios";
-import { cloneDeep, debounce } from "lodash";
+import { cloneDeep, debounce, isEqual } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
 import gearIconWhite from "../../../media/gear_white.svg?raw";
@@ -51,6 +51,7 @@ import {
     pearsonCoefficient,
     spearmanCoefficient,
 } from "../../../helpers/correlationCoefficients";
+import { TimeValues } from "../TimeSelector/TimeSelector.types";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -149,14 +150,17 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const previousTimeValues = useRef(timeValues);
         const plotRef = useRef<PlotlyHTMLElement | null>(null);
         const settingsInitialized = useRef(false);
-        const channelsLastFetchRange = useRef<
-            Map<string, [string, string] | undefined>
-        >(new Map());
+        const channelsLastTimeValues = useRef<Map<string, TimeValues>>(
+            new Map()
+        );
         const plotlyDataRef = useRef<Plotly.Data[]>(null);
         const plotlyLayoutRef = useRef<Plotly.Layout>(null);
         const plotlyConfigRef = useRef<Plotly.Config>(null);
         const legendRef = useRef<HTMLDivElement>(null);
         const channelIdentifierMap = useRef<Map<string, string>>(new Map());
+        const requestAbortControllersRef = useRef(
+            new Map<string, AbortController>()
+        );
 
         const numBins = 1000;
         const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
@@ -299,6 +303,17 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     channel.backend,
                     channel.type
                 );
+
+                // If not already done, fetch the channel identifier (seriesId or name)
+                if (!channelIdentifierMap.current.has(label)) {
+                    // To ensure this is only called once, insert the name as a safe placeholder until we maybe have a seriesid
+                    channelIdentifierMap.current.set(label, channel.name);
+
+                    getChannelIdentifier(channel).then((identifier) => {
+                        channelIdentifierMap.current.set(label, identifier);
+                    });
+                }
+
                 if (!manualAxisAssignment || !curveAttributes.has(label)) {
                     let assignedAxis: YAxisAssignment;
                     if (channels.length > 4) {
@@ -419,23 +434,25 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const setErrorCurve = useCallback(
             (error: string, channel: Channel) => {
-                setCurves((prevCurves) => {
-                    const errorCurve = prevCurves.find(
-                        (curve) =>
-                            curve.backend === channel.backend &&
-                            curve.type === channel.type &&
-                            getLabelForChannelAttributes(
-                                channel.name,
-                                channel.backend,
-                                channel.type
-                            ) in curve.curveData.curve
-                    );
-                    if (errorCurve) {
-                        errorCurve.isLoading = false;
-                        errorCurve.error = error;
-                    }
-                    return prevCurves;
-                });
+                const label = getLabelForChannelAttributes(
+                    channel.name,
+                    channel.backend,
+                    channel.type
+                );
+
+                const errorCurve = curvesRef.current.find(
+                    (curve) =>
+                        curve.backend === channel.backend &&
+                        curve.type === channel.type &&
+                        label in curve.curveData.curve
+                );
+
+                if (errorCurve) {
+                    errorCurve.isLoading = false;
+                    errorCurve.error = error;
+                }
+
+                setCurves([...curvesRef.current]);
             },
             [setCurves, getLabelForChannelAttributes]
         );
@@ -480,7 +497,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             [setErrorCurve]
         );
 
-        const getChannelIdentifier = async (channel: Channel) => {
+        const getChannelIdentifier = async (
+            channel: Channel
+        ): Promise<string> => {
             let searchResults: AxiosResponse<{
                 channels: Channel[];
             }>;
@@ -496,7 +515,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 });
             } catch (error: AxiosError | unknown) {
                 handleResponseError(error, channel);
-                return;
+                return channel.name;
             }
 
             const filteredResults = searchResults.data.channels.filter(
@@ -512,13 +531,209 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     `Channel: ${channel.name} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.type}`,
                     "error"
                 );
-                return;
+                return channel.name;
             }
             if (filteredResults.length > 1) {
                 // In that case we don't know which seriesid is the correct one
                 return channel.name;
             }
             return filteredResults[0].seriesId;
+        };
+
+        const fetchData = async (
+            channel: Channel,
+            beginTimestamp: string,
+            endTimeStamp: string,
+            requestSignal: AbortSignal
+        ): Promise<void> => {
+            try {
+                const channelLabel = getLabelForChannelAttributes(
+                    channel.name,
+                    channel.backend,
+                    channel.type
+                );
+
+                const channelIdentifier =
+                    channelIdentifierMap.current.get(channelLabel) ||
+                    channel.name;
+
+                const newNumBins = window.innerWidth ?? numBins;
+
+                // Now, fetch the actual data
+                let response: AxiosResponse | undefined;
+                try {
+                    response = await axios.get<CurveData>(
+                        `${backendUrl}/channels/curve`,
+                        {
+                            params: {
+                                channel_name: channelIdentifier,
+                                begin_time: timeValues.startTime,
+                                end_time: timeValues.endTime,
+                                backend: channel.backend,
+                                num_bins: newNumBins,
+                                useEventsIfBinCountTooLarge:
+                                    timeValues.rawWhenSparse,
+                                removeEmptyBins: timeValues.removeEmptyBins,
+                            },
+                            signal: requestSignal,
+                        }
+                    );
+                } catch (error: AxiosError | unknown) {
+                    if (axios.isCancel(error)) {
+                        logToConsole("Request cancelled", "warning");
+                    } else {
+                        handleResponseError(error, channel);
+                    }
+                    return;
+                }
+
+                const responseCurveData: CurveData = {
+                    curve: {
+                        [channel.name]: response?.data.curve[channelIdentifier],
+                        [channel.name + "_min"]:
+                            response?.data.curve[channelIdentifier + "_min"],
+                        [channel.name + "_max"]:
+                            response?.data.curve[channelIdentifier + "_max"],
+                        [channel.name + "_meta"]:
+                            response?.data.curve[channelIdentifier + "_meta"],
+                    },
+                };
+                if (
+                    !responseCurveData.curve[channel.name] ||
+                    Object.keys(responseCurveData.curve[channel.name])
+                        .length === 0
+                ) {
+                    setErrorCurve(
+                        "No data in the requested time frame",
+                        channel
+                    );
+                    return;
+                }
+
+                // If min and max are missing or undefined, set them to empty objects to avoid errors
+                if (!responseCurveData.curve[channel.name + "_min"]) {
+                    responseCurveData.curve[channel.name + "_min"] = {};
+                }
+                if (!responseCurveData.curve[channel.name + "_max"]) {
+                    responseCurveData.curve[channel.name + "_max"] = {};
+                }
+
+                // Now update the data after it is fetched
+                const channelName = Object.keys(responseCurveData.curve)[0];
+
+                const convertAndFilter = (key: string) =>
+                    Object.entries(responseCurveData.curve[key])
+                        .map(([timestamp, data]) => ({
+                            convertedTimestamp: convertTimestamp(timestamp),
+                            data,
+                        }))
+                        .filter(
+                            ({ convertedTimestamp }) =>
+                                convertedTimestamp >= beginTimestamp &&
+                                convertedTimestamp <= endTimeStamp
+                        );
+
+                const reduceToMap = (
+                    entries: {
+                        convertedTimestamp: string;
+                        data: number;
+                    }[]
+                ) =>
+                    entries.reduce(
+                        (acc, { convertedTimestamp, data }) => {
+                            acc[convertedTimestamp] = data;
+                            return acc;
+                        },
+                        {} as {
+                            [timestamp: string]: number;
+                        }
+                    );
+
+                const convertedMeans = convertAndFilter(channelName);
+                const convertedMins = convertAndFilter(channelName + "_min");
+                const convertedMaxs = convertAndFilter(channelName + "_max");
+
+                const newMeans = reduceToMap(convertedMeans);
+                const newMins = reduceToMap(convertedMins);
+                const newMaxs = reduceToMap(convertedMaxs);
+
+                const newMeta = (() => {
+                    const metaBlock =
+                        responseCurveData.curve[channelName + "_meta"];
+                    const raw = (metaBlock as CurveMeta).raw as boolean;
+
+                    const pointMeta = Object.entries(metaBlock)
+                        .filter(([timestamp]) => timestamp !== "raw")
+                        .map(([timestamp, meta]) => ({
+                            convertedTimestamp: convertTimestamp(timestamp),
+                            meta: meta as {
+                                count?: number;
+                                pulseId?: number;
+                            },
+                        }))
+                        .filter(
+                            ({ convertedTimestamp }) =>
+                                convertedTimestamp >= beginTimestamp &&
+                                convertedTimestamp <= endTimeStamp
+                        )
+                        .reduce(
+                            (acc, { convertedTimestamp, meta }) => {
+                                acc[convertedTimestamp] = meta;
+                                return acc;
+                            },
+                            {} as {
+                                [timestamp: string]: {
+                                    count?: number;
+                                    pulseId?: number;
+                                };
+                            }
+                        );
+
+                    return { raw, pointMeta };
+                })();
+
+                const updatedCurveData: CurveData = {
+                    curve: {
+                        [channelLabel]: {
+                            [beginTimestamp]: NaN,
+                            ...newMeans,
+                            [endTimeStamp]: NaN,
+                        },
+                        [channelLabel + "_min"]: {
+                            ...newMins,
+                        },
+                        [channelLabel + "_max"]: {
+                            ...newMaxs,
+                        },
+                        [channelLabel + "_meta"]: {
+                            ...newMeta,
+                        },
+                    },
+                };
+
+                const existingCurveIndex = curvesRef.current.findIndex(
+                    (curve) =>
+                        curve.backend === channel.backend &&
+                        channelLabel in curve.curveData.curve
+                );
+                if (existingCurveIndex === -1) {
+                    return;
+                }
+
+                curvesRef.current[existingCurveIndex].isLoading = false;
+                curvesRef.current[existingCurveIndex].curveData =
+                    updatedCurveData;
+
+                return;
+            } catch (error) {
+                logToConsole(
+                    `Failed to fetch channel: ${channel.name} on backend: ${channel.backend} with datatype: ${channel.type}`,
+                    "error",
+                    error
+                );
+
+                return;
+            }
         };
 
         useEffect(() => {
@@ -529,270 +744,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 (timeValues.endTime * 1e6).toString()
             );
 
-            const fetchData = async (channel: Channel) => {
-                try {
-                    const channelLabel = getLabelForChannelAttributes(
-                        channel.name,
-                        channel.backend,
-                        channel.type
-                    );
-
-                    channelsLastFetchRange.current.set(channelLabel, [
-                        beginTimestamp,
-                        endTimeStamp,
-                    ]);
-
-                    const emptyCurveData = {
-                        curve: {
-                            [channelLabel]: {
-                                [beginTimestamp]: NaN,
-                                [endTimeStamp]: NaN,
-                            },
-                            // Empty data initially, only showing range
-                        },
-                    } as CurveData;
-
-                    // Add the new channel with empty data first so it appears in the legend
-                    setCurves((prevCurves) => {
-                        const existingCurveIndex = prevCurves.findIndex(
-                            (curve) =>
-                                curve.backend === channel.backend &&
-                                channel.type === curve.type &&
-                                channelLabel in curve.curveData.curve
-                        );
-
-                        if (existingCurveIndex === -1) {
-                            return [
-                                ...prevCurves,
-                                {
-                                    backend: channel.backend,
-                                    type: channel.type,
-                                    curveData: emptyCurveData,
-                                    isLoading: true,
-                                    error: null,
-                                },
-                            ];
-                        } else {
-                            prevCurves[existingCurveIndex].isLoading = true;
-                            prevCurves[existingCurveIndex].error = null;
-                            // delete data
-                            prevCurves[existingCurveIndex].curveData =
-                                emptyCurveData;
-                        }
-                        return prevCurves;
-                    });
-
-                    // If not already done, get the channel identifier (either seriesid if unique, or channel name)
-                    if (!channelIdentifierMap.current.has(channelLabel)) {
-                        const channelIdentifier =
-                            (await getChannelIdentifier(channel)) ||
-                            channel.name;
-                        channelIdentifierMap.current.set(
-                            channelLabel,
-                            channelIdentifier
-                        );
-                    }
-
-                    const channelIdentifier =
-                        channelIdentifierMap.current.get(channelLabel)!;
-
-                    const newNumBins = window.innerWidth ?? numBins;
-
-                    // Now, fetch the actual data
-                    let response: AxiosResponse | undefined;
-                    try {
-                        response = await axios.get<CurveData>(
-                            `${backendUrl}/channels/curve`,
-                            {
-                                params: {
-                                    channel_name: channelIdentifier,
-                                    begin_time: timeValues.startTime,
-                                    end_time: timeValues.endTime,
-                                    backend: channel.backend,
-                                    num_bins: newNumBins,
-                                    useEventsIfBinCountTooLarge:
-                                        timeValues.rawWhenSparse,
-                                    removeEmptyBins: timeValues.removeEmptyBins,
-                                },
-                            }
-                        );
-                    } catch (error: AxiosError | unknown) {
-                        handleResponseError(error, channel);
-                        return;
-                    }
-
-                    const responseCurveData: CurveData = {
-                        curve: {
-                            [channel.name]:
-                                response?.data.curve[channelIdentifier],
-                            [channel.name + "_min"]:
-                                response?.data.curve[
-                                    channelIdentifier + "_min"
-                                ],
-                            [channel.name + "_max"]:
-                                response?.data.curve[
-                                    channelIdentifier + "_max"
-                                ],
-                            [channel.name + "_meta"]:
-                                response?.data.curve[
-                                    channelIdentifier + "_meta"
-                                ],
-                        },
-                    };
-                    if (
-                        !responseCurveData.curve[channel.name] ||
-                        Object.keys(responseCurveData.curve[channel.name])
-                            .length === 0
-                    ) {
-                        setErrorCurve(
-                            "No data in the requested time frame",
-                            channel
-                        );
-                        return;
-                    }
-
-                    // If min and max are missing or undefined, set them to empty objects to avoid errors
-                    if (!responseCurveData.curve[channel.name + "_min"]) {
-                        responseCurveData.curve[channel.name + "_min"] = {};
-                    }
-                    if (!responseCurveData.curve[channel.name + "_max"]) {
-                        responseCurveData.curve[channel.name + "_max"] = {};
-                    }
-
-                    // Now update the data after it is fetched
-                    setCurves((prevCurves) => {
-                        const channelName = Object.keys(
-                            responseCurveData.curve
-                        )[0];
-                        const existingCurveIndex = prevCurves.findIndex(
-                            (curve) =>
-                                curve.backend === channel.backend &&
-                                channelLabel in curve.curveData.curve
-                        );
-
-                        const convertAndFilter = (key: string) =>
-                            Object.entries(responseCurveData.curve[key])
-                                .map(([timestamp, data]) => ({
-                                    convertedTimestamp:
-                                        convertTimestamp(timestamp),
-                                    data,
-                                }))
-                                .filter(
-                                    ({ convertedTimestamp }) =>
-                                        convertedTimestamp >= beginTimestamp &&
-                                        convertedTimestamp <= endTimeStamp
-                                );
-
-                        const reduceToMap = (
-                            entries: {
-                                convertedTimestamp: string;
-                                data: number;
-                            }[]
-                        ) =>
-                            entries.reduce(
-                                (acc, { convertedTimestamp, data }) => {
-                                    acc[convertedTimestamp] = data;
-                                    return acc;
-                                },
-                                {} as {
-                                    [timestamp: string]: number;
-                                }
-                            );
-
-                        const convertedMeans = convertAndFilter(channelName);
-                        const convertedMins = convertAndFilter(
-                            channelName + "_min"
-                        );
-                        const convertedMaxs = convertAndFilter(
-                            channelName + "_max"
-                        );
-
-                        const newMeans = reduceToMap(convertedMeans);
-                        const newMins = reduceToMap(convertedMins);
-                        const newMaxs = reduceToMap(convertedMaxs);
-
-                        const newMeta = (() => {
-                            const metaBlock =
-                                responseCurveData.curve[channelName + "_meta"];
-                            const raw = (metaBlock as CurveMeta).raw as boolean;
-
-                            const pointMeta = Object.entries(metaBlock)
-                                .filter(([timestamp]) => timestamp !== "raw")
-                                .map(([timestamp, meta]) => ({
-                                    convertedTimestamp:
-                                        convertTimestamp(timestamp),
-                                    meta: meta as {
-                                        count?: number;
-                                        pulseId?: number;
-                                    },
-                                }))
-                                .filter(
-                                    ({ convertedTimestamp }) =>
-                                        convertedTimestamp >= beginTimestamp &&
-                                        convertedTimestamp <= endTimeStamp
-                                )
-                                .reduce(
-                                    (acc, { convertedTimestamp, meta }) => {
-                                        acc[convertedTimestamp] = meta;
-                                        return acc;
-                                    },
-                                    {} as {
-                                        [timestamp: string]: {
-                                            count?: number;
-                                            pulseId?: number;
-                                        };
-                                    }
-                                );
-
-                            return { raw, pointMeta };
-                        })();
-
-                        const updatedCurveData: CurveData = {
-                            curve: {
-                                [channelLabel]: {
-                                    [beginTimestamp]: NaN,
-                                    ...newMeans,
-                                    [endTimeStamp]: NaN,
-                                },
-                                [channelLabel + "_min"]: {
-                                    ...newMins,
-                                },
-                                [channelLabel + "_max"]: {
-                                    ...newMaxs,
-                                },
-                                [channelLabel + "_meta"]: {
-                                    ...newMeta,
-                                },
-                            },
-                        };
-
-                        const updatedCurves = [...prevCurves];
-                        if (existingCurveIndex === -1) {
-                            return updatedCurves;
-                        }
-                        updatedCurves[existingCurveIndex].isLoading = false;
-                        updatedCurves[existingCurveIndex].curveData =
-                            updatedCurveData;
-                        return updatedCurves;
-                    });
-                } catch (error) {
-                    logToConsole(
-                        `Failed to fetch channel: ${channel.name} on backend: ${channel.backend} with datatype: ${channel.type}`,
-                        "error",
-                        error
-                    );
-
-                    channelsLastFetchRange.current.set(
-                        getLabelForChannelAttributes(
-                            channel.name,
-                            channel.backend,
-                            channel.type
-                        ),
-                        undefined
-                    );
-                }
-            };
-
             for (const channel of channels) {
                 const label = getLabelForChannelAttributes(
                     channel.name,
@@ -801,34 +752,86 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 );
 
                 // If data has already been fetched / is currently fetching for the current timeframe, dont request again
-                const lastRange = channelsLastFetchRange.current.get(label);
-                if (
-                    lastRange &&
-                    lastRange[0] === beginTimestamp &&
-                    lastRange[1] === endTimeStamp &&
-                    curves.some((curve) => getLabelForCurve(curve) === label)
-                ) {
+                const lastTimeValues =
+                    channelsLastTimeValues.current.get(label);
+                if (isEqual(lastTimeValues, timeValues)) {
                     continue;
                 }
 
-                // Else either no data has been fetched for this timerange yet, or there was an error other than no data found, on which we retry.
-                fetchData(channel);
+                // Set this channel to be fetching the current timeframe
+                channelsLastTimeValues.current.set(label, timeValues);
+
+                // Cancel any previous request for this label
+                const previousController =
+                    requestAbortControllersRef.current.get(label);
+                if (previousController) {
+                    previousController.abort();
+                }
+
+                // Create new controller for this label
+                const controller = new AbortController();
+                requestAbortControllersRef.current.set(label, controller);
+
+                // Add the new channel with empty data first so it appears in the legend
+                const existingCurveIndex = curvesRef.current.findIndex(
+                    (curve) =>
+                        curve.backend === channel.backend &&
+                        channel.type === curve.type &&
+                        label in curve.curveData.curve
+                );
+
+                const emptyCurveData = {
+                    curve: {
+                        [label]: {
+                            [beginTimestamp]: NaN,
+                            [endTimeStamp]: NaN,
+                        },
+                        // Empty data initially, only showing range
+                    },
+                };
+
+                if (existingCurveIndex === -1) {
+                    curvesRef.current.push({
+                        backend: channel.backend,
+                        type: channel.type,
+                        curveData: emptyCurveData,
+                        isLoading: true,
+                        error: null,
+                    });
+                } else {
+                    curvesRef.current[existingCurveIndex].isLoading = true;
+                    curvesRef.current[existingCurveIndex].error = null;
+                }
+                setCurves([...curvesRef.current]);
+
+                // Trigger fetch
+                (async () => {
+                    await fetchData(
+                        channel,
+                        beginTimestamp,
+                        endTimeStamp,
+                        controller.signal
+                    );
+                    if (controller.signal.aborted) {
+                        return;
+                    } else {
+                        setCurves([...curvesRef.current]);
+                    }
+                })();
             }
         }, [
             channels,
             timeValues,
+            curves,
             timezoneOffsetMs,
             backendUrl,
             convertTimestamp,
             getLabelForChannelAttributes,
             getLabelForCurve,
             setErrorCurve,
+            setCurves,
             handleResponseError,
         ]);
-
-        useEffect(() => {
-            curvesRef.current = curves;
-        }, [curves]);
 
         // Resets zoom when time values change (and ctrl isn't pressed)
         useEffect(() => {
@@ -855,9 +858,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     }
                     Plotly.relayout(currentPlotDiv, newLayout);
                 }
-
-                previousTimeValues.current = timeValues;
             }
+            previousTimeValues.current = timeValues;
         }, [timeValues]);
 
         const downloadBlob = useCallback((blob: Blob, fileName: string) => {
@@ -1761,9 +1763,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         }, [handleRelayout, handleDoubleClick]);
 
         const handleRemoveCurve = (label: string) => {
-            setCurves((prevCurves) =>
-                prevCurves.filter((curve) => getLabelForCurve(curve) !== label)
+            curvesRef.current = curvesRef.current.filter(
+                (curve) => getLabelForCurve(curve) !== label
             );
+            setCurves([...curvesRef.current]);
+
+            // Leave the entry for the colormap and channelidentifier map, delete others
+            channelsLastTimeValues.current.delete(label);
+            requestAbortControllersRef.current.delete(label);
 
             const updatedChannels = channels.filter(
                 (channel) =>

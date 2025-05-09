@@ -1,3 +1,8 @@
+![Version](https://img.shields.io/github/release/paulscherrerinstitute/data_board_frontend.svg)
+![Issues](https://img.shields.io/github/issues/paulscherrerinstitute/data_board_frontend)
+![Lint and Test](https://img.shields.io/github/actions/workflow/status/paulscherrerinstitute/data_board_frontend/lint-test.yml?branch=main&label=tests&logo=github)
+![Build Status](https://img.shields.io/github/actions/workflow/status/paulscherrerinstitute/data_board_frontend/docker-image.yml?branch=main&label=build&logo=github)
+
 # Data Board Frontend
 
 This is the frontend for the Data Board project. It is a React application written in TypeScript that uses the [Data Board Backend](https://github.com/paulscherrerinstitute/data_board_backend).
@@ -199,6 +204,7 @@ If a page is loaded and a dashboard ID is present in the URL, it will be fetched
 >     - To help detect if a dashboard retrieved from the DataBoard server has been modified, they are hashed upon save. This hash is then stored in the URL as `dashboardHash`.
 >     - When an URL is loaded that contains a this hash parameter (and obviously a `dashboardId`), the hash is compared to the retrieved data, and an error id displayed if there is a mismatch. If the hash matches, you get a success message after the stored dashboard has been retrieved. This way, you can be sure the retrieved dashboard is still in the state you saved it as, and was not overwritten externally.
 >     - The hash stored in the URL is updated if you save the dashboard layout again, either as a new entry on the Server, or to overwrite an existing one.
+> - If you believe your dashboard is so important, it should always take priority when the backend cache is being cleaned, and should not be auto-deleted to save space (think control room panels or similar), please get in touch with the [current maintainer](#contact--support). It is possible to whitelist individual dashboards from auto-deletion.
 
 #### Export Dashboard
 
@@ -276,7 +282,7 @@ For easy deployment/running of the frontend, there is a [`Dockerfile`](./Dockerf
 
 If you find any bugs, please open a GitHub issue.
 
-If you want to add a feature or extend the application in any other way, please get in contact with the current maintainer.
+If you want to add a feature or extend the application in any other way, please get in contact with the [current maintainer](#contact--support).
 
 For any contribution to be merged, all pipelines need to be successful, and the linter should not give any errors. (Warnings are tolerated if reasonable)
 
@@ -328,18 +334,21 @@ Adding a custom theme can be done by opening a PR with the following changes:
 
 ## 🆘 Help
 
-If you have a problem that this documentation could not solve, please ask someone you know that also uses DataBoard. If that doesn't get you any further, please contact the current maintainer.
+If you have a problem that this documentation could not solve, please ask someone you know that also uses DataBoard. If that doesn't get you any further, please contact the [current maintainer](#contact--support).
 
-If you are sure your problem is a bug in DataBoard, you can also directly open an issue in GitHub. Either way, for urgent/very important requests, please contact the current maintainer directly.
+If you are sure your problem is a bug in DataBoard, you can also directly open an issue in GitHub. Either way, for urgent/very important requests, please contact the [current maintainer](#contact--support) directly.
 
 ### 📖 FAQ
 
-> **Q:** Nothing yet  
-> **A:** All clear ;)
+> **Q:** When adding / removing a curve, other curves disappear!  
+> **A:** If this changes the axis assignments of the curves, it might be a curve is assigned to an axis, on which custom limits are defined, outside of the visible domain for this curve. Make sure to check the [plot settings](#plot-specific-settings) for any weird limits.
+
+> **Q:** The [old interface](https://data-api.psi.ch) could render more points / was faster / displayed better data!  
+> **A:** A big reason for this application to be created was the old archiver interface (used by data-api) becoming obsolete. This means this application uses a different backend ([Data-API v4](https://data-api.psi.ch/api/4/docs/index.html) via [datahub](https://github.com/paulscherrerinstitute/datahub)). Thus, the data is coming from another provider, providing it differently. Unfortunately there is nothing we can do about that here.
 
 ### ⚠️ Known Issues
 
-> **Performance:** We are aware the website can be slow sometimes. This happens especially with many plots, plotting many curves with a lot of data points. To a certain extent this is natural, due to browser limitations. At the same time, the application could probably be optimized a bit. If you can't stand the performance, feel free to optimize, and open a PR. If you have any _groundbreaking_ ideas that could drastically improve performance (not rewriting it in rust), at best with a little proof-of-concept, feel free to reach out to the current maintainer.
+> **Performance:** We are aware the website can be slow sometimes. This happens especially with many plots, plotting many curves with a lot of data points. To a certain extent this is natural, due to browser limitations. At the same time, the application could probably be optimized a bit. If you can't stand the performance, feel free to optimize, and open a PR. If you have any _groundbreaking_ ideas that could drastically improve performance (not rewriting it in rust), at best with a little proof-of-concept, feel free to reach out to the [current maintainer](#contact--support).
 
 ---
 
@@ -348,3 +357,7 @@ If you are sure your problem is a bug in DataBoard, you can also directly open a
 The current maintainer is Erik Schwarz <erik.schwarz{at}psi.ch>
 
 ---
+
+<div style="text-align: center; margin-top: 20px;">
+  <img src="public/logo512.png" alt="DataBoard Logo" />
+</div>
