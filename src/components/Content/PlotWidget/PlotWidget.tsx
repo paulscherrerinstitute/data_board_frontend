@@ -51,7 +51,7 @@ import {
     pearsonCoefficient,
     spearmanCoefficient,
 } from "../../../helpers/correlationCoefficients";
-import { TimeValues } from "../Content.types";
+import { TimeValues } from "../TimeSelector/TimeSelector.types";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -434,23 +434,25 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const setErrorCurve = useCallback(
             (error: string, channel: Channel) => {
-                setCurves((prevCurves) => {
-                    const errorCurve = prevCurves.find(
-                        (curve) =>
-                            curve.backend === channel.backend &&
-                            curve.type === channel.type &&
-                            getLabelForChannelAttributes(
-                                channel.name,
-                                channel.backend,
-                                channel.type
-                            ) in curve.curveData.curve
-                    );
-                    if (errorCurve) {
-                        errorCurve.isLoading = false;
-                        errorCurve.error = error;
-                    }
-                    return prevCurves;
-                });
+                const label = getLabelForChannelAttributes(
+                    channel.name,
+                    channel.backend,
+                    channel.type
+                );
+
+                const errorCurve = curvesRef.current.find(
+                    (curve) =>
+                        curve.backend === channel.backend &&
+                        curve.type === channel.type &&
+                        label in curve.curveData.curve
+                );
+
+                if (errorCurve) {
+                    errorCurve.isLoading = false;
+                    errorCurve.error = error;
+                }
+
+                setCurves([...curvesRef.current]);
             },
             [setCurves, getLabelForChannelAttributes]
         );
@@ -543,7 +545,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             beginTimestamp: string,
             endTimeStamp: string,
             requestSignal: AbortSignal
-        ): Promise<Curve[]> => {
+        ): Promise<void> => {
             try {
                 const channelLabel = getLabelForChannelAttributes(
                     channel.name,
@@ -582,7 +584,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     } else {
                         handleResponseError(error, channel);
                     }
-                    return [];
+                    return;
                 }
 
                 const responseCurveData: CurveData = {
@@ -605,7 +607,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         "No data in the requested time frame",
                         channel
                     );
-                    return [];
+                    return;
                 }
 
                 // If min and max are missing or undefined, set them to empty objects to avoid errors
@@ -709,20 +711,20 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     },
                 };
 
-                const existingCurveIndex = curves.findIndex(
+                const existingCurveIndex = curvesRef.current.findIndex(
                     (curve) =>
                         curve.backend === channel.backend &&
                         channelLabel in curve.curveData.curve
                 );
                 if (existingCurveIndex === -1) {
-                    return [];
+                    return;
                 }
 
-                const updatedCurves = [...curves];
-                updatedCurves[existingCurveIndex].isLoading = false;
-                updatedCurves[existingCurveIndex].curveData = updatedCurveData;
+                curvesRef.current[existingCurveIndex].isLoading = false;
+                curvesRef.current[existingCurveIndex].curveData =
+                    updatedCurveData;
 
-                return updatedCurves;
+                return;
             } catch (error) {
                 logToConsole(
                     `Failed to fetch channel: ${channel.name} on backend: ${channel.backend} with datatype: ${channel.type}`,
@@ -730,7 +732,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     error
                 );
 
-                return [];
+                return;
             }
         };
 
@@ -771,14 +773,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 requestAbortControllersRef.current.set(label, controller);
 
                 // Add the new channel with empty data first so it appears in the legend
-                const existingCurveIndex = curves.findIndex(
+                const existingCurveIndex = curvesRef.current.findIndex(
                     (curve) =>
                         curve.backend === channel.backend &&
                         channel.type === curve.type &&
                         label in curve.curveData.curve
                 );
-
-                const newCurves = curves;
 
                 const emptyCurveData = {
                     curve: {
@@ -791,7 +791,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 };
 
                 if (existingCurveIndex === -1) {
-                    newCurves.push({
+                    curvesRef.current.push({
                         backend: channel.backend,
                         type: channel.type,
                         curveData: emptyCurveData,
@@ -799,29 +799,23 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         error: null,
                     });
                 } else {
-                    newCurves[existingCurveIndex].isLoading = true;
-                    newCurves[existingCurveIndex].error = null;
+                    curvesRef.current[existingCurveIndex].isLoading = true;
+                    curvesRef.current[existingCurveIndex].error = null;
                 }
-                setCurves(newCurves);
+                setCurves([...curvesRef.current]);
 
                 // Trigger fetch
                 (async () => {
-                    logToConsole(`starting: ${channel.name}`, "info");
-                    const updatedCurves = await fetchData(
+                    await fetchData(
                         channel,
                         beginTimestamp,
                         endTimeStamp,
                         controller.signal
                     );
-                    logToConsole(`Got: ${channel.name}`, "info");
-                    if (
-                        controller.signal.aborted ||
-                        !updatedCurves ||
-                        updatedCurves.length === 0
-                    ) {
+                    if (controller.signal.aborted) {
                         return;
                     } else {
-                        setCurves(updatedCurves);
+                        setCurves([...curvesRef.current]);
                     }
                 })();
             }
@@ -838,10 +832,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             setCurves,
             handleResponseError,
         ]);
-
-        useEffect(() => {
-            curvesRef.current = curves;
-        }, [curves]);
 
         // Resets zoom when time values change (and ctrl isn't pressed)
         useEffect(() => {
@@ -1773,9 +1763,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         }, [handleRelayout, handleDoubleClick]);
 
         const handleRemoveCurve = (label: string) => {
-            setCurves((prevCurves) =>
-                prevCurves.filter((curve) => getLabelForCurve(curve) !== label)
+            curvesRef.current = curvesRef.current.filter(
+                (curve) => getLabelForCurve(curve) !== label
             );
+            setCurves([...curvesRef.current]);
 
             // Leave the entry for the colormap and channelidentifier map, delete others
             channelsLastTimeValues.current.delete(label);

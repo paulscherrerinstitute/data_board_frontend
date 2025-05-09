@@ -13,13 +13,6 @@ export type Widget = {
     layout: ReactGridLayout.Layout;
 };
 
-export type TimeValues = {
-    startTime: number;
-    endTime: number;
-    rawWhenSparse: boolean;
-    removeEmptyBins: boolean;
-};
-
 export type Dashboard = {
     widgets: Widget[];
 };
