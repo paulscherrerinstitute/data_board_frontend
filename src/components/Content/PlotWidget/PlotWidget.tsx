@@ -21,7 +21,7 @@ import {
 } from "./PlotWidget.types";
 import { useApiUrls } from "../../ApiContext/ApiContext";
 import axios, { AxiosError, AxiosResponse } from "axios";
-import { cloneDeep, debounce } from "lodash";
+import { cloneDeep, debounce, isEqual } from "lodash";
 import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
 import gearIconWhite from "../../../media/gear_white.svg?raw";
@@ -754,7 +754,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 // If data has already been fetched / is currently fetching for the current timeframe, dont request again
                 const lastTimeValues =
                     channelsLastTimeValues.current.get(label);
-                if (lastTimeValues === timeValues) {
+                if (isEqual(lastTimeValues, timeValues)) {
                     continue;
                 }
 
