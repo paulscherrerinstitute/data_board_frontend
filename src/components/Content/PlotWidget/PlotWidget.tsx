@@ -306,7 +306,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                 // If not already done, fetch the channel identifier (seriesId or name)
                 if (!channelIdentifierMap.current.has(label)) {
-                    // To ensure this is only called once, insert the name as a safe placholder until we maybe have a seriesid
+                    // To ensure this is only called once, insert the name as a safe placeholder until we maybe have a seriesid
                     channelIdentifierMap.current.set(label, channel.name);
 
                     getChannelIdentifier(channel).then((identifier) => {
