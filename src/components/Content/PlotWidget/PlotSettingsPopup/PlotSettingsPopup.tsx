@@ -212,6 +212,7 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                             <TableCell>Name</TableCell>
                                             <TableCell>Backend</TableCell>
                                             <TableCell>Datatype</TableCell>
+                                            <TableCell>Shape</TableCell>
                                             <TableCell>Label</TableCell>
                                             <TableCell>Axis</TableCell>
                                         </TableRow>
@@ -337,7 +338,19 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                         type="text"
                                                         value={
                                                             attr.channel.type ||
-                                                            "[]"
+                                                            "unknown"
+                                                        }
+                                                        disabled
+                                                    />
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <Input
+                                                        type="text"
+                                                        value={
+                                                            "[" +
+                                                            attr.channel.shape.toString() +
+                                                            "]"
                                                         }
                                                         disabled
                                                     />

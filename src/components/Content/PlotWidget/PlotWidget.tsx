@@ -205,7 +205,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const getLabelForChannelAttributes = useCallback(
             (name: string, backend: string, type: string) => {
-                return `${name.split("|")[0].trim()} | ${backend} | ${type === "" ? "[]" : type}`;
+                return `${name.split("|")[0].trim()} | ${backend} | ${type === "" ? "unknown" : type}`;
             },
             []
         );

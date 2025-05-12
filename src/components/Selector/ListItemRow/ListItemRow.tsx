@@ -18,10 +18,17 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
     const seriesId = items[index].attributes.seriesId;
     const isSelected = items[index].selected;
     const name = items[index].attributes.name;
-    const type = items[index].attributes.type
-        ? items[index].attributes.type
-        : "[]"; // Show [] for no datatype given
+    const type = items[index].attributes.type;
+    const shape =
+        Array.isArray(items[index].attributes.shape) &&
+        items[index].attributes.shape.length === 1
+            ? "[" + items[index].attributes.shape + "]"
+            : undefined;
     const backend = items[index].attributes.backend;
+
+    const primaryText = name;
+    const secondaryText =
+        `${backend} - ${type || "unknown"}` + (shape ? ` - ${shape}` : "");
 
     return (
         <ListItem
@@ -63,8 +70,8 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
                             style: { color: theme.palette.custom.sidebar.text },
                         },
                     }}
-                    primary={name}
-                    secondary={`${backend} - ${type}`}
+                    primary={primaryText}
+                    secondary={secondaryText}
                 />
                 {isDraggable && (
                     <ListItemIcon
