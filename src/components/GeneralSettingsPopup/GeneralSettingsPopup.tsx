@@ -336,8 +336,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     ]);
 
     useEffect(() => {
-        const data = Array.from({ length: 8 }, (_, idx) => {
-            const curveIndex = idx + 3;
+        const data = Array.from({ length: 10 }, (_, idx) => {
+            const curveIndex = idx + 1;
             const xOffset = curveIndex * 5;
             const yOffset = curveIndex * 100;
 
@@ -354,7 +354,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                 type: useWebGL ? "scattergl" : "scatter",
                 mode: curveMode as Plotly.PlotData["mode"],
                 line: {
-                    color: curveColors[curveIndex % curveColors.length],
+                    color: curveColors[idx % curveColors.length],
                     shape: curveShape as Plotly.ScatterLine["shape"],
                 },
                 name: `Curve ${curveIndex}`,
