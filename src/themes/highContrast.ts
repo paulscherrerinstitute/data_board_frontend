@@ -7,53 +7,65 @@ export const highContrastTheme: ThemeOptions = createTheme({
     palette: {
         mode: "dark",
         primary: {
-            main: "#ffffff", // White for primary elements
-            dark: "#f9a825", // Bright yellow for dark elements
+            main: "#ffffff",
+            dark: "#f9a825",
         },
         secondary: {
-            main: "#ffcc00", // Yellow for secondary elements
-            dark: "#ffcc00", // Yellow for dark elements
+            main: "#ffcc00",
+            dark: "#ffcc00",
         },
         background: {
-            default: "#000000", // Black background
+            default: "#000000",
             paper: "#000000",
         },
         text: {
-            primary: "#ffffff", // White text
-            secondary: "#ffcc00", // Yellow text for secondary elements
+            primary: "#ffffff",
+            secondary: "#ffcc00",
         },
         custom: {
             sidebar: {
                 text: "#ffffff",
                 background: {
                     primary: "#000000",
-                    secondary: "#343034", // Dark gray for sidebar
-                    tertiary: "#343034", // Dark gray for sidebar elements
+                    secondary: "#343034",
+                    tertiary: "#343034",
                 },
                 results: {
-                    primary: "rgba(0, 0, 0, 0.4)", // Black for primary results
-                    secondary: "rgba(34, 34, 34, 0.4)", // Dark gray for secondary results
+                    primary: "rgba(0, 0, 0, 0.4)",
+                    secondary: "rgba(34, 34, 34, 0.4)",
                 },
             },
             plot: {
                 legend: {
-                    background: "#000000", // Black for plot legend
+                    background: "#000000",
                     entry: {
                         background: {
-                            primary: "rgba(255, 255, 255, 0.2)", // White for plot legend entry
-                            hover: "rgba(255, 255, 255, 0.4)", // Softer white for hover
+                            primary: "rgba(255, 255, 255, 0.2)",
+                            hover: "rgba(255, 255, 255, 0.4)",
                         },
                     },
                 },
-                background: "#000000", // Black for plot background
-                xAxisGrid: "#ffffff", // White for x-axis grid
-                yAxisGrid: "#ffffff", // White for y-axis grid
+                background: "#000000",
+                xAxisGrid: "#ffff00",
+                yAxisGrid: "#ffff00",
+                curves: [
+                    "#ffffff",
+                    "#ff0000",
+                    "#00ff91",
+                    "#429dff",
+                    "#9467bd",
+                    "#8c564b",
+                    "#e377c2",
+                    "#7f7f7f",
+                    "#bcbd22",
+                    "#17becf",
+                ],
                 watermark: psiCasWhite,
             },
         },
     },
     typography: {
-        fontSize: 14, // Slightly larger font for readability
-        fontFamily: "'Arial', sans-serif", // High readability font
+        fontSize: 14,
+        fontFamily: "'Arial', sans-serif",
     },
 });

@@ -36,6 +36,7 @@ type CustomPalette = {
         background: string;
         xAxisGrid: string;
         yAxisGrid: string;
+        curves: string[];
         watermark: string | undefined;
     };
 };

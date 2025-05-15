@@ -1,33 +1,34 @@
 import { ThemeOptions, createTheme } from "@mui/material";
 import baseTheme from "./base";
 import unicorn from "../media/unicorn.gif";
+import { defaultCurveColors } from "../helpers/defaults";
 
 export const unicornTheme: ThemeOptions = createTheme({
     ...baseTheme,
     palette: {
         mode: "light",
         primary: {
-            main: "#f06292", // Light pink
-            dark: "#f8bbd0", // Softer pink
+            main: "#f06292",
+            dark: "#f8bbd0",
         },
         secondary: {
-            main: "#f8bbd0", // Softer pink
+            main: "#f8bbd0",
         },
         background: {
-            default: "#fce4ec", // Very light pink
-            paper: "#f8bbd0", // Softer pink
+            default: "#fce4ec",
+            paper: "#f8bbd0",
         },
         text: {
-            primary: "#880e4f", // Dark pink
-            secondary: "#ad1457", // Medium pink
+            primary: "#880e4f",
+            secondary: "#ad1457",
         },
         custom: {
             sidebar: {
-                text: "#880e4f", // Dark pink
+                text: "#880e4f",
                 background: {
-                    primary: "#f8bbd0", // Softer pink
-                    secondary: "#f06292", // Light pink
-                    tertiary: "#ffffff", // White for sidebar elements
+                    primary: "#f8bbd0",
+                    secondary: "#f06292",
+                    tertiary: "#ffffff",
                 },
                 results: {
                     primary: "rgba(255, 203, 220, 1)",
@@ -36,17 +37,18 @@ export const unicornTheme: ThemeOptions = createTheme({
             },
             plot: {
                 legend: {
-                    background: "#f8bbd0", // Softer pink, matching paper background
+                    background: "#f8bbd0",
                     entry: {
                         background: {
-                            primary: "rgba(252, 228, 236, 0.4)", // Very light pink (default background) with opacity
-                            hover: "rgba(252, 228, 236, 0.6)", // Very light pink (default background) with higher opacity
+                            primary: "rgba(252, 228, 236, 0.4)",
+                            hover: "rgba(252, 228, 236, 0.6)",
                         },
                     },
                 },
-                background: "#fce4ec", // Very light pink
-                xAxisGrid: "#f8bbd0", // Softer pink
-                yAxisGrid: "#f8bbd0", // Softer pink
+                background: "#fce4ec",
+                xAxisGrid: "#f8bbd0",
+                yAxisGrid: "#f8bbd0",
+                curves: defaultCurveColors,
                 watermark: unicorn,
             },
         },

@@ -1,5 +1,6 @@
 import { createTheme, ThemeOptions } from "@mui/material";
 import psiCasBlack from "../media/psi_cas_black.svg";
+import { defaultCurveColors } from "../helpers/defaults";
 
 export const baseTheme: ThemeOptions = createTheme({
     palette: {
@@ -46,6 +47,7 @@ export const baseTheme: ThemeOptions = createTheme({
                 background: "#fcfcfc",
                 xAxisGrid: "#ebebeb",
                 yAxisGrid: "#ebebeb",
+                curves: defaultCurveColors,
                 watermark: psiCasBlack,
             },
         },
