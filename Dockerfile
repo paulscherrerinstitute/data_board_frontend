@@ -30,13 +30,15 @@ WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
 
 COPY --from=builder /app/build .
+COPY nginx.conf /etc/nginx/nginx.conf
 COPY start.sh .
+COPY default.conf /etc/nginx/conf.d/default.conf
+COPY configure-backend-proxy.sh /configure-backend-proxy.sh
 
-RUN chmod +x /usr/share/nginx/html/start.sh
+RUN chmod +x /usr/share/nginx/html/start.sh /configure-backend-proxy.sh
+
 RUN chown nginx:nginx -R /usr/share/nginx/html /var/cache/nginx
 RUN touch /var/run/nginx.pid && chown nginx:nginx /var/run/nginx.pid
-
-USER nginx
 
 ENTRYPOINT ["/usr/share/nginx/html/start.sh"]
 

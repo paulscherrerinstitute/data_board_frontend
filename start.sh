@@ -21,5 +21,7 @@ done
 
 echo "}" >> ./env-config.js
 
+/configure-backend-proxy.sh
+
 # Execute the command specified as argument to the script
 exec "$@"
