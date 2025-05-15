@@ -326,6 +326,9 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
             setYAxisGridColor(
                 themes[previewTheme].theme.palette!.custom.plot.yAxisGrid
             );
+            setCurveColors(
+                themes[previewTheme].theme.palette!.custom.plot.curves
+            );
             isManualThemeChange.current = false;
         }
     }, [
@@ -333,13 +336,14 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setPlotBackgroundColor,
         setXAxisGridColor,
         setYAxisGridColor,
+        setCurveColors,
     ]);
 
     useEffect(() => {
-        const data = Array.from({ length: 8 }, (_, idx) => {
-            const curveIndex = idx + 3;
-            const xOffset = curveIndex * 5;
-            const yOffset = curveIndex * 100;
+        const data = Array.from({ length: 10 }, (_, idx) => {
+            const offset = 10 - idx;
+            const xOffset = offset * 5;
+            const yOffset = offset * 100;
 
             const baseX = [
                 1, 45, 110, 220, 300, 430, 500, 610, 720, 810, 900,
@@ -354,10 +358,10 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                 type: useWebGL ? "scattergl" : "scatter",
                 mode: curveMode as Plotly.PlotData["mode"],
                 line: {
-                    color: curveColors[curveIndex % curveColors.length],
+                    color: curveColors[idx % curveColors.length],
                     shape: curveShape as Plotly.ScatterLine["shape"],
                 },
-                name: `Curve ${curveIndex}`,
+                name: `Curve ${idx + 1}`,
             };
         }) as Plotly.Data[];
 
@@ -366,9 +370,13 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
             plot_bgcolor: plotBackgroundColor,
             xaxis: {
                 gridcolor: xAxisGridColor,
+                linecolor: xAxisGridColor,
+                zerolinecolor: xAxisGridColor,
             },
             yaxis: {
                 gridcolor: yAxisGridColor,
+                linecolor: yAxisGridColor,
+                zerolinecolor: yAxisGridColor,
                 type: yAxisScaling as Plotly.AxisType,
             },
             images:

@@ -1420,6 +1420,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 type: scaling,
                                 autorange: autorange,
                                 gridcolor: yAxisGridColor,
+                                linecolor: yAxisGridColor,
+                                zerolinecolor: yAxisGridColor,
                                 title: { text: displayLabel },
                                 overlaying: index === 0 ? undefined : "y", // overlay all except the first axis
                                 side: index % 2 === 0 ? "left" : "right", // alternate sides
@@ -1485,6 +1487,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             type: scaling,
                             autorange: autorange,
                             gridcolor: yAxisGridColor,
+                            linecolor: yAxisGridColor,
+                            zerolinecolor: yAxisGridColor,
                             title: { text: displayLabel },
                             overlaying: index === 0 ? undefined : "y",
                             side: index % 2 === 0 ? "left" : "right",
@@ -1539,6 +1543,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 },
                 xaxis: {
                     gridcolor: xAxisGridColor,
+                    linecolor: xAxisGridColor,
+                    zerolinecolor: xAxisGridColor,
                     title: {
                         text: xLabel,
                     },
@@ -1555,6 +1561,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 },
                 yaxis: {
                     gridcolor: yAxisGridColor,
+                    linecolor: yAxisGridColor,
+                    zerolinecolor: yAxisGridColor,
                     type: yAxisAttributes[0].scaling,
                     title: {
                         text:
