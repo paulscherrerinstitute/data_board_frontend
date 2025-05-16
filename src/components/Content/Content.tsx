@@ -12,7 +12,6 @@ import TimeSelector from "./TimeSelector/TimeSelector";
 import * as uuid from "uuid";
 import {
     Widget,
-    TimeValues,
     DashboardDTO,
     DashboardReturnDTO,
     StoredPlotSettings,
@@ -24,7 +23,10 @@ import PlotWidget from "./PlotWidget/PlotWidget";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useApiUrls } from "../ApiContext/ApiContext";
-import { TimeSelectorHandle } from "./TimeSelector/TimeSelector.types";
+import {
+    TimeSelectorHandle,
+    TimeValues,
+} from "./TimeSelector/TimeSelector.types";
 import { Channel } from "../Selector/Selector.types";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import {
@@ -357,6 +359,31 @@ const Content: React.FC = () => {
         } as DashboardDTO;
     }, [widgets]);
 
+    const handleDashboardModificationError = useCallback((error: unknown) => {
+        if (!axios.isAxiosError(error)) {
+            showSnackbarAndLog(
+                "Failed to save dashboard to server. Maybe try again, or export to JSON.",
+                "error",
+                error
+            );
+            return;
+        }
+
+        const status = error.response?.status;
+
+        const errorMessages: Record<number, string> = {
+            403: "Dashboard is read only. You can always create a new one.",
+            413: "Dashboard is too big to save to server, but you can always export as JSON.",
+            422: "Dashboard format is invalid. If your dashboard is legitimate, contact the admin.",
+        };
+
+        const message =
+            errorMessages[status!] ||
+            "Failed to save dashboard to server. Maybe try again, or export to JSON.";
+
+        showSnackbarAndLog(message, "error", error);
+    }, []);
+
     const handleCreateDashboard = useCallback(async () => {
         try {
             const response = await axios.post<DashboardReturnDTO>(
@@ -381,19 +408,7 @@ const Content: React.FC = () => {
                 `Hash saved to URL: ${dashboardHash}`
             );
         } catch (error) {
-            if (axios.isAxiosError(error) && error.response?.status === 413) {
-                showSnackbarAndLog(
-                    "Dashboard is too big to save to server, but you can always export as JSON.",
-                    "error",
-                    error
-                );
-                return;
-            }
-            showSnackbarAndLog(
-                "Failed to save dashboard to server. Maybe try again, or export to JSON.",
-                "error",
-                error
-            );
+            handleDashboardModificationError(error);
         }
     }, [backendUrl, dashboardData, setSearchParams]);
 
@@ -422,20 +437,17 @@ const Content: React.FC = () => {
             } catch (error) {
                 if (
                     axios.isAxiosError(error) &&
-                    error.response?.status === 413
+                    error.response?.status === 404
                 ) {
                     showSnackbarAndLog(
-                        "Dashboard is too big to save to server, but you can always export as JSON.",
+                        "No existing dashboard found with that ID, creating new one",
                         "error",
                         error
                     );
+                } else {
+                    handleDashboardModificationError(error);
                     return;
                 }
-                showSnackbarAndLog(
-                    "Failed to save dashboard, creating new one",
-                    "error",
-                    error
-                );
             }
         }
         handleCreateDashboard();

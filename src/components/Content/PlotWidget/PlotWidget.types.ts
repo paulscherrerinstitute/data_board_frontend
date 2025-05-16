@@ -1,5 +1,5 @@
 import { Channel } from "../../Selector/Selector.types";
-import { TimeValues } from "../Content.types";
+import { TimeValues } from "../TimeSelector/TimeSelector.types";
 import { PlotSettings } from "./PlotSettingsPopup/PlotSettingsPopup.types";
 
 export interface PlotWidgetProps {

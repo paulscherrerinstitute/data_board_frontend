@@ -16,6 +16,18 @@ export const plotContainerStyle: SxProps<Theme> = {
     ".gtitle-subtitle": {
         display: "none",
     },
+    ".modebar-btn path": {
+        fill: (theme) =>
+            theme.palette.mode === "dark"
+                ? "#fff !important"
+                : "#000 !important",
+    },
+    ".modebar-btn:hover path": {
+        opacity: 0.8,
+    },
+    ".modebar-btn.active path": {
+        opacity: 1,
+    },
 };
 
 export const legendStyle: SxProps<Theme> = {

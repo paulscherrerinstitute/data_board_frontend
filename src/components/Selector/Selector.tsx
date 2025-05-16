@@ -458,7 +458,9 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                             setSelectedTypes(e.target.value as string[])
                         }
                         renderValue={(selected) => {
-                            const concatenated = selected.join(", ");
+                            const concatenated = selected
+                                .map((type) => type || "unknown")
+                                .join(", ");
                             return concatenated.length > maxCharacters
                                 ? `${concatenated.slice(0, maxCharacters)}...`
                                 : concatenated;
@@ -474,7 +476,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                                 <Checkbox
                                     checked={selectedTypes.includes(type)}
                                 />
-                                <ListItemText primary={type} />
+                                <ListItemText primary={type || "unknown"} />
                             </MenuItem>
                         ))}
                     </Select>
