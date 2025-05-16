@@ -18,9 +18,12 @@ const App: React.FC = () => {
     };
 
     useEffect(() => {
-        const controller = new AbortController();
+        const timeoutMs = 60000;
+        let controller = new AbortController();
 
         const ping = () => {
+            controller.abort();
+            controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 5000);
 
             axios
@@ -35,14 +38,14 @@ const App: React.FC = () => {
                         "Couldn't reach backend",
                         "error",
                         err,
-                        -1
+                        timeoutMs
                     )
                 )
                 .finally(() => clearTimeout(timeout));
         };
 
         ping();
-        const interval = setInterval(ping, 60000);
+        const interval = setInterval(ping, timeoutMs);
 
         return () => {
             clearInterval(interval);
