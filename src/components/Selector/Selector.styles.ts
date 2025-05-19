@@ -99,6 +99,15 @@ export const selectAllStyle: SxProps<Theme> = {
     padding: 1,
 };
 
+export const selectedOptionsStyle: SxProps<Theme> = {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 1,
+    color: (theme) => theme.palette.custom.sidebar.text,
+    padding: 1,
+};
+
 export const checkboxStyle: SxProps<Theme> = {
     "&.MuiCheckbox-root": {
         color: (theme) => theme.palette.text.primary,

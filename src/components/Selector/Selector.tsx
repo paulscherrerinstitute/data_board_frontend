@@ -25,8 +25,15 @@ import ListItemRow from "./ListItemRow/ListItemRow";
 import { useApiUrls } from "../ApiContext/ApiContext";
 import * as styles from "./Selector.styles";
 import { throttle } from "lodash";
-import { Channel, SelectorProps, StoredChannel } from "./Selector.types";
+import {
+    ADD_CHANNELS_TO_FIRST_PLOT_EVENT,
+    Channel,
+    SelectorProps,
+    StoredChannel,
+    AddChannelsToFirstPlotEvent,
+} from "./Selector.types";
 import showSnackbarAndLog from "../../helpers/showSnackbar";
+import AddIcon from "@mui/icons-material/Add";
 
 const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
     const { backendUrl } = useApiUrls();
@@ -387,6 +394,26 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
         setStoredChannels(updatedChannels);
     }, [selectAll, storedChannels]);
 
+    const handleAddSelectedToFirstPlot = useCallback(() => {
+        const selectedChannels = storedChannels.filter(
+            (channel) => channel.selected
+        );
+        if (selectedChannels.length === 0) return;
+
+        const channelsToTransfer = selectedChannels.map(
+            (channel) => channel.attributes
+        );
+
+        const addChannelsToFirstPlotEvent: AddChannelsToFirstPlotEvent =
+            new CustomEvent(ADD_CHANNELS_TO_FIRST_PLOT_EVENT, {
+                detail: {
+                    channels: channelsToTransfer,
+                },
+            });
+
+        window.dispatchEvent(addChannelsToFirstPlotEvent);
+    }, [storedChannels]);
+
     return (
         <Box sx={styles.containerStyle} ref={selectRef}>
             <Typography sx={styles.typographyTitleStyle}>
@@ -494,13 +521,23 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                 <Typography sx={styles.typographyHeaderStyle}>
                     Drag into Plot to display.
                 </Typography>
-                <Box sx={styles.selectAllStyle}>
-                    <Checkbox
-                        checked={selectAll}
-                        onChange={handleSelectAll}
-                        sx={styles.checkboxStyle}
-                    />
-                    <Typography>Select All</Typography>
+                <Box sx={styles.selectedOptionsStyle}>
+                    <Box sx={styles.selectAllStyle}>
+                        <Checkbox
+                            checked={selectAll}
+                            onChange={handleSelectAll}
+                            sx={styles.checkboxStyle}
+                        />
+                        <Typography>Select All</Typography>
+                    </Box>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        sx={{ textTransform: "none" }}
+                        onClick={handleAddSelectedToFirstPlot}
+                    >
+                        Add selected to first plot
+                    </Button>
                 </Box>
 
                 {loading && <CircularProgress sx={styles.statusSymbolStyle} />}
