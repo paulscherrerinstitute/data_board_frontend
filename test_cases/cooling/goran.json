@@ -129,7 +129,7 @@
                     "h": 13,
                     "x": 0,
                     "y": 0,
-                    "i": "1",
+                    "i": "8630d2c1-5508-484c-8baa-b46b5524507d",
                     "moved": false,
                     "static": false
                 },
@@ -374,7 +374,8 @@
                             "displayLabel": "y4",
                             "manualDisplayLabel": false
                         }
-                    ]
+                    ],
+                    "manualAxisAssignment": false
                 }
             },
             {
@@ -505,7 +506,7 @@
                     "h": 15,
                     "x": 0,
                     "y": 13,
-                    "i": "2",
+                    "i": "78a280b8-22ab-4eff-a904-d92ef89b6c62",
                     "moved": false,
                     "static": false
                 },
@@ -750,7 +751,8 @@
                             "displayLabel": "y4",
                             "manualDisplayLabel": false
                         }
-                    ]
+                    ],
+                    "manualAxisAssignment": false
                 }
             },
             {
@@ -881,7 +883,7 @@
                     "h": 12,
                     "x": 0,
                     "y": 28,
-                    "i": "3",
+                    "i": "4d300f5e-eaf8-4993-af33-ed8a542a5836",
                     "moved": false,
                     "static": false
                 },
@@ -1126,7 +1128,8 @@
                             "displayLabel": "y4",
                             "manualDisplayLabel": false
                         }
-                    ]
+                    ],
+                    "manualAxisAssignment": false
                 }
             },
             {
@@ -1257,7 +1260,7 @@
                     "h": 14,
                     "x": 0,
                     "y": 40,
-                    "i": "4",
+                    "i": "28e4b1e2-387f-4932-a93c-5e173ca50561",
                     "moved": false,
                     "static": false
                 },
@@ -1502,7 +1505,8 @@
                             "displayLabel": "y4",
                             "manualDisplayLabel": false
                         }
-                    ]
+                    ],
+                    "manualAxisAssignment": false
                 }
             }
         ]

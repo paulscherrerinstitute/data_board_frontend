@@ -209,7 +209,7 @@
                     "h": 30.3875,
                     "x": 0,
                     "y": 0,
-                    "i": "1",
+                    "i": "325c5f34-de7b-41ef-9cd5-65e15b1f28cf",
                     "moved": false,
                     "static": false
                 },
@@ -590,7 +590,8 @@
                             "displayLabel": "y4",
                             "manualDisplayLabel": false
                         }
-                    ]
+                    ],
+                    "manualAxisAssignment": false
                 }
             }
         ]
