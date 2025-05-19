@@ -517,6 +517,71 @@ const Content: React.FC = () => {
         }
     }, [setWidgets]);
 
+    useEffect(() => {
+        const handleAddChannels = (event: Event) => {
+            const { channels } = (event as CustomEvent).detail;
+
+            if (
+                !Array.isArray(channels) ||
+                !channels.every((channel) =>
+                    [channel.backend, channel.name, channel.type].every(
+                        (attr) => attr !== undefined
+                    )
+                )
+            ) {
+                showSnackbarAndLog("Invalid channel structure", "error");
+                return;
+            }
+
+            if (widgets.length === 0) {
+                handleCreateWidget(channels);
+                return;
+            }
+
+            const firstWidget = widgets[0];
+
+            // Check for duplicates
+            const existingChannel = firstWidget.channels.find((channel) =>
+                channels.find(
+                    (newChannel) =>
+                        newChannel.backend === channel.backend &&
+                        newChannel.name === channel.name &&
+                        newChannel.type === channel.type
+                )
+            );
+
+            if (existingChannel) {
+                showSnackbarAndLog(
+                    `Widget already contains the channel: ${existingChannel.name}`,
+                    "warning"
+                );
+                return;
+            }
+
+            // Add channels to the first widget
+            const newWidgets = widgets.map((widget, index) =>
+                index === 0
+                    ? {
+                          ...widget,
+                          channels: [...widget.channels, ...channels],
+                      }
+                    : widget
+            );
+
+            setWidgets(newWidgets);
+        };
+
+        window.addEventListener(
+            "add-channels-to-first-plot",
+            handleAddChannels
+        );
+        return () =>
+            window.removeEventListener(
+                "add-channels-to-first-plot",
+                handleAddChannels
+            );
+    }, [widgets, setWidgets, handleCreateWidget]);
+
     return (
         <Box sx={styles.contentContainerStyle}>
             <Box sx={styles.topBarStyle}>
