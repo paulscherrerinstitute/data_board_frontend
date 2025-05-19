@@ -540,26 +540,66 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             return filteredResults[0].seriesId;
         };
 
+        function filterCurveData(
+            curveData: CurveData,
+            from: string,
+            to: string
+        ): CurveData {
+            const filteredCurve: CurveData["curve"] = {};
+
+            for (const [channelName, data] of Object.entries(curveData.curve)) {
+                if (isCurvePoints(data)) {
+                    const filteredPoints: CurvePoints = {};
+                    for (const [timestamp, value] of Object.entries(data)) {
+                        if (timestamp >= from && timestamp <= to) {
+                            filteredPoints[timestamp] = value;
+                        }
+                    }
+                    filteredCurve[channelName] = filteredPoints;
+                } else {
+                    const filteredPointMeta: CurveMeta["pointMeta"] = {};
+                    for (const [timestamp, meta] of Object.entries(
+                        data.pointMeta
+                    )) {
+                        if (timestamp >= from && timestamp <= to) {
+                            filteredPointMeta[timestamp] = meta;
+                        }
+                    }
+                    filteredCurve[channelName] = {
+                        raw: data.raw,
+                        pointMeta: filteredPointMeta,
+                    };
+                }
+            }
+
+            return { curve: filteredCurve };
+        }
+
+        function isCurvePoints(
+            data: CurvePoints | CurveMeta
+        ): data is CurvePoints {
+            return typeof data !== "object" || !("raw" in data);
+        }
+
         const fetchData = async (
             channel: Channel,
             beginTimestamp: string,
             endTimeStamp: string,
             requestSignal: AbortSignal
         ): Promise<void> => {
-            try {
-                const channelLabel = getLabelForChannelAttributes(
-                    channel.name,
-                    channel.backend,
-                    channel.type
-                );
+            const channelLabel = getLabelForChannelAttributes(
+                channel.name,
+                channel.backend,
+                channel.type
+            );
 
+            try {
                 const channelIdentifier =
                     channelIdentifierMap.current.get(channelLabel) ||
                     channel.name;
 
                 const newNumBins = window.innerWidth ?? numBins;
 
-                // Now, fetch the actual data
                 let response: AxiosResponse | undefined;
                 try {
                     response = await axios.get<CurveData>(
@@ -607,6 +647,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         "No data in the requested time frame",
                         channel
                     );
+
                     return;
                 }
 
@@ -731,6 +772,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     "error",
                     error
                 );
+                channelsLastTimeValues.current.set(
+                    channelLabel,
+                    {} as TimeValues
+                );
 
                 return;
             }
@@ -801,6 +846,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 } else {
                     curvesRef.current[existingCurveIndex].isLoading = true;
                     curvesRef.current[existingCurveIndex].error = null;
+                    // Remove points not in the current timeframe
+                    curvesRef.current[existingCurveIndex].curveData =
+                        filterCurveData(
+                            curvesRef.current[existingCurveIndex].curveData,
+                            beginTimestamp,
+                            endTimeStamp
+                        );
                 }
                 setCurves([...curvesRef.current]);
 
