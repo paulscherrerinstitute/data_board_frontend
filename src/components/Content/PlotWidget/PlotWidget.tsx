@@ -17,6 +17,8 @@ import {
     AxisLimit,
     CurveMeta,
     CurvePoints,
+    Y_AXIS_ASSIGNMENT_OPTIONS,
+    USED_Y_AXES,
 } from "./PlotWidget.types";
 import { useApiUrls } from "../../ApiContext/ApiContext";
 import axios, { AxiosError, AxiosResponse } from "axios";
@@ -291,7 +293,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         }, [plotTitle, curveAttributes, yAxisAttributes, manualAxisAssignment]);
 
         useEffect(() => {
-            const newAxisOptions: YAxisAssignment[] = ["y1", "y2", "y3", "y4"];
+            const newAxisOptions = Y_AXIS_ASSIGNMENT_OPTIONS;
             const newCurveAttributes = new Map<string, CurveAttributes>();
             const newYAxisAttributes = new Array(...yAxisAttributes);
 
@@ -1747,7 +1749,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 const keys = Object.keys(e);
                 if (keys.length === 1) {
                     const key = keys[0] as keyof Plotly.PlotRelayoutEvent;
-                    const axes = ["yaxis", "yaxis2", "yaxis3", "yaxis4"];
+                    const axes = USED_Y_AXES;
 
                     for (let i = 0; i < axes.length; i++) {
                         const axis = axes[i];

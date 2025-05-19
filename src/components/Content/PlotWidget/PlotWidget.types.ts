@@ -56,10 +56,12 @@ export type ContainerDimensions = {
     width: number;
 };
 
-export type YAxisAssignment = "y1" | "y2" | "y3" | "y4";
+export const Y_AXIS_ASSIGNMENT_OPTIONS = ["y1", "y2", "y3", "y4"] as const;
+export type YAxisAssignment = (typeof Y_AXIS_ASSIGNMENT_OPTIONS)[number];
 export type AxisAssignment = YAxisAssignment | "x";
 
-export type UsedYAxis = "yaxis" | "yaxis2" | "yaxis3" | "yaxis4";
+export const USED_Y_AXES = ["yaxis", "yaxis2", "yaxis3", "yaxis4"] as const;
+export type UsedYAxis = (typeof USED_Y_AXES)[number];
 
 export type CurveAttributes = {
     channel: Channel;
