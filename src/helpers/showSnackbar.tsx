@@ -118,11 +118,14 @@ export const logToConsole = (
 
     if (type === "warning" || type === "error") {
         console.error(formattedMessage);
+        if (details) {
+            console.error(details);
+        }
     } else {
         console.log(formattedMessage);
-    }
-    if (details) {
-        console.error(details);
+        if (details) {
+            console.log(details);
+        }
     }
 };
 
