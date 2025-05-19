@@ -27,7 +27,11 @@ import {
     TimeSelectorHandle,
     TimeValues,
 } from "./TimeSelector/TimeSelector.types";
-import { Channel } from "../Selector/Selector.types";
+import {
+    ADD_CHANNELS_TO_FIRST_PLOT_EVENT,
+    AddChannelsToFirstPlotEvent,
+    Channel,
+} from "../Selector/Selector.types";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import {
     defaultWidgetHeight,
@@ -147,61 +151,64 @@ const Content: React.FC = () => {
         );
     };
 
-    const handleCreateWidget = (initialChannels: Channel[] = []) => {
-        if (!isWidgetsInitializedRef.current) {
-            isWidgetsInitializedRef.current = true;
-        }
+    const handleCreateWidget = useCallback(
+        (initialChannels: Channel[] = []) => {
+            if (!isWidgetsInitializedRef.current) {
+                isWidgetsInitializedRef.current = true;
+            }
 
-        const maxEndY = Math.max(
-            ...widgets.map((widget) => widget.layout.y + widget.layout.h)
-        );
+            const maxEndY = Math.max(
+                ...widgets.map((widget) => widget.layout.y + widget.layout.h)
+            );
 
-        const occupiedXPositions = new Set<number>();
+            const occupiedXPositions = new Set<number>();
 
-        // Check all widgets and find which ones end at maxEndY
-        widgets.forEach((widget) => {
-            const widgetEndY = widget.layout.y + widget.layout.h;
-            if (widgetEndY === maxEndY) {
-                // Mark the x positions occupied by this widget at maxEndY
-                for (
-                    let x = widget.layout.x;
-                    x < widget.layout.x + widget.layout.w;
-                    x++
-                ) {
-                    occupiedXPositions.add(x);
+            // Check all widgets and find which ones end at maxEndY
+            widgets.forEach((widget) => {
+                const widgetEndY = widget.layout.y + widget.layout.h;
+                if (widgetEndY === maxEndY) {
+                    // Mark the x positions occupied by this widget at maxEndY
+                    for (
+                        let x = widget.layout.x;
+                        x < widget.layout.x + widget.layout.w;
+                        x++
+                    ) {
+                        occupiedXPositions.add(x);
+                    }
+                }
+            });
+
+            // Now, try to find the first available space with width = initialWidgetWidth
+            let calculatedX = 0;
+            for (let x = 0; x <= 12 - initialWidgetWidth; x++) {
+                // Check if this space (x, x+1, ..., x + defaultWidgetWidth - 1) is available
+                const isSpaceAvailable = Array.from(
+                    { length: initialWidgetWidth },
+                    (_, i) => x + i
+                ).every((occupiedX) => !occupiedXPositions.has(occupiedX));
+
+                if (isSpaceAvailable) {
+                    calculatedX = x;
+                    break;
                 }
             }
-        });
 
-        // Now, try to find the first available space with width = initialWidgetWidth
-        let calculatedX = 0;
-        for (let x = 0; x <= 12 - initialWidgetWidth; x++) {
-            // Check if this space (x, x+1, ..., x + defaultWidgetWidth - 1) is available
-            const isSpaceAvailable = Array.from(
-                { length: initialWidgetWidth },
-                (_, i) => x + i
-            ).every((occupiedX) => !occupiedXPositions.has(occupiedX));
-
-            if (isSpaceAvailable) {
-                calculatedX = x;
-                break;
-            }
-        }
-
-        setWidgets((prevWidgets) => [
-            ...prevWidgets,
-            {
-                channels: initialChannels,
-                layout: {
-                    i: uuid.v4(),
-                    x: calculatedX,
-                    y: Infinity,
-                    w: initialWidgetWidth,
-                    h: initialWidgetHeight,
+            setWidgets((prevWidgets) => [
+                ...prevWidgets,
+                {
+                    channels: initialChannels,
+                    layout: {
+                        i: uuid.v4(),
+                        x: calculatedX,
+                        y: Infinity,
+                        w: initialWidgetWidth,
+                        h: initialWidgetHeight,
+                    },
                 },
-            },
-        ]);
-    };
+            ]);
+        },
+        [initialWidgetHeight, initialWidgetWidth, widgets]
+    );
 
     const interceptMouseDown = (e: MouseEvent) => {
         // Create a new event with modified properties
@@ -519,7 +526,7 @@ const Content: React.FC = () => {
 
     useEffect(() => {
         const handleAddChannels = (event: Event) => {
-            const { channels } = (event as CustomEvent).detail;
+            const { channels } = (event as AddChannelsToFirstPlotEvent).detail;
 
             if (
                 !Array.isArray(channels) ||
@@ -572,12 +579,12 @@ const Content: React.FC = () => {
         };
 
         window.addEventListener(
-            "add-channels-to-first-plot",
+            ADD_CHANNELS_TO_FIRST_PLOT_EVENT,
             handleAddChannels
         );
         return () =>
             window.removeEventListener(
-                "add-channels-to-first-plot",
+                ADD_CHANNELS_TO_FIRST_PLOT_EVENT,
                 handleAddChannels
             );
     }, [widgets, setWidgets, handleCreateWidget]);

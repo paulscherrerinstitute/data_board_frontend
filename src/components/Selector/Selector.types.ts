@@ -17,3 +17,9 @@ export type Channel = {
     unit: string;
     description: string;
 };
+
+export type AddChannelsToFirstPlotEvent = CustomEvent<{
+    channels: Channel[];
+}>;
+
+export const ADD_CHANNELS_TO_FIRST_PLOT_EVENT = "add-channels-to-first-plot";

@@ -25,7 +25,13 @@ import ListItemRow from "./ListItemRow/ListItemRow";
 import { useApiUrls } from "../ApiContext/ApiContext";
 import * as styles from "./Selector.styles";
 import { throttle } from "lodash";
-import { Channel, SelectorProps, StoredChannel } from "./Selector.types";
+import {
+    ADD_CHANNELS_TO_FIRST_PLOT_EVENT,
+    Channel,
+    SelectorProps,
+    StoredChannel,
+    AddChannelsToFirstPlotEvent,
+} from "./Selector.types";
 import showSnackbarAndLog from "../../helpers/showSnackbar";
 import AddIcon from "@mui/icons-material/Add";
 
@@ -398,14 +404,12 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
             (channel) => channel.attributes
         );
 
-        const addChannelsToFirstPlotEvent = new CustomEvent(
-            "add-channels-to-first-plot",
-            {
+        const addChannelsToFirstPlotEvent: AddChannelsToFirstPlotEvent =
+            new CustomEvent(ADD_CHANNELS_TO_FIRST_PLOT_EVENT, {
                 detail: {
                     channels: channelsToTransfer,
                 },
-            }
-        );
+            });
 
         window.dispatchEvent(addChannelsToFirstPlotEvent);
     }, [storedChannels]);
