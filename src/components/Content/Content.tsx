@@ -410,7 +410,12 @@ const Content: React.FC = () => {
         } catch (error) {
             handleDashboardModificationError(error);
         }
-    }, [backendUrl, dashboardData, setSearchParams]);
+    }, [
+        backendUrl,
+        dashboardData,
+        setSearchParams,
+        handleDashboardModificationError,
+    ]);
 
     const handleSaveDashboard = useCallback(async () => {
         const dashboardId = searchParams.get("dashboardId");
@@ -457,6 +462,7 @@ const Content: React.FC = () => {
         dashboardData,
         setSearchParams,
         handleCreateDashboard,
+        handleDashboardModificationError,
     ]);
 
     const handleDownloadDashboard = useCallback(async () => {
