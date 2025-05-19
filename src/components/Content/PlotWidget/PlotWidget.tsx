@@ -1750,31 +1750,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const handleDoubleClick = useCallback(() => {
             const currentPlotDiv = plotRef.current;
-            const currentPlotLayout = plotlyLayoutRef.current;
-            if (currentPlotDiv && currentPlotLayout) {
-                const newLayout = currentPlotLayout;
-
-                newLayout["xaxis"] = {
-                    ...currentPlotLayout.xaxis,
-                    autorange: true,
-                };
-
-                // Add default layout settings for each used Y-axis
-                for (let i = 1; i <= 4; i++) {
-                    const axisKey =
-                        i === 1 ? "yaxis" : (`yaxis${i}` as UsedYAxis);
-                    const axisConfig = layout[axisKey] as Plotly.LayoutAxis;
-
-                    if (axisConfig) {
-                        newLayout[axisKey] = {
-                            ...currentPlotLayout[axisKey],
-                            autorange: axisConfig.autorange,
-                            range: axisConfig.range,
-                        };
-                    }
-                }
-
-                Plotly.relayout(currentPlotDiv, newLayout);
+            if (currentPlotDiv && plotlyLayoutRef.current) {
+                // Revert to saved settings
+                plotlyLayoutRef.current = cloneDeep(layout);
+                Plotly.relayout(currentPlotDiv, plotlyLayoutRef.current);
             }
         }, [layout]);
 
@@ -1794,6 +1773,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 // Unfortunately, Plotly.react invalidates our layout range, so we have to set it manually based on whatever it was previously
                 // If there is no existing layout, simply emulate a double click
                 if (plotlyLayoutRef.current) {
+                    plotlyLayoutRef.current = cloneDeep(layout);
                     Plotly.relayout(currentPlotDiv, plotlyLayoutRef.current);
                 } else {
                     handleDoubleClick();
