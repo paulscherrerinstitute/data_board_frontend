@@ -15,7 +15,6 @@ import {
     CurveAttributes,
     YAxisAttributes,
     AxisLimit,
-    UsedYAxis,
     CurveMeta,
     CurvePoints,
 } from "./PlotWidget.types";
@@ -1741,7 +1740,38 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         ).getTime();
                         const endUnix = new Date(timeValues.endTime).getTime();
                         onZoomTimeRangeChange(startUnix, endUnix);
-                        return;
+                    }
+                }
+
+                // Handle limits set via axis double click -> those result in only exactly one limit being changed
+                const keys = Object.keys(e);
+                if (keys.length === 1) {
+                    const key = keys[0] as keyof Plotly.PlotRelayoutEvent;
+                    const axes = ["yaxis", "yaxis2", "yaxis3", "yaxis4"];
+
+                    for (let i = 0; i < axes.length; i++) {
+                        const axis = axes[i];
+                        if (!key.startsWith(axis)) continue;
+
+                        if (
+                            key === `${axis}.range[0]` ||
+                            key === `${axis}.range[1]`
+                        ) {
+                            const isMin = key.endsWith("[0]");
+                            const newVal = e[key] as number;
+
+                            setYAxisAttributes((prev) =>
+                                prev.map((attr, idx) => {
+                                    if (idx !== i) return attr;
+                                    return {
+                                        ...attr,
+                                        min: isMin ? newVal : attr.min,
+                                        max: !isMin ? newVal : attr.max,
+                                    };
+                                })
+                            );
+                            break;
+                        }
                     }
                 }
             },
