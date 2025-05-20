@@ -764,7 +764,7 @@ const Content: React.FC = () => {
                         <Button
                             variant="contained"
                             color="secondary"
-                            onClick={() => setIsLayoutingMode(!isLayoutingMode)}
+                            onClick={() => setIsLayoutingMode((prev) => !prev)}
                         >
                             {isLayoutingMode
                                 ? "Disable Layouting Mode"
