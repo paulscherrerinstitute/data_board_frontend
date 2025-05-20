@@ -5,7 +5,7 @@ import React, {
     useEffect,
     useMemo,
 } from "react";
-import { Box, Button, IconButton } from "@mui/material";
+import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
@@ -56,6 +56,7 @@ const Content: React.FC = () => {
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
+    const [isLayoutingMode, setIsLayoutingMode] = useState(false);
 
     const [initialWidgetHeight] = useLocalStorage(
         "initialWidgetHeight",
@@ -607,6 +608,8 @@ const Content: React.FC = () => {
                         autoSize={true}
                         resizeHandles={["sw", "nw", "se", "ne"]}
                         onLayoutChange={handleLayoutChange}
+                        isDraggable={isLayoutingMode}
+                        isResizable={isLayoutingMode}
                     >
                         {widgets.map(({ channels, layout, plotSettings }) => (
                             <Box
@@ -706,6 +709,7 @@ const Content: React.FC = () => {
                             </Box>
                         ))}
                     </ReactGridLayout>
+                    <Box sx={styles.actionButtonBoxPlaceholderStyle}></Box>
                 </div>
                 <Box sx={styles.actionButtonBoxStyle}>
                     <Button
@@ -713,7 +717,8 @@ const Content: React.FC = () => {
                         onDragOver={(event) => handleDragOver(event, "-1")}
                         onDragLeave={handleDragLeave}
                         sx={{
-                            ...styles.CreateWidgetStyle,
+                            ...styles.actionButtonStyle,
+                            ...styles.createWidgetStyle,
                             filter:
                                 draggedOverKey === "-1"
                                     ? "brightness(0.5)"
@@ -723,29 +728,49 @@ const Content: React.FC = () => {
                         onClick={() => handleCreateWidget()}
                     ></Button>
                     <Button
+                        sx={styles.actionButtonStyle}
                         variant="contained"
                         onClick={() => handleSaveDashboard()}
                     >
                         Save Layout
                     </Button>
                     <Button
+                        sx={styles.actionButtonStyle}
                         variant="contained"
                         onClick={() => handleCreateDashboard()}
                     >
                         Save as new Layout
                     </Button>
                     <Button
+                        sx={styles.actionButtonStyle}
                         variant="contained"
                         onClick={() => handleDownloadDashboard()}
                     >
                         Download Layout as JSON
                     </Button>
                     <Button
+                        sx={styles.actionButtonStyle}
                         variant="contained"
                         onClick={() => handleImportDashboard()}
                     >
                         Import JSON Layout
                     </Button>
+                    <Tooltip
+                        sx={styles.actionButtonStyle}
+                        title="Toggles whether or not the plots can be moved and resized"
+                        placement="top"
+                        arrow
+                    >
+                        <Button
+                            variant="contained"
+                            color="secondary"
+                            onClick={() => setIsLayoutingMode((prev) => !prev)}
+                        >
+                            {isLayoutingMode
+                                ? "Disable Layouting Mode"
+                                : "Enable Layouting Mode"}
+                        </Button>
+                    </Tooltip>
                 </Box>
             </Box>
         </Box>
