@@ -64,11 +64,15 @@ To apply query parameters, you have to click the `APPLY`-button. Or, activating 
 
 - You can delete plots by clicking the round icon with the "x" on them at the very top right of any plot.
 
-- Plots can be arranged using drag and drop, but make sure not to drag the canvas or legend. It is easiest to drag the bottom of the plot, for example, by the X-axis title.
-
-- Plots can be resized within the plotting area by dragging one of the marked corners of the plot.
-
 - You can also [import](#import-dashboard) or [export](#export-dashboard) dashboards.
+
+    #### Layouting Mode
+
+    You can toggle the layouting mode by clicking the button in the bottom right, overlaying the dashboard. In this mode:
+
+    - Plots can be arranged using drag and drop, but make sure not to drag the canvas or legend. It is easiest to drag the bottom of the plot, for example, by the X-axis title.
+
+    - Plots can be resized within the plotting area by dragging one of the marked corners of the plot.
 
 ### Settings
 
@@ -138,29 +142,20 @@ In these settings, you can define properties that only affect the current plot, 
 - **Plot Title:** The title of the plot, as displayed
 - **Curve Settings:** Settings for single curves; every defined curve is mapped out and can be configured by itself.
 
-    - **Color:** This curve's color
-
-    - **Name, Backend, Datatype:** Attributes of this curve, as received from the Archiver.
-
-    - **Label:** The label displayed for this curve.
-
-    - **Axis:** On which axis this curve is drawn.
-
-> ⚠️ **Warning:** As soon as one curve is manually assigned to an axis, all new curves will be added to the first axis; automatic assignments are therefore off for this plot. Until then, new curves are put on succeeding Y-axes until more than 4 curves are in the plot, upon which all curves are drawn on the first Y-axis.
-
-    - **Everything else:** See [Plot Defaults](#plot-defaults)
+    - **Color:** This curve's color
+    - **Name, Backend, Datatype:** Attributes of this curve, as received from the Archiver.
+    - **Label:** The label displayed for this curve.
+    - **Axis:** On which axis this curve is drawn.
+        > ⚠️ **Warning:** As soon as one curve is manually assigned to an axis, all new curves will be added to the first axis; automatic assignments are therefore off for this plot. Until then, new curves are put on succeeding Y-axes until more than 4 curves are in the plot, upon which all curves are drawn on the first Y-axis.
+    - **Everything else:** See [Plot Defaults](#plot-defaults)
 
 - **Y-Axes:** There are at most 4 axes in a plot. These can be configured in here.
-
-    - **#:** The axis to modify
-
-    - **Scaling:** Either linear or logarithmic
-
-    - **Min:** Minimum value displayed on the scale. Leave blank to have it auto-calculated.
-
-    - **Max:** Maximum value displayed on the scale. Leave blank to have it auto-calculated.
-
-    - **Label:** The text displayed on the axis.
+    - **#:** The axis to modify
+    - **Scaling:** Either linear or logarithmic
+    - **Min:** Minimum value displayed on the scale. Leave blank to have it auto-calculated.
+    - **Max:** Maximum value displayed on the scale. Leave blank to have it auto-calculated.
+    - **Label:** The text displayed on the axis.
+        > 💡 **Tip:** You can also set the axis limits (Min/Max) by clicking the top/bottom of an axis. Limits set this way are saved as if they were set via the settings.
 
 #### Activating Correlation
 
