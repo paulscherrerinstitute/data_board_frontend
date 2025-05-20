@@ -56,7 +56,7 @@ const Content: React.FC = () => {
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
-    const [isEditMode, setIsEditMode] = useState(false);
+    const [isLayoutingMode, setIsLayoutingMode] = useState(false);
 
     const [initialWidgetHeight] = useLocalStorage(
         "initialWidgetHeight",
@@ -608,8 +608,8 @@ const Content: React.FC = () => {
                         autoSize={true}
                         resizeHandles={["sw", "nw", "se", "ne"]}
                         onLayoutChange={handleLayoutChange}
-                        isDraggable={isEditMode}
-                        isResizable={isEditMode}
+                        isDraggable={isLayoutingMode}
+                        isResizable={isLayoutingMode}
                     >
                         {widgets.map(({ channels, layout, plotSettings }) => (
                             <Box
@@ -764,11 +764,11 @@ const Content: React.FC = () => {
                         <Button
                             variant="contained"
                             color="secondary"
-                            onClick={() => setIsEditMode(!isEditMode)}
+                            onClick={() => setIsLayoutingMode(!isLayoutingMode)}
                         >
-                            {isEditMode
-                                ? "Disable Edit Mode"
-                                : "Enable Edit Mode"}
+                            {isLayoutingMode
+                                ? "Disable Layouting Mode"
+                                : "Enable Layouting Mode"}
                         </Button>
                     </Tooltip>
                 </Box>
