@@ -53,7 +53,7 @@ export const gridItemStyle: SxProps<Theme> = {
     },
 };
 
-export const CreateWidgetStyle: SxProps<Theme> = {
+export const createWidgetStyle: SxProps<Theme> = {
     ...gridItemStyle,
     height: "5vh",
     minHeight: "5vh",
@@ -79,6 +79,11 @@ export const removeWidgetButtonStyle: SxProps<Theme> = {
     zIndex: 99999,
 };
 
+export const actionButtonBoxPlaceholderStyle: SxProps<Theme> = {
+    height: "5vh",
+    minHeight: "5vh",
+};
+
 export const actionButtonBoxStyle: SxProps<Theme> = {
     display: "flex",
     justifyContent: "center",
@@ -88,5 +93,9 @@ export const actionButtonBoxStyle: SxProps<Theme> = {
     bottom: 10,
     left: 0,
     right: 0,
-    zIndex: 9,
+    pointerEvents: "none",
+};
+
+export const actionButtonStyle: SxProps<Theme> = {
+    pointerEvents: "all",
 };
