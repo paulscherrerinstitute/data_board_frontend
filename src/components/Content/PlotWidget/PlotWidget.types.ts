@@ -46,6 +46,7 @@ export type CurveData = {
 export type Curve = {
     backend: string;
     type: string;
+    name: string;
     curveData: CurveData;
     isLoading: boolean;
     error: string | null;

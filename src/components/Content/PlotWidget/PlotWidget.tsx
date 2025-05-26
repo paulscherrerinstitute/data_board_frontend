@@ -53,6 +53,8 @@ import {
     spearmanCoefficient,
 } from "../../../helpers/correlationCoefficients";
 import { TimeValues } from "../TimeSelector/TimeSelector.types";
+import { DownloadLink } from "./DownloadRawPopup/DownloadRawPopup.types";
+import DownloadRawPopup from "./DownloadRawPopup/DownloadRawPopup";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -70,6 +72,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 width: 0,
                 height: 0,
             });
+        const [rawDownloadLinks, setRawDownloadLinks] = useState<
+            DownloadLink[] | null
+        >(null);
         const [curves, setCurves] = useState<Curve[]>([]);
         const [manualAxisAssignment, setManualAxisAssignment] = useState(false);
         const [curveAttributes, setCurveAttributes] = useState(
@@ -840,6 +845,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     curvesRef.current.push({
                         backend: channel.backend,
                         type: channel.type,
+                        name: channel.name,
                         curveData: emptyCurveData,
                         isLoading: true,
                         error: null,
@@ -1060,6 +1066,46 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             const fileName = `curves_${new Date().toISOString()}.json`;
             downloadBlob(blob, fileName);
         }, [downloadBlob]);
+
+        const downloadDataRaw = useCallback(async () => {
+            const startTime = previousTimeValues.current.startTime;
+            const endTime = previousTimeValues.current.endTime;
+            const curves = curvesRef.current;
+
+            if (!curves?.length) {
+                logToConsole("No channels to fetch data from.", "warning");
+                return;
+            }
+
+            try {
+                const rawDataLinks = await Promise.all(
+                    curves.flatMap(({ backend, name }) =>
+                        axios
+                            .get(`${backendUrl}/channels/raw-link`, {
+                                params: {
+                                    channel_name: name,
+                                    begin_time: startTime,
+                                    end_time: endTime,
+                                    backend,
+                                },
+                                responseType: "json",
+                            })
+                            .then((res) => {
+                                if (!res.data?.link) {
+                                    throw new Error(
+                                        `No link for ${name} in backend: ${backend}`
+                                    );
+                                }
+                                return { name, link: res.data.link };
+                            })
+                    )
+                );
+
+                setRawDownloadLinks(rawDataLinks);
+            } catch (err) {
+                showSnackbarAndLog("downloadDataRaw failed:", "error", err);
+            }
+        }, [backendUrl]);
 
         const downloadImage = useCallback(() => {
             const plotElement = plotRef.current;
@@ -1697,6 +1743,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 downloadDataJSON();
                             },
                         },
+                        {
+                            name: "downloadRaw",
+                            title: "Download raw data",
+                            icon: Plotly.Icons.disk,
+                            click: () => {
+                                downloadDataRaw();
+                            },
+                        },
                     ],
                     [
                         {
@@ -1728,7 +1782,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 ],
                 doubleClick: false,
             } as Plotly.Config;
-        }, [downloadDataCSV, downloadDataJSON, downloadImage, theme]);
+        }, [
+            downloadDataCSV,
+            downloadDataJSON,
+            downloadDataRaw,
+            downloadImage,
+            theme,
+        ]);
 
         const handleRelayout = useCallback(
             (e: Readonly<Plotly.PlotRelayoutEvent>) => {
@@ -1936,6 +1996,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     }}
                     onSave={onPlotSettingsSave}
                 />
+                {rawDownloadLinks && (
+                    <DownloadRawPopup
+                        links={rawDownloadLinks}
+                        onClose={() => setRawDownloadLinks(null)}
+                    />
+                )}
             </Box>
         );
     }
