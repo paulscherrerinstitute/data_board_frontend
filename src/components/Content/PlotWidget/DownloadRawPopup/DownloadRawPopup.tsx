@@ -9,14 +9,9 @@ import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import * as styles from "./DownloadRawPopup.styles";
-import { DownloadLink } from "./DownloadRawPopup.types";
 import { Alert } from "@mui/material";
 import showSnackbarAndLog from "../../../../helpers/showSnackbar";
-
-interface DownloadRawPopupProps {
-    links: DownloadLink[];
-    onClose: () => void;
-}
+import { DownloadRawPopupProps } from "./DownloadRawPopup.types";
 
 const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
     links,
