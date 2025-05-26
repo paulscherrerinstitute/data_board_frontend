@@ -15,9 +15,10 @@ import {
     CurveAttributes,
     YAxisAttributes,
     AxisLimit,
-    UsedYAxis,
     CurveMeta,
     CurvePoints,
+    Y_AXIS_ASSIGNMENT_OPTIONS,
+    USED_Y_AXES,
 } from "./PlotWidget.types";
 import { useApiUrls } from "../../ApiContext/ApiContext";
 import axios, { AxiosError, AxiosResponse } from "axios";
@@ -52,6 +53,8 @@ import {
     spearmanCoefficient,
 } from "../../../helpers/correlationCoefficients";
 import { TimeValues } from "../TimeSelector/TimeSelector.types";
+import { DownloadLink } from "./DownloadRawPopup/DownloadRawPopup.types";
+import DownloadRawPopup from "./DownloadRawPopup/DownloadRawPopup";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -69,6 +72,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 width: 0,
                 height: 0,
             });
+        const [rawDownloadLinks, setRawDownloadLinks] = useState<
+            DownloadLink[] | null
+        >(null);
         const [curves, setCurves] = useState<Curve[]>([]);
         const [manualAxisAssignment, setManualAxisAssignment] = useState(false);
         const [curveAttributes, setCurveAttributes] = useState(
@@ -292,7 +298,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         }, [plotTitle, curveAttributes, yAxisAttributes, manualAxisAssignment]);
 
         useEffect(() => {
-            const newAxisOptions: YAxisAssignment[] = ["y1", "y2", "y3", "y4"];
+            const newAxisOptions = Y_AXIS_ASSIGNMENT_OPTIONS;
             const newCurveAttributes = new Map<string, CurveAttributes>();
             const newYAxisAttributes = new Array(...yAxisAttributes);
 
@@ -527,7 +533,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
             // Now we have our seriesId, if the channel still exists
             if (filteredResults.length === 0) {
-                showSnackbarAndLog(
+                logToConsole(
                     `Channel: ${channel.name} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.type}`,
                     "error"
                 );
@@ -540,26 +546,66 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             return filteredResults[0].seriesId;
         };
 
+        function filterCurveData(
+            curveData: CurveData,
+            from: string,
+            to: string
+        ): CurveData {
+            const filteredCurve: CurveData["curve"] = {};
+
+            for (const [channelName, data] of Object.entries(curveData.curve)) {
+                if (isCurvePoints(data)) {
+                    const filteredPoints: CurvePoints = {};
+                    for (const [timestamp, value] of Object.entries(data)) {
+                        if (timestamp >= from && timestamp <= to) {
+                            filteredPoints[timestamp] = value;
+                        }
+                    }
+                    filteredCurve[channelName] = filteredPoints;
+                } else {
+                    const filteredPointMeta: CurveMeta["pointMeta"] = {};
+                    for (const [timestamp, meta] of Object.entries(
+                        data.pointMeta
+                    )) {
+                        if (timestamp >= from && timestamp <= to) {
+                            filteredPointMeta[timestamp] = meta;
+                        }
+                    }
+                    filteredCurve[channelName] = {
+                        raw: data.raw,
+                        pointMeta: filteredPointMeta,
+                    };
+                }
+            }
+
+            return { curve: filteredCurve };
+        }
+
+        function isCurvePoints(
+            data: CurvePoints | CurveMeta
+        ): data is CurvePoints {
+            return typeof data !== "object" || !("raw" in data);
+        }
+
         const fetchData = async (
             channel: Channel,
             beginTimestamp: string,
             endTimeStamp: string,
             requestSignal: AbortSignal
         ): Promise<void> => {
-            try {
-                const channelLabel = getLabelForChannelAttributes(
-                    channel.name,
-                    channel.backend,
-                    channel.type
-                );
+            const channelLabel = getLabelForChannelAttributes(
+                channel.name,
+                channel.backend,
+                channel.type
+            );
 
+            try {
                 const channelIdentifier =
                     channelIdentifierMap.current.get(channelLabel) ||
                     channel.name;
 
                 const newNumBins = window.innerWidth ?? numBins;
 
-                // Now, fetch the actual data
                 let response: AxiosResponse | undefined;
                 try {
                     response = await axios.get<CurveData>(
@@ -607,6 +653,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         "No data in the requested time frame",
                         channel
                     );
+
                     return;
                 }
 
@@ -731,6 +778,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     "error",
                     error
                 );
+                channelsLastTimeValues.current.set(
+                    channelLabel,
+                    {} as TimeValues
+                );
 
                 return;
             }
@@ -794,6 +845,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     curvesRef.current.push({
                         backend: channel.backend,
                         type: channel.type,
+                        name: channel.name,
                         curveData: emptyCurveData,
                         isLoading: true,
                         error: null,
@@ -801,6 +853,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 } else {
                     curvesRef.current[existingCurveIndex].isLoading = true;
                     curvesRef.current[existingCurveIndex].error = null;
+                    // Remove points not in the current timeframe
+                    curvesRef.current[existingCurveIndex].curveData =
+                        filterCurveData(
+                            curvesRef.current[existingCurveIndex].curveData,
+                            beginTimestamp,
+                            endTimeStamp
+                        );
                 }
                 setCurves([...curvesRef.current]);
 
@@ -1007,6 +1066,46 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             const fileName = `curves_${new Date().toISOString()}.json`;
             downloadBlob(blob, fileName);
         }, [downloadBlob]);
+
+        const downloadDataRaw = useCallback(async () => {
+            const startTime = previousTimeValues.current.startTime;
+            const endTime = previousTimeValues.current.endTime;
+            const curves = curvesRef.current;
+
+            if (!curves?.length) {
+                logToConsole("No channels to fetch data from.", "warning");
+                return;
+            }
+
+            try {
+                const rawDataLinks = await Promise.all(
+                    curves.flatMap(({ backend, name }) =>
+                        axios
+                            .get(`${backendUrl}/channels/raw-link`, {
+                                params: {
+                                    channel_name: name,
+                                    begin_time: startTime,
+                                    end_time: endTime,
+                                    backend,
+                                },
+                                responseType: "json",
+                            })
+                            .then((res) => {
+                                if (!res.data?.link) {
+                                    throw new Error(
+                                        `No link for ${name} in backend: ${backend}`
+                                    );
+                                }
+                                return { name, link: res.data.link };
+                            })
+                    )
+                );
+
+                setRawDownloadLinks(rawDataLinks);
+            } catch (err) {
+                showSnackbarAndLog("downloadDataRaw failed:", "error", err);
+            }
+        }, [backendUrl]);
 
         const downloadImage = useCallback(() => {
             const plotElement = plotRef.current;
@@ -1644,6 +1743,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 downloadDataJSON();
                             },
                         },
+                        {
+                            name: "downloadRaw",
+                            title: "Download raw data",
+                            icon: Plotly.Icons.disk,
+                            click: () => {
+                                downloadDataRaw();
+                            },
+                        },
                     ],
                     [
                         {
@@ -1675,7 +1782,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 ],
                 doubleClick: false,
             } as Plotly.Config;
-        }, [downloadDataCSV, downloadDataJSON, downloadImage, theme]);
+        }, [
+            downloadDataCSV,
+            downloadDataJSON,
+            downloadDataRaw,
+            downloadImage,
+            theme,
+        ]);
 
         const handleRelayout = useCallback(
             (e: Readonly<Plotly.PlotRelayoutEvent>) => {
@@ -1689,7 +1802,38 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         ).getTime();
                         const endUnix = new Date(timeValues.endTime).getTime();
                         onZoomTimeRangeChange(startUnix, endUnix);
-                        return;
+                    }
+                }
+
+                // Handle limits set via axis double click -> those result in only exactly one limit being changed
+                const keys = Object.keys(e);
+                if (keys.length === 1) {
+                    const key = keys[0] as keyof Plotly.PlotRelayoutEvent;
+                    const axes = USED_Y_AXES;
+
+                    for (let i = 0; i < axes.length; i++) {
+                        const axis = axes[i];
+                        if (!key.startsWith(axis)) continue;
+
+                        if (
+                            key === `${axis}.range[0]` ||
+                            key === `${axis}.range[1]`
+                        ) {
+                            const isMin = key.endsWith("[0]");
+                            const newVal = e[key] as number;
+
+                            setYAxisAttributes((prev) =>
+                                prev.map((attr, idx) => {
+                                    if (idx !== i) return attr;
+                                    return {
+                                        ...attr,
+                                        min: isMin ? newVal : attr.min,
+                                        max: !isMin ? newVal : attr.max,
+                                    };
+                                })
+                            );
+                            break;
+                        }
                     }
                 }
             },
@@ -1698,31 +1842,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const handleDoubleClick = useCallback(() => {
             const currentPlotDiv = plotRef.current;
-            const currentPlotLayout = plotlyLayoutRef.current;
-            if (currentPlotDiv && currentPlotLayout) {
-                const newLayout = currentPlotLayout;
-
-                newLayout["xaxis"] = {
-                    ...currentPlotLayout.xaxis,
-                    autorange: true,
-                };
-
-                // Add default layout settings for each used Y-axis
-                for (let i = 1; i <= 4; i++) {
-                    const axisKey =
-                        i === 1 ? "yaxis" : (`yaxis${i}` as UsedYAxis);
-                    const axisConfig = layout[axisKey] as Plotly.LayoutAxis;
-
-                    if (axisConfig) {
-                        newLayout[axisKey] = {
-                            ...currentPlotLayout[axisKey],
-                            autorange: axisConfig.autorange,
-                            range: axisConfig.range,
-                        };
-                    }
-                }
-
-                Plotly.relayout(currentPlotDiv, newLayout);
+            if (currentPlotDiv && plotlyLayoutRef.current) {
+                // Revert to saved settings
+                plotlyLayoutRef.current = cloneDeep(layout);
+                Plotly.relayout(currentPlotDiv, plotlyLayoutRef.current);
             }
         }, [layout]);
 
@@ -1742,6 +1865,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 // Unfortunately, Plotly.react invalidates our layout range, so we have to set it manually based on whatever it was previously
                 // If there is no existing layout, simply emulate a double click
                 if (plotlyLayoutRef.current) {
+                    plotlyLayoutRef.current = cloneDeep(layout);
                     Plotly.relayout(currentPlotDiv, plotlyLayoutRef.current);
                 } else {
                     handleDoubleClick();
@@ -1872,6 +1996,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     }}
                     onSave={onPlotSettingsSave}
                 />
+                {rawDownloadLinks && (
+                    <DownloadRawPopup
+                        links={rawDownloadLinks}
+                        onClose={() => setRawDownloadLinks(null)}
+                    />
+                )}
             </Box>
         );
     }

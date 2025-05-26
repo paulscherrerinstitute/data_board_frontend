@@ -5,7 +5,7 @@ import React, {
     useEffect,
     useMemo,
 } from "react";
-import { Box, Button, IconButton } from "@mui/material";
+import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
@@ -27,7 +27,11 @@ import {
     TimeSelectorHandle,
     TimeValues,
 } from "./TimeSelector/TimeSelector.types";
-import { Channel } from "../Selector/Selector.types";
+import {
+    ADD_CHANNELS_TO_FIRST_PLOT_EVENT,
+    AddChannelsToFirstPlotEvent,
+    Channel,
+} from "../Selector/Selector.types";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import {
     defaultWidgetHeight,
@@ -52,6 +56,7 @@ const Content: React.FC = () => {
     const [gridWidth, setGridWidth] = useState(
         window.innerWidth - window.innerWidth * 0.05
     );
+    const [isLayoutingMode, setIsLayoutingMode] = useState(false);
 
     const [initialWidgetHeight] = useLocalStorage(
         "initialWidgetHeight",
@@ -147,61 +152,64 @@ const Content: React.FC = () => {
         );
     };
 
-    const handleCreateWidget = (initialChannels: Channel[] = []) => {
-        if (!isWidgetsInitializedRef.current) {
-            isWidgetsInitializedRef.current = true;
-        }
+    const handleCreateWidget = useCallback(
+        (initialChannels: Channel[] = []) => {
+            if (!isWidgetsInitializedRef.current) {
+                isWidgetsInitializedRef.current = true;
+            }
 
-        const maxEndY = Math.max(
-            ...widgets.map((widget) => widget.layout.y + widget.layout.h)
-        );
+            const maxEndY = Math.max(
+                ...widgets.map((widget) => widget.layout.y + widget.layout.h)
+            );
 
-        const occupiedXPositions = new Set<number>();
+            const occupiedXPositions = new Set<number>();
 
-        // Check all widgets and find which ones end at maxEndY
-        widgets.forEach((widget) => {
-            const widgetEndY = widget.layout.y + widget.layout.h;
-            if (widgetEndY === maxEndY) {
-                // Mark the x positions occupied by this widget at maxEndY
-                for (
-                    let x = widget.layout.x;
-                    x < widget.layout.x + widget.layout.w;
-                    x++
-                ) {
-                    occupiedXPositions.add(x);
+            // Check all widgets and find which ones end at maxEndY
+            widgets.forEach((widget) => {
+                const widgetEndY = widget.layout.y + widget.layout.h;
+                if (widgetEndY === maxEndY) {
+                    // Mark the x positions occupied by this widget at maxEndY
+                    for (
+                        let x = widget.layout.x;
+                        x < widget.layout.x + widget.layout.w;
+                        x++
+                    ) {
+                        occupiedXPositions.add(x);
+                    }
+                }
+            });
+
+            // Now, try to find the first available space with width = initialWidgetWidth
+            let calculatedX = 0;
+            for (let x = 0; x <= 12 - initialWidgetWidth; x++) {
+                // Check if this space (x, x+1, ..., x + defaultWidgetWidth - 1) is available
+                const isSpaceAvailable = Array.from(
+                    { length: initialWidgetWidth },
+                    (_, i) => x + i
+                ).every((occupiedX) => !occupiedXPositions.has(occupiedX));
+
+                if (isSpaceAvailable) {
+                    calculatedX = x;
+                    break;
                 }
             }
-        });
 
-        // Now, try to find the first available space with width = initialWidgetWidth
-        let calculatedX = 0;
-        for (let x = 0; x <= 12 - initialWidgetWidth; x++) {
-            // Check if this space (x, x+1, ..., x + defaultWidgetWidth - 1) is available
-            const isSpaceAvailable = Array.from(
-                { length: initialWidgetWidth },
-                (_, i) => x + i
-            ).every((occupiedX) => !occupiedXPositions.has(occupiedX));
-
-            if (isSpaceAvailable) {
-                calculatedX = x;
-                break;
-            }
-        }
-
-        setWidgets((prevWidgets) => [
-            ...prevWidgets,
-            {
-                channels: initialChannels,
-                layout: {
-                    i: uuid.v4(),
-                    x: calculatedX,
-                    y: Infinity,
-                    w: initialWidgetWidth,
-                    h: initialWidgetHeight,
+            setWidgets((prevWidgets) => [
+                ...prevWidgets,
+                {
+                    channels: initialChannels,
+                    layout: {
+                        i: uuid.v4(),
+                        x: calculatedX,
+                        y: Infinity,
+                        w: initialWidgetWidth,
+                        h: initialWidgetHeight,
+                    },
                 },
-            },
-        ]);
-    };
+            ]);
+        },
+        [initialWidgetHeight, initialWidgetWidth, widgets]
+    );
 
     const interceptMouseDown = (e: MouseEvent) => {
         // Create a new event with modified properties
@@ -410,7 +418,12 @@ const Content: React.FC = () => {
         } catch (error) {
             handleDashboardModificationError(error);
         }
-    }, [backendUrl, dashboardData, setSearchParams]);
+    }, [
+        backendUrl,
+        dashboardData,
+        setSearchParams,
+        handleDashboardModificationError,
+    ]);
 
     const handleSaveDashboard = useCallback(async () => {
         const dashboardId = searchParams.get("dashboardId");
@@ -457,6 +470,7 @@ const Content: React.FC = () => {
         dashboardData,
         setSearchParams,
         handleCreateDashboard,
+        handleDashboardModificationError,
     ]);
 
     const handleDownloadDashboard = useCallback(async () => {
@@ -511,6 +525,71 @@ const Content: React.FC = () => {
         }
     }, [setWidgets]);
 
+    useEffect(() => {
+        const handleAddChannels = (event: Event) => {
+            const { channels } = (event as AddChannelsToFirstPlotEvent).detail;
+
+            if (
+                !Array.isArray(channels) ||
+                !channels.every((channel) =>
+                    [channel.backend, channel.name, channel.type].every(
+                        (attr) => attr !== undefined
+                    )
+                )
+            ) {
+                showSnackbarAndLog("Invalid channel structure", "error");
+                return;
+            }
+
+            if (widgets.length === 0) {
+                handleCreateWidget(channels);
+                return;
+            }
+
+            const firstWidget = widgets[0];
+
+            // Check for duplicates
+            const existingChannel = firstWidget.channels.find((channel) =>
+                channels.find(
+                    (newChannel) =>
+                        newChannel.backend === channel.backend &&
+                        newChannel.name === channel.name &&
+                        newChannel.type === channel.type
+                )
+            );
+
+            if (existingChannel) {
+                showSnackbarAndLog(
+                    `Widget already contains the channel: ${existingChannel.name}`,
+                    "warning"
+                );
+                return;
+            }
+
+            // Add channels to the first widget
+            const newWidgets = widgets.map((widget, index) =>
+                index === 0
+                    ? {
+                          ...widget,
+                          channels: [...widget.channels, ...channels],
+                      }
+                    : widget
+            );
+
+            setWidgets(newWidgets);
+        };
+
+        window.addEventListener(
+            ADD_CHANNELS_TO_FIRST_PLOT_EVENT,
+            handleAddChannels
+        );
+        return () =>
+            window.removeEventListener(
+                ADD_CHANNELS_TO_FIRST_PLOT_EVENT,
+                handleAddChannels
+            );
+    }, [widgets, setWidgets, handleCreateWidget]);
+
     return (
         <Box sx={styles.contentContainerStyle}>
             <Box sx={styles.topBarStyle}>
@@ -529,6 +608,8 @@ const Content: React.FC = () => {
                         autoSize={true}
                         resizeHandles={["sw", "nw", "se", "ne"]}
                         onLayoutChange={handleLayoutChange}
+                        isDraggable={isLayoutingMode}
+                        isResizable={isLayoutingMode}
                     >
                         {widgets.map(({ channels, layout, plotSettings }) => (
                             <Box
@@ -628,6 +709,7 @@ const Content: React.FC = () => {
                             </Box>
                         ))}
                     </ReactGridLayout>
+                    <Box sx={styles.actionButtonBoxPlaceholderStyle}></Box>
                 </div>
                 <Box sx={styles.actionButtonBoxStyle}>
                     <Button
@@ -635,7 +717,8 @@ const Content: React.FC = () => {
                         onDragOver={(event) => handleDragOver(event, "-1")}
                         onDragLeave={handleDragLeave}
                         sx={{
-                            ...styles.CreateWidgetStyle,
+                            ...styles.actionButtonStyle,
+                            ...styles.createWidgetStyle,
                             filter:
                                 draggedOverKey === "-1"
                                     ? "brightness(0.5)"
@@ -645,29 +728,49 @@ const Content: React.FC = () => {
                         onClick={() => handleCreateWidget()}
                     ></Button>
                     <Button
+                        sx={styles.actionButtonStyle}
                         variant="contained"
                         onClick={() => handleSaveDashboard()}
                     >
                         Save Layout
                     </Button>
                     <Button
+                        sx={styles.actionButtonStyle}
                         variant="contained"
                         onClick={() => handleCreateDashboard()}
                     >
                         Save as new Layout
                     </Button>
                     <Button
+                        sx={styles.actionButtonStyle}
                         variant="contained"
                         onClick={() => handleDownloadDashboard()}
                     >
                         Download Layout as JSON
                     </Button>
                     <Button
+                        sx={styles.actionButtonStyle}
                         variant="contained"
                         onClick={() => handleImportDashboard()}
                     >
                         Import JSON Layout
                     </Button>
+                    <Tooltip
+                        sx={styles.actionButtonStyle}
+                        title="Toggles whether or not the plots can be moved and resized"
+                        placement="top"
+                        arrow
+                    >
+                        <Button
+                            variant="contained"
+                            color="secondary"
+                            onClick={() => setIsLayoutingMode((prev) => !prev)}
+                        >
+                            {isLayoutingMode
+                                ? "Disable Layouting Mode"
+                                : "Enable Layouting Mode"}
+                        </Button>
+                    </Tooltip>
                 </Box>
             </Box>
         </Box>

@@ -513,23 +513,29 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     <Box sx={styles.settingBoxStyle}>
                         <FormControl fullWidth>
                             <InputLabel>Theme</InputLabel>
-                            <Select
-                                value={previewTheme ?? defaultTheme}
-                                onChange={(e) => {
-                                    updateTheme(
-                                        e.target.value as AvailableTheme
-                                    );
-                                }}
-                                label="Theme"
+                            <Tooltip
+                                title="After closing this dialog, refresh the page to make sure the new theme is applied fully."
+                                arrow
+                                placement="top-start"
                             >
-                                {Object.entries(themes).map(
-                                    ([key, { displayName }]) => (
-                                        <MenuItem key={key} value={key}>
-                                            {displayName}
-                                        </MenuItem>
-                                    )
-                                )}
-                            </Select>
+                                <Select
+                                    value={previewTheme ?? defaultTheme}
+                                    onChange={(e) => {
+                                        updateTheme(
+                                            e.target.value as AvailableTheme
+                                        );
+                                    }}
+                                    label="Theme"
+                                >
+                                    {Object.entries(themes).map(
+                                        ([key, { displayName }]) => (
+                                            <MenuItem key={key} value={key}>
+                                                {displayName}
+                                            </MenuItem>
+                                        )
+                                    )}
+                                </Select>
+                            </Tooltip>
                         </FormControl>
                     </Box>
 

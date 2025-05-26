@@ -19,7 +19,7 @@
                     "h": 12,
                     "x": 0,
                     "y": 0,
-                    "i": "1",
+                    "i": "59666753-b63b-49a3-a4f5-3cfeb6b24b65",
                     "moved": false,
                     "static": false
                 },
@@ -77,7 +77,8 @@
                             "displayLabel": "y4",
                             "manualDisplayLabel": false
                         }
-                    ]
+                    ],
+                    "manualAxisAssignment": false
                 }
             },
             {
@@ -98,7 +99,7 @@
                     "h": 14,
                     "x": 0,
                     "y": 12,
-                    "i": "2",
+                    "i": "6a85a748-5ef7-47c6-ac41-f79a61168df5",
                     "moved": false,
                     "static": false
                 },
@@ -156,7 +157,8 @@
                             "displayLabel": "y4",
                             "manualDisplayLabel": false
                         }
-                    ]
+                    ],
+                    "manualAxisAssignment": false
                 }
             },
             {
@@ -187,14 +189,14 @@
                     "h": 14,
                     "x": 0,
                     "y": 26,
-                    "i": "3",
+                    "i": "7fe2185d-66e6-4c01-984d-a56e4836f5e9",
                     "moved": false,
                     "static": false
                 },
                 "plotSettings": {
                     "plotTitle": "Plot 3",
                     "curveAttributes": {
-                        "SINSB03-RLLE-REF10:SIG-PHASE-AVG | sf-databuffer | []": {
+                        "SINSB03-RLLE-REF10:SIG-PHASE-AVG | sf-databuffer | unknown": {
                             "channel": {
                                 "backend": "sf-databuffer",
                                 "name": "SINSB03-RLLE-REF10:SIG-PHASE-AVG",
@@ -208,10 +210,10 @@
                             "color": "#1f77b4",
                             "curveShape": "linear",
                             "curveMode": "lines+markers",
-                            "displayLabel": "SINSB03-RLLE-REF10:SIG-PHASE-AVG | sf-databuffer | []",
+                            "displayLabel": "SINSB03-RLLE-REF10:SIG-PHASE-AVG | sf-databuffer | unknown",
                             "axisAssignment": "y1"
                         },
-                        "SINSB03-RLLE-REF20:SIG-PHASE-AVG | sf-databuffer | []": {
+                        "SINSB03-RLLE-REF20:SIG-PHASE-AVG | sf-databuffer | unknown": {
                             "channel": {
                                 "backend": "sf-databuffer",
                                 "name": "SINSB03-RLLE-REF20:SIG-PHASE-AVG",
@@ -225,7 +227,7 @@
                             "color": "#ff7f0e",
                             "curveShape": "linear",
                             "curveMode": "lines+markers",
-                            "displayLabel": "SINSB03-RLLE-REF20:SIG-PHASE-AVG | sf-databuffer | []",
+                            "displayLabel": "SINSB03-RLLE-REF20:SIG-PHASE-AVG | sf-databuffer | unknown",
                             "axisAssignment": "y2"
                         }
                     },
@@ -235,7 +237,7 @@
                             "scaling": "linear",
                             "min": null,
                             "max": null,
-                            "displayLabel": "SINSB03-RLLE-REF10:SIG-PHASE-AVG | sf-databuffer | []",
+                            "displayLabel": "SINSB03-RLLE-REF10:SIG-PHASE-AVG | sf-databuffer | unknown",
                             "manualDisplayLabel": false
                         },
                         {
@@ -243,7 +245,7 @@
                             "scaling": "linear",
                             "min": null,
                             "max": null,
-                            "displayLabel": "SINSB03-RLLE-REF20:SIG-PHASE-AVG | sf-databuffer | []",
+                            "displayLabel": "SINSB03-RLLE-REF20:SIG-PHASE-AVG | sf-databuffer | unknown",
                             "manualDisplayLabel": false
                         },
                         {
@@ -262,7 +264,8 @@
                             "displayLabel": "y4",
                             "manualDisplayLabel": false
                         }
-                    ]
+                    ],
+                    "manualAxisAssignment": false
                 }
             }
         ]

@@ -45,6 +45,17 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
     useEffect(() => {
         if (open) {
             setLocalPlotSettings(plotSettings);
+
+            setInputsMin(
+                plotSettings.yAxisAttributes.map((attr) =>
+                    (attr.min ?? "").toString()
+                )
+            );
+            setInputsMax(
+                plotSettings.yAxisAttributes.map((attr) =>
+                    (attr.max ?? "").toString()
+                )
+            );
         }
     }, [open]);
 
