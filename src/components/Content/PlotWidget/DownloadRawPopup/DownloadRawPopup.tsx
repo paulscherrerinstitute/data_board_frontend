@@ -11,9 +11,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import * as styles from "./DownloadRawPopup.styles";
 import { DownloadLink } from "./DownloadRawPopup.types";
 import { Alert } from "@mui/material";
-import showSnackbarAndLog, {
-    logToConsole,
-} from "../../../../helpers/showSnackbar";
+import showSnackbarAndLog from "../../../../helpers/showSnackbar";
 
 interface DownloadRawPopupProps {
     links: DownloadLink[];
