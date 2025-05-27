@@ -881,7 +881,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         }, [
             channels,
             timeValues,
-            curves,
             timezoneOffsetMs,
             backendUrl,
             convertTimestamp,
