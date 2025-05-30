@@ -349,7 +349,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
             `;
 
             if (selectedChannels.length === 1) {
-                dragPreview.innerText = `${channelsToTransfer[0].name} (${channelsToTransfer[0].backend} - ${channelsToTransfer[0].type})`;
+                dragPreview.innerText = `${channelsToTransfer[0].name} (${channelsToTransfer[0].backend} - ${channelsToTransfer[0].type || "unknown"})`;
             } else {
                 dragPreview.innerText = `Multiple Channels`;
             }
