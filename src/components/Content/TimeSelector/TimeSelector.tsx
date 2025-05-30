@@ -139,6 +139,9 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         const handleQuickSelect = (value: QuickSelectOption) => {
             if (value === "false") {
                 timeSourceRef.current = "manual";
+                setStartTime(dayjs(appliedTimeValues?.startTime));
+                setEndTime(dayjs(appliedTimeValues?.endTime));
+                setSelectedQuickOption(false);
                 return;
             }
             timeSourceRef.current = "quickselect";
