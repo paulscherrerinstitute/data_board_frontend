@@ -774,10 +774,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 return;
             } catch (error) {
                 logToConsole(
-                    `Failed to fetch channel: ${channel.name} on backend: ${channel.backend} with datatype: ${channel.type}`,
+                    `Failed to fetch/parse data for channel: ${channel.name} on backend: ${channel.backend} with datatype: ${channel.type}`,
                     "error",
                     error
                 );
+                setErrorCurve("Failed to fetch/parse data", channel);
                 channelsLastTimeValues.current.set(
                     channelLabel,
                     {} as TimeValues
@@ -871,6 +872,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         endTimeStamp,
                         controller.signal
                     );
+                    const existingCurveIndex = curvesRef.current.findIndex(
+                        (curve) =>
+                            curve.backend === channel.backend &&
+                            channel.type === curve.type &&
+                            label in curve.curveData.curve
+                    );
+                    if (existingCurveIndex !== -1) {
+                        curvesRef.current[existingCurveIndex].isLoading = false;
+                    }
                     if (controller.signal.aborted) {
                         return;
                     } else {

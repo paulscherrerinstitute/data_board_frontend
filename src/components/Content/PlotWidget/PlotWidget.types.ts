@@ -15,13 +15,10 @@ export interface PlotWidgetProps {
     ) => void;
 }
 
-export interface PlotlyHTMLElement extends HTMLDivElement {
-    on(
-        event: "plotly_relayout" | "plotly_doubleclick",
-        callback: (data: Readonly<Plotly.PlotRelayoutEvent>) => void
-    ): void;
-    removeAllListeners(): void;
-}
+export type PlotlyHTMLElement = Plotly.PlotlyHTMLElement &
+    HTMLDivElement & {
+        removeAllListeners(): void;
+    };
 
 export type CurvePoints = {
     [timestamp: string]: number;
