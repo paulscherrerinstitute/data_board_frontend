@@ -48,3 +48,34 @@ export const autoApplyContainerStyle: SxProps<Theme> = {
     display: "flex",
     gap: 1,
 };
+
+export const optionsButtonStyle: SxProps<Theme> = {
+    border: "1px solid",
+    borderColor: "divider",
+};
+
+export const overlayStyle: SxProps<Theme> = {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100vw",
+    height: "100vh",
+    bgcolor: "rgba(0,0,0,0.5)",
+    zIndex: 1300,
+};
+
+export const optionsContainerStyle: SxProps<Theme> = {
+    position: "absolute",
+    top: "10%",
+    left: "50%",
+    transform: "translateX(-50%)",
+    bgcolor: "background.paper",
+    p: 2,
+    borderRadius: 2,
+    boxShadow: 3,
+    display: "flex",
+    justifyContent: "space-between",
+    maxWidth: 600,
+    width: "90%",
+    mx: "auto",
+};
