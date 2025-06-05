@@ -15,7 +15,7 @@ function filterCurveAttribute<T extends CurveMeta["pointMeta"] | CurvePoints>(
     const filteredData = {} as T;
     for (const [timestamp, data] of Object.entries(attribute)) {
         if (timestamp >= from && timestamp <= to) {
-            (filteredData as any)[timestamp] = data;
+            filteredData[timestamp] = data;
         }
     }
     return filteredData;

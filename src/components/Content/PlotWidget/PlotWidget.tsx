@@ -172,6 +172,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             new Map<string, AbortController>()
         );
         const lastDoubleClickMsRef = useRef(0);
+        const waveformPreviewDataIsRequesting = useRef(false);
 
         const NUM_BINS = 1000;
         const NUM_EXPECTED_POINTS_MAX = 102400;
@@ -262,6 +263,54 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 e.stopPropagation();
             }
         };
+
+        const getChannelIdentifier = useCallback(
+            async (channel: Channel): Promise<string> => {
+                let searchResults: AxiosResponse<{
+                    channels: Channel[];
+                }>;
+
+                try {
+                    searchResults = await axios.get<{
+                        channels: Channel[];
+                    }>(`${backendUrl}/channels/search`, {
+                        params: {
+                            search_text: `^${channel.name}$`,
+                            allow_cached_response: false,
+                        },
+                    });
+                } catch (error: AxiosError | unknown) {
+                    logToConsole(
+                        `Failed to fetch channel identifier for channel ${channel.name} on backend: ${channel.backend}`,
+                        "error",
+                        error
+                    );
+                    return channel.name;
+                }
+
+                const filteredResults = searchResults.data.channels.filter(
+                    (returnedChannel) =>
+                        returnedChannel.backend === channel.backend &&
+                        returnedChannel.name === channel.name &&
+                        returnedChannel.type === channel.type
+                );
+
+                // Now we have our seriesId, if the channel still exists
+                if (filteredResults.length === 0) {
+                    logToConsole(
+                        `Channel: ${channel.name} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.type}`,
+                        "error"
+                    );
+                    return channel.name;
+                }
+                if (filteredResults.length > 1) {
+                    // In that case we don't know which seriesid is the correct one
+                    return channel.name;
+                }
+                return filteredResults[0].seriesId;
+            },
+            [backendUrl]
+        );
 
         useEffect(() => {
             onUpdatePlotSettings(index, {
@@ -364,6 +413,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         }, [
             channels,
             getColorForChannel,
+            getChannelIdentifier,
             initialCurveShape,
             initialCurveMode,
             manualAxisAssignment,
@@ -448,50 +498,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 }
             },
             [setErrorCurve]
-        );
-
-        const getChannelIdentifier = useCallback(
-            async (channel: Channel): Promise<string> => {
-                let searchResults: AxiosResponse<{
-                    channels: Channel[];
-                }>;
-
-                try {
-                    searchResults = await axios.get<{
-                        channels: Channel[];
-                    }>(`${backendUrl}/channels/search`, {
-                        params: {
-                            search_text: `^${channel.name}$`,
-                            allow_cached_response: false,
-                        },
-                    });
-                } catch (error: AxiosError | unknown) {
-                    handleResponseError(error, channel);
-                    return channel.name;
-                }
-
-                const filteredResults = searchResults.data.channels.filter(
-                    (returnedChannel) =>
-                        returnedChannel.backend === channel.backend &&
-                        returnedChannel.name === channel.name &&
-                        returnedChannel.type === channel.type
-                );
-
-                // Now we have our seriesId, if the channel still exists
-                if (filteredResults.length === 0) {
-                    logToConsole(
-                        `Channel: ${channel.name} does not exist anymore on backend: ${channel.backend} with datatype: ${channel.type}`,
-                        "error"
-                    );
-                    return channel.name;
-                }
-                if (filteredResults.length > 1) {
-                    // In that case we don't know which seriesid is the correct one
-                    return channel.name;
-                }
-                return filteredResults[0].seriesId;
-            },
-            [handleResponseError]
         );
 
         const fetchData = useCallback(
@@ -744,7 +750,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     return;
                 }
             },
-            [getChannelIdentifier, setErrorCurve]
+            [backendUrl, handleResponseError, setErrorCurve]
         );
 
         useEffect(() => {
@@ -1680,6 +1686,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             }
         }, [layout]);
 
+        // Here, we check if it's a waveform channel and try to fetch a preview of the raw waveform data.
         const handlePointClick = useCallback(
             async (event: Plotly.PlotMouseEvent) => {
                 // Wait shortly to make sure this isnt part of a double click
@@ -1768,23 +1775,46 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                                     const channelIdentifier =
                                         channelIdentifierMap.current.get(label);
-                                    const response =
-                                        await axios.get<BackendCurveData>(
-                                            `${backendUrl}/channels/curve`,
-                                            {
-                                                params: {
-                                                    channel_name:
-                                                        channelIdentifier,
-                                                    begin_time: beginTime,
-                                                    end_time: endTime,
-                                                    backend: curve.backend,
-                                                },
-                                            }
+                                    // If another point is already being processed, abort.
+                                    if (
+                                        waveformPreviewDataIsRequesting.current
+                                    ) {
+                                        return;
+                                    }
+                                    showSnackbarAndLog(
+                                        "Fetching waveform preview for clicked point...",
+                                        "info"
+                                    );
+                                    waveformPreviewDataIsRequesting.current =
+                                        true;
+                                    try {
+                                        const response =
+                                            await axios.get<BackendCurveData>(
+                                                `${backendUrl}/channels/curve`,
+                                                {
+                                                    params: {
+                                                        channel_name:
+                                                            channelIdentifier,
+                                                        begin_time: beginTime,
+                                                        end_time: endTime,
+                                                        backend: curve.backend,
+                                                    },
+                                                }
+                                            );
+                                        setWaveformPreviewData({
+                                            ...cloneDeep(curve),
+                                            curveData: cloneDeep(response.data),
+                                        });
+                                    } catch (error) {
+                                        showSnackbarAndLog(
+                                            "Failed to fetch waveform preview",
+                                            "error",
+                                            error
                                         );
-                                    setWaveformPreviewData({
-                                        ...cloneDeep(curve),
-                                        curveData: cloneDeep(response.data),
-                                    });
+                                    } finally {
+                                        waveformPreviewDataIsRequesting.current =
+                                            false;
+                                    }
                                 }
                             }
                         }
@@ -1816,7 +1846,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     handleDoubleClick();
                 }
             }
-        }, [data, config]);
+        }, [data, config, backendUrl]);
 
         useEffect(() => {
             const currentPlotDiv = plotRef.current;
