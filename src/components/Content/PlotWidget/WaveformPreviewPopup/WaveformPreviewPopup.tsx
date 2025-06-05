@@ -149,7 +149,7 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                     (a, b) => Number(a) - Number(b)
                 );
                 const convertedTimestamps = timestamps.map((timestamp) =>
-                    convertUnixToLocalISO(Number(timestamp) / 1e6)
+                    convertUnixToLocalISO(Number(timestamp) / 1e6).slice(11, 23)
                 );
                 const yTimestampIndices = Array.from(
                     { length: convertedTimestamps.length },
@@ -209,11 +209,32 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
     }, [waveformPreviewData, useWebGL, curveColor]);
 
     const layout = useMemo(() => {
+        const maxTicks = 5;
+        const totalPoints = yAxisIndices.length;
+
+        const step = Math.max(1, Math.floor(totalPoints / maxTicks));
+        const tickvals = [];
+        const ticktext = [];
+
+        for (let i = 0; i < totalPoints; i += step) {
+            const tickIndex = yAxisIndices[i];
+            tickvals.push(tickIndex);
+            ticktext.push(yAxisTimestamps[tickIndex]);
+        }
+
+        // Make sure the last tick is included
+        if (tickvals[tickvals.length - 1] !== totalPoints - 1) {
+            const lastTickIndex = yAxisIndices.at(-1)!;
+            tickvals.push(lastTickIndex);
+            ticktext.push(yAxisTimestamps[lastTickIndex]);
+        }
+
         return {
             scene: {
                 yaxis: {
-                    tickvals: yAxisIndices,
-                    ticktext: yAxisTimestamps,
+                    tickvals: tickvals,
+                    ticktext: ticktext,
+                    ticks: "outside",
                     gridcolor: xAxisGridColor,
                     linecolor: xAxisGridColor,
                     zerolinecolor: xAxisGridColor,
