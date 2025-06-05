@@ -65,3 +65,9 @@ export const closeButtonStyle: SxProps<Theme> = {
     color: "white",
     borderRadius: 1,
 };
+
+export const loadingBoxStyle: SxProps<Theme> = {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+};

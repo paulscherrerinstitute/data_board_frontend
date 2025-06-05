@@ -30,6 +30,7 @@ import { useSearchParams } from "react-router-dom";
 import { DateTimePicker } from "@mui/x-date-pickers";
 import { ArrowBack, ArrowForward } from "@mui/icons-material";
 import dayjs, { Dayjs } from "dayjs";
+import { cloneDeep } from "lodash";
 
 const quickOptions = [
     { label: "Not selected", value: false },
@@ -221,7 +222,9 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
 
             setHistory((prev) => {
                 const truncated = prev.slice(0, historyIndex + 1);
-                const updated = [...truncated, newTimeValues].slice(-10);
+                const updated = [...truncated, cloneDeep(newTimeValues)].slice(
+                    -10
+                );
                 setHistoryIndex(updated.length - 1);
                 return updated;
             });
@@ -231,6 +234,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             removeEmptyBins,
             selectedQuickOption,
             startTime,
+            historyIndex,
         ]);
 
         const simulateAutoApplyPress = () => {
@@ -288,21 +292,9 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             const removeEmptyBins = searchParams.get("removeEmptyBins");
             const autoApplyParam = searchParams.get("autoApply");
 
-            const startTime = Number(startTimeParam);
-            const endTime = Number(endTimeParam);
-            let start, end;
-            // If both time parameters are valid numbers, initialize the time to those
-            if (!isNaN(startTime) && !isNaN(endTime) && startTime * endTime) {
-                start = new Date(startTime);
-                end = new Date(endTime);
-            } else {
-                // Else, default to ten minutes ago
-                ({ start, end } = convertQuickOptionToTimestamps(10));
-                setSelectedQuickOption(10);
-            }
-
-            setStartTime(dayjs(start));
-            setEndTime(dayjs(end));
+            let start!: Date;
+            let end!: Date;
+            let validTime = false;
 
             if (quickSelectParam) {
                 if (quickSelectParam === "false") {
@@ -310,13 +302,41 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 } else if (isValueInQuickSelectOptions(quickSelectParam)) {
                     timeSourceRef.current = "quickselect";
                     setSelectedQuickOption(quickSelectParam);
+                    if (!validTime) {
+                        ({ start, end } =
+                            convertQuickOptionToTimestamps(quickSelectParam));
+                        validTime = true;
+                    }
                 } else if (
                     isValueInQuickSelectOptions(Number(quickSelectParam))
                 ) {
                     timeSourceRef.current = "quickselect";
                     setSelectedQuickOption(Number(quickSelectParam));
+                    if (!validTime) {
+                        ({ start, end } = convertQuickOptionToTimestamps(
+                            Number(quickSelectParam)
+                        ));
+                        validTime = true;
+                    }
                 }
             }
+
+            const startTime = Number(startTimeParam);
+            const endTime = Number(endTimeParam);
+            // If both time parameters are valid numbers, initialize the time to those
+            if (!isNaN(startTime) && !isNaN(endTime) && startTime * endTime) {
+                start = new Date(startTime);
+                end = new Date(endTime);
+                validTime = true;
+            } else if (!validTime) {
+                // Else, default to ten minutes ago
+                timeSourceRef.current = "quickselect";
+                ({ start, end } = convertQuickOptionToTimestamps(10));
+                setSelectedQuickOption(10);
+            }
+
+            setStartTime(dayjs(start));
+            setEndTime(dayjs(end));
 
             let newRawWhenSparse = false;
             if (rawWhenSparse) {
@@ -363,6 +383,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 setEndTime(dayjs(endTime));
                 timeSourceRef.current = "manual";
                 setSelectedQuickOption(false);
+
                 const newTimeValues = {
                     startTime: startTime,
                     endTime: endTime,
@@ -375,15 +396,16 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 if (!isHistoryEntry) {
                     setHistory((prev) => {
                         const truncated = prev.slice(0, historyIndex + 1);
-                        const updated = [...truncated, newTimeValues].slice(
-                            -10
-                        );
+                        const updated = [
+                            ...truncated,
+                            cloneDeep(newTimeValues),
+                        ].slice(-10);
                         setHistoryIndex(updated.length - 1);
                         return updated;
                     });
                 }
             },
-            [rawWhenSparse, removeEmptyBins, selectedQuickOption]
+            [rawWhenSparse, removeEmptyBins, selectedQuickOption, historyIndex]
         );
 
         useImperativeHandle(

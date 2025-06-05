@@ -662,6 +662,7 @@ const Content: React.FC = () => {
                                               }
                                             : undefined
                                     }
+                                    isWaveformPreview={false}
                                     onChannelsChange={(updatedChannels) => {
                                         setWidgets((prevWidgets) =>
                                             prevWidgets.map((widget) =>
