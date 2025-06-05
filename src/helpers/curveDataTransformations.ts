@@ -65,15 +65,15 @@ export const getLabelForCurve = (curve: Curve) => {
 };
 
 /**
- * Converts a unix timestamp (integer, formatted as string, e.g. "1234") to it's ISO representation, but in local time. Used to trick plotly into displaying local time, as it only accepts UTC time.
+ * Converts a unix timestamp in milliseconds to it's ISO representation, but in local time. Used to trick plotly into displaying local time, as it only accepts UTC time.
  * Converted timestamps therefore look like UTC-Timestamps, but are actually in local time.
  */
-export const convertUnixToLocalISO = (timestamp: string) => {
-    return new Date(Number(timestamp) / 1e6 + timezoneOffsetMs).toISOString();
+export const convertUnixToLocalISO = (timestamp: number) => {
+    return new Date(Number(timestamp) + timezoneOffsetMs).toISOString();
 };
 
 /**
- * Converts a local timestap written in UTC-Format back to the correct unix timestamp as an integer..
+ * Converts a local timestap written in UTC-Format back to the correct unix timestamp in milliseconds as an integer.
  */
 export const convertLocalISOToUnix = (timestamp: string) => {
     return new Date(timestamp).getTime() - timezoneOffsetMs;

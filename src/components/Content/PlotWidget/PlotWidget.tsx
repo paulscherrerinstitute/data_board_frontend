@@ -513,10 +513,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 );
 
                 const beginTimestamp = convertUnixToLocalISO(
-                    (fetchTimeValues.startTime * 1e6).toString()
+                    fetchTimeValues.startTime
                 );
                 const endTimeStamp = convertUnixToLocalISO(
-                    (fetchTimeValues.endTime * 1e6).toString()
+                    fetchTimeValues.endTime
                 );
 
                 try {
@@ -610,8 +610,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             responseCurveData.curve[key] as CurvePoints
                         )
                             .map(([timestamp, value]) => ({
-                                convertedTimestamp:
-                                    convertUnixToLocalISO(timestamp),
+                                convertedTimestamp: convertUnixToLocalISO(
+                                    Number(timestamp) / 1e6
+                                ),
                                 value,
                             }))
                             .filter(
@@ -653,8 +654,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                         const pointMeta = Object.entries(metaBlock.pointMeta)
                             .map(([timestamp, meta]) => ({
-                                convertedTimestamp:
-                                    convertUnixToLocalISO(timestamp),
+                                convertedTimestamp: convertUnixToLocalISO(
+                                    Number(timestamp) / 1e6
+                                ),
                                 meta: meta as {
                                     count?: number;
                                     pulseId?: number;
@@ -764,12 +766,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         }, [timeValues]);
 
         useEffect(() => {
-            const beginTimestamp = convertUnixToLocalISO(
-                (timeValues.startTime * 1e6).toString()
-            );
-            const endTimeStamp = convertUnixToLocalISO(
-                (timeValues.endTime * 1e6).toString()
-            );
+            const beginTimestamp = convertUnixToLocalISO(timeValues.startTime);
+            const endTimeStamp = convertUnixToLocalISO(timeValues.endTime);
 
             for (const channel of channels) {
                 const label = getLabelForChannelAttributes(

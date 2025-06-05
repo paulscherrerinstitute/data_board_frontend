@@ -114,7 +114,7 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                     text += "<br>This curve is a waveform.<br>Waveform info:";
 
                     if (metaKeys.length === 1) {
-                        text += `<br>   Timestamp: ${convertUnixToLocalISO(metaKeys[0])}`;
+                        text += `<br>   Timestamp: ${convertUnixToLocalISO(Number(metaKeys[0]) / 1e6)}`;
                         if (hasPulseIds) {
                             const pulseId = Object.values(metaData.pointMeta)[0]
                                 .pulseId;
@@ -149,7 +149,7 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                     (a, b) => Number(a) - Number(b)
                 );
                 const convertedTimestamps = timestamps.map((timestamp) =>
-                    convertUnixToLocalISO(timestamp)
+                    convertUnixToLocalISO(Number(timestamp) / 1e6)
                 );
                 const yTimestampIndices = Array.from(
                     { length: convertedTimestamps.length },
