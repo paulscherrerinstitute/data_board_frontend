@@ -367,6 +367,8 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                 maxWidth={false}
                 sx={styles.dialogStyle}
                 disablePortal
+                hideBackdrop
+                disableEnforceFocus
             >
                 <DialogTitle>
                     Waveform Preview
