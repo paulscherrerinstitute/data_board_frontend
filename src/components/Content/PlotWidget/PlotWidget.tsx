@@ -128,6 +128,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             ];
         });
         const [plotTitle, setPlotTitle] = useState(`New Plot`);
+        const [isWaveformPresent, setIsWaveformPresent] = useState(false);
         const [openPlotSettings, setOpenPlotSettings] = useState(false);
 
         const [watermarkOpacity] = useLocalStorage(
@@ -1082,6 +1083,22 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     }
                 );
 
+                let numWaveform = 0;
+                let numNotWaveform = 0;
+                curvesRef.current.forEach((curve) => {
+                    if (curve.curveData.curve.meta.waveform) {
+                        numWaveform++;
+                    } else {
+                        numNotWaveform++;
+                    }
+                });
+
+                if (numWaveform > 0) {
+                    setIsWaveformPresent(true);
+                } else {
+                    setIsWaveformPresent(false);
+                }
+
                 const values: Plotly.Data[] = [];
                 const result: Plotly.Data[] = [];
 
@@ -1279,21 +1296,27 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             type: useWebGL ? "scattergl" : "scatter",
                             mode: mode,
                             yaxis: yAxis === "y1" ? "y" : yAxis,
+                            xaxis:
+                                metaData.waveform && numNotWaveform > 0
+                                    ? "x2"
+                                    : "x",
                             line: { color: color, shape: shape },
                         } as Plotly.Data);
-                        result.push({
-                            x: xPolygon,
-                            y: yPolygon,
-                            type: useWebGL ? "scattergl" : "scatter",
-                            mode: "lines",
-                            fill: "toself",
-                            fillcolor: hexToRgba(color, 0.3),
-                            line: { color: "transparent", shape: "vh" },
-                            showlegend: false,
-                            showscale: false,
-                            yaxis: yAxis === "y1" ? "y" : yAxis,
-                            hoverinfo: "skip",
-                        } as Plotly.Data);
+                        if (xPolygon.length > 0) {
+                            result.push({
+                                x: xPolygon,
+                                y: yPolygon,
+                                type: useWebGL ? "scattergl" : "scatter",
+                                mode: "lines",
+                                fill: "toself",
+                                fillcolor: hexToRgba(color, 0.3),
+                                line: { color: "transparent", shape: "vh" },
+                                showlegend: false,
+                                showscale: false,
+                                yaxis: yAxis === "y1" ? "y" : yAxis,
+                                hoverinfo: "skip",
+                            } as Plotly.Data);
+                        }
                     }
                 }
 
@@ -1441,6 +1464,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 });
             }
 
+            const hasNonWaveformChannels = curvesRef.current.some((curve) => {
+                return !curve.curveData.curve.meta.waveform;
+            });
+
             const xLabel =
                 Array.from(curveAttributes).find(
                     ([, attributes]) => attributes.axisAssignment === "x"
@@ -1474,16 +1501,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 margin: {
                     l: 70,
                     r: 40,
-                    t: 50,
+                    t: isWaveformPresent && hasNonWaveformChannels ? 80 : 50,
                     b: 70,
                 },
                 xaxis: {
                     gridcolor: xAxisGridColor,
                     linecolor: xAxisGridColor,
                     zerolinecolor: xAxisGridColor,
-                    title: {
-                        text: xLabel,
-                    },
+                    title: hasNonWaveformChannels
+                        ? {
+                              title: { text: xLabel },
+                          }
+                        : { text: "Point Index", standoff: 0 },
                     ...{
                         // Specify the width of the X axis to leave enough room for all y axes
                         domain: [
@@ -1495,6 +1524,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         ],
                     },
                 },
+                xaxis2:
+                    hasNonWaveformChannels && isWaveformPresent
+                        ? {
+                              title: { text: "Point Index", standoff: 0 },
+                              overlaying: "x",
+                              side: "top",
+                          }
+                        : { visible: false },
                 yaxis: {
                     gridcolor: yAxisGridColor,
                     linecolor: yAxisGridColor,
@@ -1546,6 +1583,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             return layout;
         }, [
             channels,
+            isWaveformPresent,
             watermarkOpacity,
             plotBackgroundColor,
             manualAxisAssignment,
