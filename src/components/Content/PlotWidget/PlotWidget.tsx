@@ -172,7 +172,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const requestAbortControllersRef = useRef(
             new Map<string, AbortController>()
         );
-        const lastDoubleClickMsRef = useRef(0);
+        const lastClickMsRef = useRef(0);
         const waveformPreviewDataIsRequesting = useRef(false);
 
         const NUM_BINS = 1000;
@@ -1713,7 +1713,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         );
 
         const handleDoubleClick = useCallback(() => {
-            lastDoubleClickMsRef.current = Date.now();
+            lastClickMsRef.current = Date.now();
             const currentPlotDiv = plotRef.current;
             if (currentPlotDiv && plotlyLayoutRef.current) {
                 // Revert to saved settings
@@ -1725,14 +1725,19 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         // Here, we check if it's a waveform channel and try to fetch a preview of the raw waveform data.
         const handlePointClick = useCallback(
             async (event: Plotly.PlotMouseEvent) => {
-                // Wait shortly to make sure this isnt part of a double click
+                // Check if this is click follows another click within 500ms and register the click itself
+                const lastClickMs = Date.now() - lastClickMsRef.current;
+                lastClickMsRef.current = Date.now();
+                if (lastClickMs < 500) {
+                    // If this click does follow another one, ignore it since double-clicks are handled separately.
+                    return;
+                }
                 setTimeout(() => {
-                    // If a double click happened in the last 300ms, ignore this click
-                    if (Date.now() - lastDoubleClickMsRef.current < 300) {
+                    // Also make sure the click isn't followed by another click within 500ms
+                    if (Date.now() - lastClickMsRef.current < 500) {
                         return;
                     }
                     // In this case this is a single click, upon which we proceed.
-
                     const pointNumber = event.points[0].pointNumber;
                     const timestamp =
                         event.points[0].data.x[pointNumber]!.toString();
@@ -1856,7 +1861,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             }
                         }
                     });
-                }, 300);
+                }, 500);
             },
             [backendUrl]
         );
