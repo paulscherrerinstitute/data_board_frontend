@@ -64,6 +64,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         const [appliedTimeValues, setAppliedTimeValues] =
             useState<AppliedTimeValues>();
         const [optionsOpen, setOptionsOpen] = useState(false);
+        const [optionsCollapsed, setOptionsCollapsed] = useState(true);
         const [history, setHistory] = useState<AppliedTimeValues[]>([]);
         const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
@@ -81,6 +82,15 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 handleApply();
             },
         }));
+
+        useEffect(() => {
+            const handleResize = () => {
+                setOptionsCollapsed(window.innerWidth < 1920);
+            };
+
+            window.addEventListener("resize", handleResize);
+            return () => window.removeEventListener("resize", handleResize);
+        }, []);
 
         const convertQuickOptionToTimestamps = (option: QuickSelectOption) => {
             const now = new Date();
@@ -539,82 +549,169 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                         </MenuItem>
                     ))}
                 </TextField>
-                <Button variant="outlined" onClick={() => setOptionsOpen(true)}>
-                    Options
-                </Button>
-                {optionsOpen && (
-                    <Box
-                        sx={styles.overlayStyle}
-                        onClick={() => setOptionsOpen(false)}
-                    >
-                        <Box
-                            sx={styles.optionsContainerStyle}
-                            onClick={(e) => e.stopPropagation()}
+                {optionsCollapsed ? (
+                    <>
+                        <Button
+                            variant="outlined"
+                            onClick={() => setOptionsOpen(true)}
                         >
-                            <Box sx={{ textAlign: "center" }}>
-                                <Tooltip
-                                    title="When little data is available, raw data is plotted"
-                                    placement="top"
-                                    arrow
+                            Options
+                        </Button>
+                        {optionsOpen && (
+                            <Box
+                                sx={styles.overlayStyle}
+                                onClick={() => setOptionsOpen(false)}
+                            >
+                                <Box
+                                    sx={styles.optionsContainerStyle}
+                                    onClick={(e) => e.stopPropagation()}
                                 >
-                                    <Typography>Raw when sparse</Typography>
-                                </Tooltip>
-                                <Switch
-                                    checked={rawWhenSparse}
-                                    onChange={(e) =>
-                                        setRawWhenSparse(e.target.checked)
-                                    }
-                                />
-                            </Box>
+                                    <Box sx={{ textAlign: "center" }}>
+                                        <Tooltip
+                                            title="When little data is available, raw data is plotted"
+                                            placement="top"
+                                            arrow
+                                        >
+                                            <Typography>
+                                                Raw when sparse
+                                            </Typography>
+                                        </Tooltip>
+                                        <Switch
+                                            checked={rawWhenSparse}
+                                            onChange={(e) =>
+                                                setRawWhenSparse(
+                                                    e.target.checked
+                                                )
+                                            }
+                                        />
+                                    </Box>
 
-                            <Box sx={{ textAlign: "center" }}>
-                                <Tooltip
-                                    title="Bins containing no events are discarded"
-                                    placement="top"
-                                    arrow
-                                >
-                                    <Typography>Remove empty bins</Typography>
-                                </Tooltip>
-                                <Switch
-                                    checked={removeEmptyBins}
-                                    onChange={(e) =>
-                                        setRemoveEmptyBins(e.target.checked)
-                                    }
-                                />
-                            </Box>
+                                    <Box sx={{ textAlign: "center" }}>
+                                        <Tooltip
+                                            title="Bins containing no events are discarded"
+                                            placement="top"
+                                            arrow
+                                        >
+                                            <Typography>
+                                                Remove empty bins
+                                            </Typography>
+                                        </Tooltip>
+                                        <Switch
+                                            checked={removeEmptyBins}
+                                            onChange={(e) =>
+                                                setRemoveEmptyBins(
+                                                    e.target.checked
+                                                )
+                                            }
+                                        />
+                                    </Box>
 
-                            <Box sx={{ textAlign: "center" }}>
-                                <Tooltip
-                                    title="Automatically applies the configuration"
-                                    placement="top"
-                                    arrow
-                                >
-                                    <Typography>Auto Apply</Typography>
-                                </Tooltip>
-                                <TextField
-                                    select
-                                    size="small"
-                                    value={autoApply}
-                                    onChange={(e) =>
-                                        handleAutoApplyChange(
-                                            e.target.value as AutoApplyOption
-                                        )
-                                    }
-                                >
-                                    <MenuItem value="never">Never</MenuItem>
-                                    <MenuItem value="1min">1 min</MenuItem>
-                                    <MenuItem value="10min">10 min</MenuItem>
-                                </TextField>
-                                {autoApply !== "never" && (
-                                    <LinearProgress
-                                        variant="determinate"
-                                        value={autoApplyProgress}
-                                        sx={{ mt: 1 }}
-                                    />
-                                )}
+                                    <Box sx={{ textAlign: "center" }}>
+                                        <Tooltip
+                                            title="Automatically applies the configuration"
+                                            placement="top"
+                                            arrow
+                                        >
+                                            <Typography>Auto Apply</Typography>
+                                        </Tooltip>
+                                        <TextField
+                                            select
+                                            size="small"
+                                            value={autoApply}
+                                            onChange={(e) =>
+                                                handleAutoApplyChange(
+                                                    e.target
+                                                        .value as AutoApplyOption
+                                                )
+                                            }
+                                        >
+                                            <MenuItem value="never">
+                                                Never
+                                            </MenuItem>
+                                            <MenuItem value="1min">
+                                                1 min
+                                            </MenuItem>
+                                            <MenuItem value="10min">
+                                                10 min
+                                            </MenuItem>
+                                        </TextField>
+                                        {autoApply !== "never" && (
+                                            <LinearProgress
+                                                variant="determinate"
+                                                value={autoApplyProgress}
+                                                sx={{ mt: 1 }}
+                                            />
+                                        )}
+                                    </Box>
+                                </Box>
                             </Box>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        <Box sx={{ textAlign: "center" }}>
+                            <Tooltip
+                                title="When little data is available, raw data is plotted"
+                                placement="top"
+                                arrow
+                            >
+                                <Typography>Raw when sparse</Typography>
+                            </Tooltip>
+                            <Switch
+                                checked={rawWhenSparse}
+                                onChange={(e) =>
+                                    setRawWhenSparse(e.target.checked)
+                                }
+                            />
                         </Box>
-                    </Box>
+
+                        <Box sx={{ textAlign: "center" }}>
+                            <Tooltip
+                                title="Bins containing no events are discarded"
+                                placement="top"
+                                arrow
+                            >
+                                <Typography>Remove empty bins</Typography>
+                            </Tooltip>
+                            <Switch
+                                checked={removeEmptyBins}
+                                onChange={(e) =>
+                                    setRemoveEmptyBins(e.target.checked)
+                                }
+                            />
+                        </Box>
+
+                        <Box sx={{ textAlign: "center" }}>
+                            <Tooltip
+                                title="Automatically applies the configuration"
+                                placement="top"
+                                arrow
+                            >
+                                <Typography>Auto Apply</Typography>
+                            </Tooltip>
+                            <TextField
+                                select
+                                size="small"
+                                value={autoApply}
+                                onChange={(e) =>
+                                    handleAutoApplyChange(
+                                        e.target.value as AutoApplyOption
+                                    )
+                                }
+                            >
+                                <MenuItem value="never">Never</MenuItem>
+                                <MenuItem value="1min">1 min</MenuItem>
+                                <MenuItem value="10min">10 min</MenuItem>
+                            </TextField>
+                            {autoApply !== "never" && (
+                                <LinearProgress
+                                    variant="determinate"
+                                    value={autoApplyProgress}
+                                    sx={{ mt: 1 }}
+                                />
+                            )}
+                        </Box>
+                    </>
                 )}
 
                 <Button

@@ -35,6 +35,7 @@ export const toggleContainerStyle: SxProps<Theme> = {
 
 export const refreshButtonStyle: SxProps<Theme> = {
     flex: 1,
+    height: "80%",
     maxHeight: "95%",
 };
 
