@@ -50,7 +50,7 @@ The query parameters are defined for all plots and can be set in the topbar.
 
 <span id="undo-redo-timerange"></span>
 
-- **Undo / Redo Timerange:** Using the arrow buttons to the right of the end time field, you can switch to the previously set timerange. This will **immediately** apply and not have an effect on other query parameters. These arrow buttons are only shown if switching between timeranges is possible, e.g. if you have not selected a timerange more than once, there will be no arrow buttons.
+- **Undo / Redo Timerange:** Using the arrow buttons to the right of the end time field, you can switch to the previously set timerange. This will **immediately** apply and not have an effect on other query parameters. These arrow buttons are only shown if switching between timeranges is possible, e.g. if you have not selected a timerange more than once, there will be no arrow buttons. If you undo / redo a timerange, it **will** reset the quickselect option to unselected.
 
     > 💡 **Tip:** You can also switch between timeranges using `control` + `z` and `control` + `y`
 

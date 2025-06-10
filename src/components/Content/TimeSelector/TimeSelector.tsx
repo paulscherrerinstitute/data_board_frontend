@@ -295,12 +295,14 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             let start!: Date;
             let end!: Date;
             let validTime = false;
+            let selectedQuickOption: QuickSelectOption = false;
 
             if (quickSelectParam) {
                 if (quickSelectParam === "false") {
                     timeSourceRef.current = "manual";
                 } else if (isValueInQuickSelectOptions(quickSelectParam)) {
                     timeSourceRef.current = "quickselect";
+                    selectedQuickOption = quickSelectParam;
                     setSelectedQuickOption(quickSelectParam);
                     if (!validTime) {
                         ({ start, end } =
@@ -311,6 +313,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     isValueInQuickSelectOptions(Number(quickSelectParam))
                 ) {
                     timeSourceRef.current = "quickselect";
+                    selectedQuickOption = Number(quickSelectParam);
                     setSelectedQuickOption(Number(quickSelectParam));
                     if (!validTime) {
                         ({ start, end } = convertQuickOptionToTimestamps(
@@ -331,8 +334,9 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             } else if (!validTime) {
                 // Else, default to ten minutes ago
                 timeSourceRef.current = "quickselect";
-                ({ start, end } = convertQuickOptionToTimestamps(10));
+                selectedQuickOption = 10;
                 setSelectedQuickOption(10);
+                ({ start, end } = convertQuickOptionToTimestamps(10));
             }
 
             setStartTime(dayjs(start));
@@ -368,12 +372,22 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 }
             }
 
-            onTimeChange({
+            const newTimeValues = {
                 startTime: start.valueOf(),
                 endTime: end.valueOf(),
                 rawWhenSparse: newRawWhenSparse,
                 removeEmptyBins: newRemoveEmptyBins,
-            });
+            };
+
+            const newAppliedTimeValues = {
+                ...newTimeValues,
+                selectedQuickOption: selectedQuickOption,
+            };
+
+            setHistory([cloneDeep(newAppliedTimeValues)]);
+            setHistoryIndex(0);
+
+            onTimeChange(newTimeValues);
         }, [handleAutoApplyChange, onTimeChange, searchParams]);
 
         const setTimeRange = useCallback(
@@ -381,6 +395,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 if (!startTime || !endTime) return;
                 setStartTime(dayjs(startTime));
                 setEndTime(dayjs(endTime));
+
                 timeSourceRef.current = "manual";
                 setSelectedQuickOption(false);
 
@@ -392,6 +407,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     selectedQuickOption,
                 };
                 setAppliedTimeValues(newTimeValues);
+
                 // If this isn't a history entry (selected by going back / forward through history), add it to the history
                 if (!isHistoryEntry) {
                     setHistory((prev) => {
@@ -468,40 +484,38 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                         }}
                     />
                 </Box>
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Box sx={styles.timeFieldStyle}>
-                        <DateTimePicker
-                            label="End Time"
-                            format="YYYY-MM-DD HH:mm:ss"
-                            ampm={false}
-                            value={endTime}
-                            onChange={(newTime) => {
-                                setEndTime(dayjs(newTime));
-                                timeSourceRef.current = "manual";
-                                setSelectedQuickOption(false);
-                            }}
-                        />
-                    </Box>
-                    <Box sx={{ ml: 1, display: "flex", gap: 1 }}>
-                        {historyIndex > 0 && (
-                            <Tooltip
-                                title="Apply previous begin- and endtime"
-                                arrow
-                                placement="top"
-                            >
-                                <ArrowBack onClick={undoTimeChange} />
-                            </Tooltip>
-                        )}
-                        {historyIndex < history.length - 1 && (
-                            <Tooltip
-                                title="Apply next begin- and endtime"
-                                arrow
-                                placement="top"
-                            >
-                                <ArrowForward onClick={redoTimeChange} />
-                            </Tooltip>
-                        )}
-                    </Box>
+                <Box sx={styles.timeFieldStyle}>
+                    <DateTimePicker
+                        label="End Time"
+                        format="YYYY-MM-DD HH:mm:ss"
+                        ampm={false}
+                        value={endTime}
+                        onChange={(newTime) => {
+                            setEndTime(dayjs(newTime));
+                            timeSourceRef.current = "manual";
+                            setSelectedQuickOption(false);
+                        }}
+                    />
+                </Box>
+                <Box sx={styles.historyButtonBoxStyle}>
+                    {historyIndex > 0 && (
+                        <Tooltip
+                            title="Apply previous begin- and endtime"
+                            arrow
+                            placement="top"
+                        >
+                            <ArrowBack onClick={undoTimeChange} />
+                        </Tooltip>
+                    )}
+                    {historyIndex < history.length - 1 && (
+                        <Tooltip
+                            title="Apply next begin- and endtime"
+                            arrow
+                            placement="top"
+                        >
+                            <ArrowForward onClick={redoTimeChange} />
+                        </Tooltip>
+                    )}
                 </Box>
                 <TextField
                     select

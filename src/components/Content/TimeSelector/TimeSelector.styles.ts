@@ -79,3 +79,9 @@ export const optionsContainerStyle: SxProps<Theme> = {
     width: "90%",
     mx: "auto",
 };
+
+export const historyButtonBoxStyle: SxProps<Theme> = {
+    display: "flex",
+    alignItems: "center",
+    gap: 1,
+};
