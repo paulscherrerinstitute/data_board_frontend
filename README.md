@@ -48,6 +48,12 @@ The query parameters are defined for all plots and can be set in the topbar.
 
     > ⚠️ **Important:** The time displayed in the plots will also be in **local time**, _not_ UTC!
 
+<span id="undo-redo-timerange"></span>
+
+- **Undo / Redo Timerange:** Using the arrow buttons to the right of the end time field, you can switch to the previously set timerange. This will **immediately** apply and not have an effect on other query parameters. These arrow buttons are only shown if switching between timeranges is possible, e.g. if you have not selected a timerange more than once, there will be no arrow buttons.
+
+    > 💡 **Tip:** You can also switch between timeranges using `control` + `z` and `control` + `y`
+
 - **Quick Select:** You can also utilise quick select to get an absolute timestamp for relative time. If you apply the query parameters, relative times will be recalculated, if quick select is active.
 
 - **Raw when sparse:** This toggle defines if the curves should be drawn using raw data if there are not enough points for binned data. This simply removes unnecessary min/max curves and is highly recommended to stay activated.
@@ -98,9 +104,9 @@ The general section contains settings that affect all plots.
 
 - **Plot Background Color:** Affects all plots even existing ones. This is overwritten when a theme is selected but can be changed back manually.
 - **X-Axis / Y-Axis Grid Color:** These two settings behave the same way as plot background color.
-
+  <span id="use-webgl"></span>
 - **Use WebGL:** Decides whether or not the graphics card should be used to render curves. Highly recommended, it allows for somewhat performant rendering of even bigger curves.
-
+  <span id="use-virtual-webgl-contexts"></span>
 - **Use Virtual WebGL Contexts:** Since the number of WebGL contexts (proportional to the number of plots) is limited on most browsers, they might break if too many plots are drawn. As a workaround, this setting can be enabled to make all plots share one WebGL context.
 
     > ⚠️ **Warning:** This setting is an experimental _workaround_ and may break the plotting.
@@ -168,6 +174,29 @@ When you hover over a data point, you see a little popup with the information fo
 - **[Pearson Correlation Coefficient](https://w.wiki/Ksu)**
 - **[Spearman's Rank Correlation Coefficient](https://w.wiki/6AM9)**
 
+#### Requery on Zoom
+
+If you hold `control` while zooming in, the timerange you zoomed to will be applied as the selected timerange. This **will** affect other plots. You then can't simply zoom back again, this new zoom will be the new base zoom.
+
+#### Viewing Waveforms
+
+Waveform only show the waveform's average by default, thus behaving like regular binned curves. It is not intended to mix waveform channels with regular channels in a plot. This is not actively disabled, but also not supported.
+
+##### **Waveform Preview**
+
+When a point of a waveform curve in it's binned representation is clicked and the number of waveform points under the clicked point is reasonably small (See console.log output on the browser for this limit if it is reached), a popup window will open above the plot, allowing you to preview all raw waveforms under that point. If it only one waveform, it will be displayed as a regular curve.
+
+When there are multiple waveforms:
+
+- If [WebGL](#use-webgl) is enabled: a 3D plot will be rendered where you can view all waveforms. On hover you see more information about each point.
+- Otherwise: a heatmap will be drawn with each waveform's data in it.
+
+##### **Zoom to Waveform**
+
+If you zoom in enough on the time axis ([while holding control](#requery-on-zoom)), such that only one waveform corresponds to the current timerange, it will be displayed instead of it's binned point.
+
+This is effective when paired together with [undoing the timerange](#undo-redo-timerange). This way, you can [control zoom](#requery-on-zoom) in on a single waveform, and then [undo the zoom](#undo-redo-timerange) again to get back to the binned representation, enabling you to zoom in on another waveform.
+
 ### Sharing / Saving Stuff
 
 #### Export Settings
@@ -220,6 +249,7 @@ If your browser yells at you about too many WebGL contexts:
 - Try closing other tabs.
 - Reduce the number of plots.
 - Switch to a different browser.
+- Enable [virtual WebGL contexts](#use-virtual-webgl-contexts) if you really need this many contexts.
 
 #### I want to specify my timerange in milliseconds!
 
@@ -338,12 +368,14 @@ If you are sure your problem is a bug in DataBoard, you can also directly open a
 > **Q:** When adding / removing a curve, other curves disappear!  
 > **A:** If this changes the axis assignments of the curves, it might be a curve is assigned to an axis, on which custom limits are defined, outside of the visible domain for this curve. Make sure to check the [plot settings](#plot-specific-settings) for any weird limits.
 
-> **Q:** The [old interface](https://data-api.psi.ch) could render more points / was faster / displayed better data!  
-> **A:** A big reason for this application to be created was the old archiver interface (used by data-api) becoming obsolete. This means this application uses a different backend ([Data-API v4](https://data-api.psi.ch/api/4/docs/index.html) via [datahub](https://github.com/paulscherrerinstitute/datahub)). Thus, the data is coming from another provider, providing it differently. Unfortunately there is nothing we can do about that here.
+> **Q:** The [old interface](https://data-ui.psi.ch) could render more points / was faster / displayed better data!  
+> **A:** A big reason for this application to be created was the old archiver interface (used by data-ui) becoming obsolete. This means this application uses a different backend ([Data-API v4](https://data-api.psi.ch/api/4/docs/index.html) via [datahub](https://github.com/paulscherrerinstitute/datahub)). Thus, the data is coming from another provider, providing it differently. Unfortunately there is nothing we can do about that here.
 
 ### ⚠️ Known Issues
 
 > **Performance:** We are aware the website can be slow sometimes. This happens especially with many plots, plotting many curves with a lot of data points. To a certain extent this is natural, due to browser limitations. At the same time, the application could probably be optimized a bit. If you can't stand the performance, feel free to optimize, and open a PR. If you have any _groundbreaking_ ideas that could drastically improve performance (not rewriting it in rust), at best with a little proof-of-concept, feel free to reach out to the [current maintainer](#contact--support).
+
+> **Plot disappears when previewing waveforms:** When [previewing waveforms](#waveform-preview), it can happen that the original plot seems to disappear. It is shown again on rerender, caused e.g. by resetting the zoom (double-click). This behaviour is caused by plotly spawning a new WebGL context for each plot, including the waveform-previews. When those aren't disposed properly, too many will be active at a time, causing the oldest to be destroyed, which can be the original plot. In short: The waveform-previews overload the browsers graphics-engine. To workaround this, you could either turn off [WebGL](#use-webgl) (not recommended) or enable [virtual WebGL contexts](#use-virtual-webgl-contexts) (recommended).
 
 ---
 

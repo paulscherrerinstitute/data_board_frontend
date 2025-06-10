@@ -19,6 +19,7 @@ export interface PlotWidgetProps {
 export type PlotlyHTMLElement = Plotly.PlotlyHTMLElement &
     HTMLDivElement & {
         removeAllListeners(): void;
+        _fullLayout: Plotly.Layout;
     };
 
 export type CurvePoints = {

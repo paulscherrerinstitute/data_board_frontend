@@ -28,7 +28,7 @@ import {
 } from "../../../../helpers/defaults";
 import showSnackbarAndLog from "../../../../helpers/showSnackbar";
 import Plotly from "plotly.js";
-import { cloneDeep } from "lodash";
+import { cloneDeep, isEqual } from "lodash";
 import { convertUnixToLocalISO } from "../../../../helpers/curveDataTransformations";
 
 const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
@@ -66,8 +66,11 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
 
     const [yAxisTimestamps, setYAxisTimestamps] = useState<string[]>([]);
     const [yAxisIndices, setYAxisIndices] = useState<number[]>([]);
+    const [yAxisIsoTimestamps, setYAxisIsoTimestamps] = useState<string[]>([]);
+    const [visibleTimestamps, setVisibleTimestamps] = useState<string[]>([]);
 
     const plotRef = useRef<PlotlyHTMLElement | null>(null);
+    const previousLayoutRef = useRef<Plotly.Layout | null>(null);
 
     const close = useCallback(() => {
         setWaveformPreviewData(undefined);
@@ -149,14 +152,19 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                     (a, b) => Number(a) - Number(b)
                 );
                 const convertedTimestamps = timestamps.map((timestamp) =>
-                    convertUnixToLocalISO(Number(timestamp) / 1e6).slice(11, 23)
+                    convertUnixToLocalISO(Number(timestamp) / 1e6)
+                );
+                const shortTimestamps = convertedTimestamps.map((timestamp) =>
+                    timestamp.slice(11, 23)
                 );
                 const yTimestampIndices = Array.from(
-                    { length: convertedTimestamps.length },
+                    { length: shortTimestamps.length },
                     (_, i) => i
                 );
                 setYAxisIndices(yTimestampIndices);
-                setYAxisTimestamps(convertedTimestamps);
+                setYAxisTimestamps(shortTimestamps);
+                setYAxisIsoTimestamps(convertedTimestamps);
+                setVisibleTimestamps(convertedTimestamps);
 
                 const waveformsData = timestamps.map((timestamp) => {
                     const entries = Object.entries(baseData).filter(([key]) =>
@@ -176,27 +184,64 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                 const zMatrix = waveformsData.map((wf) => wf.values);
 
                 if (useWebGL) {
-                    result = [
-                        {
-                            name: curve.name,
-                            x: xIndices,
-                            y: yTimestampIndices,
-                            z: zMatrix,
-                            type: "surface",
+                    const allZValues = zMatrix.flat();
+                    const zMin = Math.min(...allZValues);
+                    const zMax = Math.max(...allZValues);
+
+                    const traces: Plotly.Data[] = [];
+
+                    for (let yi = 0; yi < yTimestampIndices.length; yi++) {
+                        const x = [];
+                        const y = [];
+                        const z = [];
+                        const customdata = [];
+
+                        for (let xi = 0; xi < xIndices.length; xi++) {
+                            x.push(xIndices[xi]);
+                            y.push(yTimestampIndices[yi]);
+                            z.push(zMatrix[yi][xi]);
+                            customdata.push(convertedTimestamps[yi]);
+                        }
+
+                        traces.push({
+                            type: "scatter3d",
+                            mode: "lines+markers",
+                            x: x,
+                            y: y,
+                            z: z,
+                            customdata: customdata,
+                            name: `Waveform ${yi}`,
                             hovertemplate:
-                                "Timestamp: %{y}<br>Point No.: %{x}<br>Value: %{z}<extra></extra>",
-                        },
-                    ];
+                                "Timestamp: %{customdata}<br>Point No.: %{x}<br>Value: %{z}<extra></extra>",
+                            line: {
+                                color: "rgba(0, 0, 0, 1)",
+                            },
+                            marker: {
+                                size: 3,
+                                color: z,
+                                colorscale: "RdBu",
+                                cmin: zMin,
+                                cmax: zMax,
+                                colorbar:
+                                    yi === 0
+                                        ? { title: { text: "Value" } }
+                                        : undefined,
+                                showscale: yi === 0,
+                            },
+                        });
+                    }
+                    result = traces;
                 } else {
                     result = [
                         {
                             name: curve.name,
-                            x: xIndices,
-                            y: convertedTimestamps,
+                            y: xIndices,
+                            x: convertedTimestamps,
                             z: zMatrix,
                             type: "heatmap",
                             hovertemplate:
-                                "Timestamp: %{y}<br>Point No.: %{x}<br>Value: %{z}<extra></extra>",
+                                "Timestamp: %{x}<br>Point No.: %{y}<br>Value: %{z}<extra></extra>",
+                            transpose: true,
                         },
                     ];
                 }
@@ -232,9 +277,9 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
         return {
             scene: {
                 yaxis: {
+                    tickmode: "array",
                     tickvals: tickvals,
                     ticktext: ticktext,
-                    ticks: "outside",
                     gridcolor: xAxisGridColor,
                     linecolor: xAxisGridColor,
                     zerolinecolor: xAxisGridColor,
@@ -264,29 +309,36 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
             },
             autosize: true,
             margin: {
-                l: 70,
-                r: 40,
+                l: useWebGL ? 0 : 70,
+                r: useWebGL ? 0 : 40,
                 t: 50,
-                b: 70,
+                b: useWebGL ? 0 : 90,
+                pad: 0,
             },
             xaxis: {
                 gridcolor: xAxisGridColor,
                 linecolor: xAxisGridColor,
                 zerolinecolor: xAxisGridColor,
                 title: {
-                    text: "Point Index",
+                    text: yAxisTimestamps.length === 1 ? "Point Index" : "Time",
                 },
+                ...(yAxisTimestamps.length > 1 && {
+                    type: "array",
+                    tickmode: "date",
+                    tickvals: visibleTimestamps,
+                    tickformat: "%H:%M:%S.%3f",
+                }),
             },
             yaxis: {
                 gridcolor: yAxisGridColor,
                 linecolor: yAxisGridColor,
                 zerolinecolor: yAxisGridColor,
-                type: "linear",
                 title: {
-                    text: "Value",
+                    text:
+                        yAxisTimestamps.length === 1 ? "Value" : "Point Index",
                 },
             },
-            showlegend: true,
+            showlegend: false,
             uirevision: "time",
             plot_bgcolor: plotBackgroundColor,
             paper_bgcolor: plotBackgroundColor,
@@ -312,13 +364,53 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
     }, [
         waveformPreviewData,
         watermarkOpacity,
+        yAxisIsoTimestamps,
         plotBackgroundColor,
         xAxisGridColor,
         yAxisGridColor,
         yAxisIndices,
         yAxisTimestamps,
+        visibleTimestamps,
         theme,
+        useWebGL,
     ]);
+
+    const updateTimeTicks = useCallback(
+        (gd: Plotly.PlotlyHTMLElement) => {
+            const layoutAxis = gd.layout?.xaxis;
+            if (
+                !layoutAxis ||
+                !layoutAxis.range ||
+                !Array.isArray(layoutAxis.range)
+            ) {
+                return;
+            }
+            const [rangeStartIso, rangeEndIso] = layoutAxis.range.map((ts) =>
+                convertUnixToLocalISO(new Date(ts).getTime())
+            );
+
+            // Filter timestamps within current range
+            const visibleTicks = yAxisIsoTimestamps.filter(
+                (ts) => ts >= rangeStartIso && ts <= rangeEndIso
+            );
+            if (visibleTicks.length === 0) {
+                return;
+            }
+
+            // Downsample to max 5 ticks
+            const maxTicks = 5;
+            const step = Math.ceil(visibleTicks.length / maxTicks);
+            const newTicks = visibleTicks
+                .filter((_, i) => i % step === 0)
+                .slice(0, maxTicks);
+
+            // Update if changed
+            if (!isEqual(newTicks, visibleTimestamps)) {
+                setVisibleTimestamps(newTicks);
+            }
+        },
+        [yAxisIsoTimestamps, visibleTimestamps, setVisibleTimestamps]
+    );
 
     useEffect(() => {
         const currentPlotDiv = plotRef.current;
@@ -333,16 +425,41 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
 
     useEffect(() => {
         const currentPlotDiv = plotRef.current;
+        if (!currentPlotDiv) {
+            return;
+        }
+
+        currentPlotDiv.on("plotly_relayout", () =>
+            updateTimeTicks(currentPlotDiv)
+        );
+        return () => currentPlotDiv.removeAllListeners();
+    }, [updateTimeTicks]);
+
+    useEffect(() => {
+        const currentPlotDiv = plotRef.current;
         if (!currentPlotDiv) return;
 
         const resizeObserver = new ResizeObserver(() => {
             Plotly.Plots.resize(currentPlotDiv);
-            Plotly.relayout(currentPlotDiv, cloneDeep(layout));
         });
 
         resizeObserver.observe(currentPlotDiv);
 
         return () => resizeObserver.disconnect();
+    }, [data]);
+
+    useEffect(() => {
+        const currentPlotDiv = plotRef.current;
+        if (!currentPlotDiv) return;
+        if (!isEqual(previousLayoutRef.current, layout)) {
+            previousLayoutRef.current = cloneDeep(layout);
+            const newPlotlyLayout = cloneDeep(layout);
+            if (currentPlotDiv._fullLayout.xaxis?.range) {
+                newPlotlyLayout.xaxis.range =
+                    currentPlotDiv._fullLayout.xaxis.range;
+            }
+            Plotly.relayout(currentPlotDiv, newPlotlyLayout);
+        }
     }, [layout]);
 
     return (

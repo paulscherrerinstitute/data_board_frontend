@@ -1761,9 +1761,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     if (
                                         expectedPoints > NUM_EXPECTED_POINTS_MAX
                                     ) {
-                                        logToConsole(
-                                            `Not fetching raw waveforms for clicked point, expecting too many raw points (${expectedPoints}) under the requested point, maximum allowed is: ${NUM_EXPECTED_POINTS_MAX}`,
-                                            "error"
+                                        showSnackbarAndLog(
+                                            "Not fetching raw waveform, too many points.",
+                                            "error",
+                                            `Not fetching raw waveforms for clicked point, expecting too many raw points (${expectedPoints}) under the requested point, maximum allowed is: ${NUM_EXPECTED_POINTS_MAX}`
                                         );
                                         if (
                                             expectedPoints >=
