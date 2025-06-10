@@ -40,6 +40,9 @@ export const listBoxStyle: SxProps<Theme> = {
     width: "100%",
     flexGrow: 1,
     marginBottom: 2,
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
 };
 
 export const typographyHeaderStyle: SxProps<Theme> = {
@@ -55,7 +58,7 @@ export const typographyTitleStyle: SxProps<Theme> = {
 export const filterBoxStyle: SxProps<Theme> = {
     width: "100%",
     flexGrow: 1,
-    overflow: "auto",
+    overflow: "none",
     marginBottom: 2,
 };
 
@@ -119,4 +122,10 @@ export const checkboxStyle: SxProps<Theme> = {
         padding: 0,
         margin: -0.3 - 0.3,
     },
+};
+
+export const autoSizerBoxStyle: SxProps<Theme> = {
+    flex: 1,
+    minHeight: 0,
+    width: "100%",
 };

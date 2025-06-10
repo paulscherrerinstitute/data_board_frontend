@@ -153,6 +153,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                             windowWidth >= 200
                                 ? "block"
                                 : "none",
+                        height: "100%",
                     }}
                 >
                     <Selector setSidebarIsFocused={setSidebarIsFocused} />
