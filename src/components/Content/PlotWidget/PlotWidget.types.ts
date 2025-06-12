@@ -7,7 +7,6 @@ export interface PlotWidgetProps {
     timeValues: TimeValues;
     index: string;
     initialPlotSettings?: PlotSettings;
-    isWaveformPreview: boolean;
     onChannelsChange: (updatedChannels: Channel[]) => void;
     onZoomTimeRangeChange: (startTime: number, endTime: number) => void;
     onUpdatePlotSettings: (

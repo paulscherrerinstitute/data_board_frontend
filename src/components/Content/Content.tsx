@@ -523,7 +523,7 @@ const Content: React.FC = () => {
         } catch (error) {
             showSnackbarAndLog("Failed to import dashboard", "error", error);
         }
-    }, [setWidgets]);
+    }, []);
 
     useEffect(() => {
         const handleAddChannels = (event: Event) => {
@@ -588,7 +588,7 @@ const Content: React.FC = () => {
                 ADD_CHANNELS_TO_FIRST_PLOT_EVENT,
                 handleAddChannels
             );
-    }, [widgets, setWidgets, handleCreateWidget]);
+    }, [widgets, handleCreateWidget]);
 
     return (
         <Box sx={styles.contentContainerStyle}>
@@ -662,7 +662,6 @@ const Content: React.FC = () => {
                                               }
                                             : undefined
                                     }
-                                    isWaveformPreview={false}
                                     onChannelsChange={(updatedChannels) => {
                                         setWidgets((prevWidgets) =>
                                             prevWidgets.map((widget) =>

@@ -408,7 +408,7 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                 setVisibleTimestamps(newTicks);
             }
         },
-        [yAxisIsoTimestamps, visibleTimestamps, setVisibleTimestamps]
+        [yAxisIsoTimestamps, visibleTimestamps]
     );
 
     useEffect(() => {

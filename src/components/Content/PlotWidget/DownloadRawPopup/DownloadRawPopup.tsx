@@ -76,15 +76,7 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
             }
         };
         fetchRawLinks();
-    }, [
-        backendUrl,
-        startTime,
-        endTime,
-        curves,
-        setLinks,
-        setLoadingLinks,
-        setLoadingLinksFailed,
-    ]);
+    }, [backendUrl, startTime, endTime, curves]);
 
     const copyToClipboard = async (text: string) => {
         try {

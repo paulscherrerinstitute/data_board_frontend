@@ -158,7 +158,7 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                 return { ...prev, curveAttributes: newCurveAttributes };
             });
         },
-        [setLocalPlotSettings]
+        []
     );
 
     return (

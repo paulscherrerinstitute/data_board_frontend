@@ -1,3 +1,5 @@
+import React from "react";
+
 import { BackendCurveData, Curve } from "../PlotWidget.types";
 
 export interface WaveformPreviewPopupProps {

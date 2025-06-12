@@ -442,24 +442,21 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             };
         }, []);
 
-        const setErrorCurve = useCallback(
-            (error: string, channel: Channel) => {
-                const errorCurve = curvesRef.current.find(
-                    (curve) =>
-                        curve.backend === channel.backend &&
-                        curve.type === channel.type &&
-                        curve.name === channel.name
-                );
+        const setErrorCurve = useCallback((error: string, channel: Channel) => {
+            const errorCurve = curvesRef.current.find(
+                (curve) =>
+                    curve.backend === channel.backend &&
+                    curve.type === channel.type &&
+                    curve.name === channel.name
+            );
 
-                if (errorCurve) {
-                    errorCurve.isLoading = false;
-                    errorCurve.error = error;
-                }
+            if (errorCurve) {
+                errorCurve.isLoading = false;
+                errorCurve.error = error;
+            }
 
-                setCurves([...curvesRef.current]);
-            },
-            [setCurves]
-        );
+            setCurves([...curvesRef.current]);
+        }, []);
 
         const handleResponseError = useCallback(
             (error: AxiosError | unknown, channel: Channel) => {
@@ -876,7 +873,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     }
                 })();
             }
-        }, [channels, timeValues, backendUrl, setCurves, fetchData]);
+        }, [channels, timeValues, backendUrl, fetchData]);
 
         // Resets zoom when time values change (and ctrl isn't pressed)
         useEffect(() => {
@@ -1656,13 +1653,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 ],
                 doubleClick: false,
             } as Plotly.Config;
-        }, [
-            downloadDataCSV,
-            downloadDataJSON,
-            setShowRawDownloadPopup,
-            downloadImage,
-            theme,
-        ]);
+        }, [downloadDataCSV, downloadDataJSON, downloadImage, theme]);
 
         const handleRelayout = useCallback(
             (e: Readonly<Plotly.PlotRelayoutEvent>) => {
