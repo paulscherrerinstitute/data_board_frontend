@@ -4,7 +4,7 @@ export const sidebarStyle: SxProps<Theme> = {
     display: "flex",
     flexDirection: "column",
     position: "relative",
-    height: "100%",
+    height: "100vh",
     background: (theme) => theme.palette.custom.sidebar.background.primary,
     zIndex: 10,
     borderColor: (theme) => theme.palette.divider,
