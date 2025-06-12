@@ -58,7 +58,6 @@ export const typographyTitleStyle: SxProps<Theme> = {
 export const filterBoxStyle: SxProps<Theme> = {
     width: "100%",
     flexGrow: 1,
-    overflow: "none",
     marginBottom: 2,
 };
 
