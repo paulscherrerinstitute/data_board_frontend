@@ -364,7 +364,6 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
     }, [
         waveformPreviewData,
         watermarkOpacity,
-        yAxisIsoTimestamps,
         plotBackgroundColor,
         xAxisGridColor,
         yAxisGridColor,
