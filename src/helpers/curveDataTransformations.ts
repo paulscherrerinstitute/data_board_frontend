@@ -47,7 +47,7 @@ export function filterCurveData(
 }
 
 /**
- * Constructs a unique label for each channel based on it's attributes.
+ * Constructs a unique label for each channel based on its attributes.
  */
 export const getLabelForChannelAttributes = (
     name: string,
