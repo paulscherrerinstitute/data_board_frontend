@@ -64,7 +64,10 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         const [appliedTimeValues, setAppliedTimeValues] =
             useState<AppliedTimeValues>();
         const [optionsOpen, setOptionsOpen] = useState(false);
-        const [optionsCollapsed, setOptionsCollapsed] = useState(true);
+        const OPTIONS_COLLAPSED_THRESHOLD = 1920;
+        const [optionsCollapsed, setOptionsCollapsed] = useState(
+            window.innerWidth < OPTIONS_COLLAPSED_THRESHOLD
+        );
         const [history, setHistory] = useState<AppliedTimeValues[]>([]);
         const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
@@ -85,7 +88,9 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
 
         useEffect(() => {
             const handleResize = () => {
-                setOptionsCollapsed(window.innerWidth < 1920);
+                setOptionsCollapsed(
+                    window.innerWidth < OPTIONS_COLLAPSED_THRESHOLD
+                );
             };
 
             window.addEventListener("resize", handleResize);
