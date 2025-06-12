@@ -34,6 +34,7 @@ import {
 } from "./Selector.types";
 import showSnackbarAndLog from "../../helpers/showSnackbar";
 import AddIcon from "@mui/icons-material/Add";
+import AutoSizer from "react-virtualized-auto-sizer";
 
 const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
     const { backendUrl } = useApiUrls();
@@ -349,7 +350,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
             `;
 
             if (selectedChannels.length === 1) {
-                dragPreview.innerText = `${channelsToTransfer[0].name} (${channelsToTransfer[0].backend} - ${channelsToTransfer[0].type})`;
+                dragPreview.innerText = `${channelsToTransfer[0].name} (${channelsToTransfer[0].backend} - ${channelsToTransfer[0].type || "unknown"})`;
             } else {
                 dragPreview.innerText = `Multiple Channels`;
             }
@@ -546,27 +547,33 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                         {error}
                     </Alert>
                 )}
-
-                <ListWindow
-                    style={{
-                        background:
-                            theme.palette.custom.sidebar.background.secondary,
-                    }}
-                    height={660}
-                    itemCount={filteredChannels.length}
-                    itemSize={46}
-                    width="100%"
-                    itemData={{
-                        items: filteredChannels,
-                        onSelect: handleSelectChannel,
-                        onDeselect: handleDeselectChannel,
-                        onDragStart: handleDragStart,
-                        isDraggable: true,
-                        theme,
-                    }}
-                >
-                    {ListItemRow}
-                </ListWindow>
+                <Box sx={styles.autoSizerBoxStyle}>
+                    <AutoSizer>
+                        {({ height, width }) => (
+                            <ListWindow
+                                style={{
+                                    background:
+                                        theme.palette.custom.sidebar.background
+                                            .secondary,
+                                }}
+                                height={height - 10}
+                                itemCount={filteredChannels.length}
+                                itemSize={46}
+                                width={width}
+                                itemData={{
+                                    items: filteredChannels,
+                                    onSelect: handleSelectChannel,
+                                    onDeselect: handleDeselectChannel,
+                                    onDragStart: handleDragStart,
+                                    isDraggable: true,
+                                    theme,
+                                }}
+                            >
+                                {ListItemRow}
+                            </ListWindow>
+                        )}
+                    </AutoSizer>
+                </Box>
             </Box>
         </Box>
     );

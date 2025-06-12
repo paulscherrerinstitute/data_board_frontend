@@ -28,7 +28,9 @@ import {
 import * as styles from "./TimeSelector.styles";
 import { useSearchParams } from "react-router-dom";
 import { DateTimePicker } from "@mui/x-date-pickers";
+import { ArrowBack, ArrowForward } from "@mui/icons-material";
 import dayjs, { Dayjs } from "dayjs";
+import { cloneDeep } from "lodash";
 
 const quickOptions = [
     { label: "Not selected", value: false },
@@ -61,6 +63,13 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         const [autoApplyProgress, setAutoApplyProgress] = useState(0);
         const [appliedTimeValues, setAppliedTimeValues] =
             useState<AppliedTimeValues>();
+        const [optionsOpen, setOptionsOpen] = useState(false);
+        const OPTIONS_COLLAPSED_THRESHOLD = 1920;
+        const [optionsCollapsed, setOptionsCollapsed] = useState(
+            window.innerWidth < OPTIONS_COLLAPSED_THRESHOLD
+        );
+        const [history, setHistory] = useState<AppliedTimeValues[]>([]);
+        const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
         const autoApplyIntervalRef = useRef<NodeJS.Timeout | null>(null);
         const autoApplyProgressIntervalRef = useRef<NodeJS.Timeout | null>(
@@ -76,6 +85,17 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 handleApply();
             },
         }));
+
+        useEffect(() => {
+            const handleResize = () => {
+                setOptionsCollapsed(
+                    window.innerWidth < OPTIONS_COLLAPSED_THRESHOLD
+                );
+            };
+
+            window.addEventListener("resize", handleResize);
+            return () => window.removeEventListener("resize", handleResize);
+        }, []);
 
         const convertQuickOptionToTimestamps = (option: QuickSelectOption) => {
             const now = new Date();
@@ -135,6 +155,9 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         const handleQuickSelect = (value: QuickSelectOption) => {
             if (value === "false") {
                 timeSourceRef.current = "manual";
+                setStartTime(dayjs(appliedTimeValues?.startTime));
+                setEndTime(dayjs(appliedTimeValues?.endTime));
+                setSelectedQuickOption(false);
                 return;
             }
             timeSourceRef.current = "quickselect";
@@ -202,12 +225,23 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 endUnixTimeMs = end.valueOf();
             } else setSelectedQuickOption(false);
 
-            setAppliedTimeValues({
+            const newTimeValues = {
                 startTime: startUnixTimeMs,
                 endTime: endUnixTimeMs,
                 rawWhenSparse: rawWhenSparse,
                 removeEmptyBins: removeEmptyBins,
                 selectedQuickOption: selectedQuickOption,
+            };
+
+            setAppliedTimeValues(newTimeValues);
+
+            setHistory((prev) => {
+                const truncated = prev.slice(0, historyIndex + 1);
+                const updated = [...truncated, cloneDeep(newTimeValues)].slice(
+                    -10
+                );
+                setHistoryIndex(updated.length - 1);
+                return updated;
             });
         }, [
             endTime,
@@ -215,6 +249,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             removeEmptyBins,
             selectedQuickOption,
             startTime,
+            historyIndex,
         ]);
 
         const simulateAutoApplyPress = () => {
@@ -272,35 +307,55 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             const removeEmptyBins = searchParams.get("removeEmptyBins");
             const autoApplyParam = searchParams.get("autoApply");
 
-            const startTime = Number(startTimeParam);
-            const endTime = Number(endTimeParam);
-            let start, end;
-            // If both time parameters are valid numbers, initialize the time to those
-            if (!isNaN(startTime) && !isNaN(endTime) && startTime * endTime) {
-                start = new Date(startTime);
-                end = new Date(endTime);
-            } else {
-                // Else, default to ten minutes ago
-                ({ start, end } = convertQuickOptionToTimestamps(10));
-                setSelectedQuickOption(10);
-            }
-
-            setStartTime(dayjs(start));
-            setEndTime(dayjs(end));
+            let start!: Date;
+            let end!: Date;
+            let validTime = false;
+            let selectedQuickOption: QuickSelectOption = false;
 
             if (quickSelectParam) {
                 if (quickSelectParam === "false") {
                     timeSourceRef.current = "manual";
                 } else if (isValueInQuickSelectOptions(quickSelectParam)) {
                     timeSourceRef.current = "quickselect";
+                    selectedQuickOption = quickSelectParam;
                     setSelectedQuickOption(quickSelectParam);
+                    if (!validTime) {
+                        ({ start, end } =
+                            convertQuickOptionToTimestamps(quickSelectParam));
+                        validTime = true;
+                    }
                 } else if (
                     isValueInQuickSelectOptions(Number(quickSelectParam))
                 ) {
                     timeSourceRef.current = "quickselect";
+                    selectedQuickOption = Number(quickSelectParam);
                     setSelectedQuickOption(Number(quickSelectParam));
+                    if (!validTime) {
+                        ({ start, end } = convertQuickOptionToTimestamps(
+                            Number(quickSelectParam)
+                        ));
+                        validTime = true;
+                    }
                 }
             }
+
+            const startTime = Number(startTimeParam);
+            const endTime = Number(endTimeParam);
+            // If both time parameters are valid numbers, initialize the time to those
+            if (!isNaN(startTime) && !isNaN(endTime) && startTime * endTime) {
+                start = new Date(startTime);
+                end = new Date(endTime);
+                validTime = true;
+            } else if (!validTime) {
+                // Else, default to ten minutes ago
+                timeSourceRef.current = "quickselect";
+                selectedQuickOption = 10;
+                setSelectedQuickOption(10);
+                ({ start, end } = convertQuickOptionToTimestamps(10));
+            }
+
+            setStartTime(dayjs(start));
+            setEndTime(dayjs(end));
 
             let newRawWhenSparse = false;
             if (rawWhenSparse) {
@@ -332,30 +387,56 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 }
             }
 
-            onTimeChange({
+            const newTimeValues = {
                 startTime: start.valueOf(),
                 endTime: end.valueOf(),
                 rawWhenSparse: newRawWhenSparse,
                 removeEmptyBins: newRemoveEmptyBins,
-            });
+            };
+
+            const newAppliedTimeValues = {
+                ...newTimeValues,
+                selectedQuickOption: selectedQuickOption,
+            };
+
+            setHistory([cloneDeep(newAppliedTimeValues)]);
+            setHistoryIndex(0);
+
+            onTimeChange(newTimeValues);
         }, [handleAutoApplyChange, onTimeChange, searchParams]);
 
         const setTimeRange = useCallback(
-            (startTime: number, endTime: number) => {
+            (startTime: number, endTime: number, isHistoryEntry = false) => {
                 if (!startTime || !endTime) return;
                 setStartTime(dayjs(startTime));
                 setEndTime(dayjs(endTime));
+
                 timeSourceRef.current = "manual";
                 setSelectedQuickOption(false);
-                setAppliedTimeValues({
+
+                const newTimeValues = {
                     startTime: startTime,
                     endTime: endTime,
-                    rawWhenSparse: rawWhenSparse,
-                    removeEmptyBins: removeEmptyBins,
-                    selectedQuickOption: selectedQuickOption,
-                });
+                    rawWhenSparse,
+                    removeEmptyBins,
+                    selectedQuickOption,
+                };
+                setAppliedTimeValues(newTimeValues);
+
+                // If this isn't a history entry (selected by going back / forward through history), add it to the history
+                if (!isHistoryEntry) {
+                    setHistory((prev) => {
+                        const truncated = prev.slice(0, historyIndex + 1);
+                        const updated = [
+                            ...truncated,
+                            cloneDeep(newTimeValues),
+                        ].slice(-10);
+                        setHistoryIndex(updated.length - 1);
+                        return updated;
+                    });
+                }
             },
-            [rawWhenSparse, removeEmptyBins, selectedQuickOption]
+            [rawWhenSparse, removeEmptyBins, selectedQuickOption, historyIndex]
         );
 
         useImperativeHandle(
@@ -365,6 +446,43 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             }),
             [setTimeRange]
         );
+
+        const undoTimeChange = useCallback(() => {
+            if (historyIndex > 0) {
+                const idx = historyIndex - 1;
+                setHistoryIndex(idx);
+                const entry = history[idx];
+                setTimeRange(entry.startTime, entry.endTime, true);
+            }
+        }, [historyIndex, history, setTimeRange]);
+
+        const redoTimeChange = useCallback(() => {
+            if (historyIndex < history.length - 1) {
+                const idx = historyIndex + 1;
+                setHistoryIndex(idx);
+                const entry = history[idx];
+                setTimeRange(entry.startTime, entry.endTime, true);
+            }
+        }, [historyIndex, history, setTimeRange]);
+
+        useEffect(() => {
+            const handleKeyDown = (e: KeyboardEvent) => {
+                const ctrl = e.getModifierState("Control");
+
+                if (ctrl && e.key === "z") {
+                    e.preventDefault();
+                    undoTimeChange();
+                }
+
+                if (ctrl && e.key === "y") {
+                    e.preventDefault();
+                    redoTimeChange();
+                }
+            };
+
+            window.addEventListener("keydown", handleKeyDown);
+            return () => window.removeEventListener("keydown", handleKeyDown);
+        }, [undoTimeChange, redoTimeChange]);
 
         return (
             <Box sx={styles.timeSelectorContainerStyle}>
@@ -394,6 +512,26 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                         }}
                     />
                 </Box>
+                <Box sx={styles.historyButtonBoxStyle}>
+                    {historyIndex > 0 && (
+                        <Tooltip
+                            title="Apply previous begin- and endtime"
+                            arrow
+                            placement="top"
+                        >
+                            <ArrowBack onClick={undoTimeChange} />
+                        </Tooltip>
+                    )}
+                    {historyIndex < history.length - 1 && (
+                        <Tooltip
+                            title="Apply next begin- and endtime"
+                            arrow
+                            placement="top"
+                        >
+                            <ArrowForward onClick={redoTimeChange} />
+                        </Tooltip>
+                    )}
+                </Box>
                 <TextField
                     select
                     label="Quick Select"
@@ -416,63 +554,171 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                         </MenuItem>
                     ))}
                 </TextField>
-                <Tooltip
-                    title="When little data is available, raw data is plotted instead of binned data"
-                    arrow
-                >
-                    <Box sx={styles.toggleContainerStyle}>
-                        <Typography>Raw when sparse</Typography>
-                        <Switch
-                            checked={rawWhenSparse}
-                            onChange={(e) => setRawWhenSparse(e.target.checked)}
-                        />
-                    </Box>
-                </Tooltip>
-
-                <Tooltip
-                    title="Bins containing no events are discarded, as opposed to being rendered with the previous value"
-                    arrow
-                >
-                    <Box sx={styles.toggleContainerStyle}>
-                        <Typography>Remove empty bins</Typography>
-                        <Switch
-                            checked={removeEmptyBins}
-                            onChange={(e) =>
-                                setRemoveEmptyBins(e.target.checked)
-                            }
-                        />
-                    </Box>
-                </Tooltip>
-                <Box sx={styles.autoApplyContainerStyle}>
-                    <Tooltip
-                        title="Automatically applies the configuration, includes updating relative times from Quick Select"
-                        arrow
-                        placement="left"
-                    >
-                        <TextField
-                            select
-                            label="Auto Apply"
-                            value={autoApply}
-                            onChange={(e) =>
-                                handleAutoApplyChange(
-                                    e.target.value as AutoApplyOption
-                                )
-                            }
+                {optionsCollapsed ? (
+                    <>
+                        <Button
+                            variant="outlined"
+                            onClick={() => setOptionsOpen(true)}
                         >
-                            <MenuItem value="never">Never</MenuItem>
-                            <MenuItem value="1min">1 min</MenuItem>
-                            <MenuItem value="10min">10 min</MenuItem>
-                        </TextField>
-                    </Tooltip>
-                    {autoApply !== "never" && (
-                        <Box sx={styles.autoApplyProgressStyle}>
-                            <LinearProgress
-                                variant="determinate"
-                                value={autoApplyProgress}
+                            Options
+                        </Button>
+                        {optionsOpen && (
+                            <Box
+                                sx={styles.overlayStyle}
+                                onClick={() => setOptionsOpen(false)}
+                            >
+                                <Box
+                                    sx={styles.optionsContainerStyle}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <Box sx={{ textAlign: "center" }}>
+                                        <Tooltip
+                                            title="When little data is available, raw data is plotted"
+                                            placement="top"
+                                            arrow
+                                        >
+                                            <Typography>
+                                                Raw when sparse
+                                            </Typography>
+                                        </Tooltip>
+                                        <Switch
+                                            checked={rawWhenSparse}
+                                            onChange={(e) =>
+                                                setRawWhenSparse(
+                                                    e.target.checked
+                                                )
+                                            }
+                                        />
+                                    </Box>
+
+                                    <Box sx={{ textAlign: "center" }}>
+                                        <Tooltip
+                                            title="Bins containing no events are discarded"
+                                            placement="top"
+                                            arrow
+                                        >
+                                            <Typography>
+                                                Remove empty bins
+                                            </Typography>
+                                        </Tooltip>
+                                        <Switch
+                                            checked={removeEmptyBins}
+                                            onChange={(e) =>
+                                                setRemoveEmptyBins(
+                                                    e.target.checked
+                                                )
+                                            }
+                                        />
+                                    </Box>
+
+                                    <Box sx={{ textAlign: "center" }}>
+                                        <Tooltip
+                                            title="Automatically applies the configuration"
+                                            placement="top"
+                                            arrow
+                                        >
+                                            <Typography>Auto Apply</Typography>
+                                        </Tooltip>
+                                        <TextField
+                                            select
+                                            size="small"
+                                            value={autoApply}
+                                            onChange={(e) =>
+                                                handleAutoApplyChange(
+                                                    e.target
+                                                        .value as AutoApplyOption
+                                                )
+                                            }
+                                        >
+                                            <MenuItem value="never">
+                                                Never
+                                            </MenuItem>
+                                            <MenuItem value="1min">
+                                                1 min
+                                            </MenuItem>
+                                            <MenuItem value="10min">
+                                                10 min
+                                            </MenuItem>
+                                        </TextField>
+                                        {autoApply !== "never" && (
+                                            <LinearProgress
+                                                variant="determinate"
+                                                value={autoApplyProgress}
+                                                sx={{ mt: 1 }}
+                                            />
+                                        )}
+                                    </Box>
+                                </Box>
+                            </Box>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        <Box sx={{ textAlign: "center" }}>
+                            <Tooltip
+                                title="When little data is available, raw data is plotted"
+                                placement="top"
+                                arrow
+                            >
+                                <Typography>Raw when sparse</Typography>
+                            </Tooltip>
+                            <Switch
+                                checked={rawWhenSparse}
+                                onChange={(e) =>
+                                    setRawWhenSparse(e.target.checked)
+                                }
                             />
                         </Box>
-                    )}
-                </Box>
+
+                        <Box sx={{ textAlign: "center" }}>
+                            <Tooltip
+                                title="Bins containing no events are discarded"
+                                placement="top"
+                                arrow
+                            >
+                                <Typography>Remove empty bins</Typography>
+                            </Tooltip>
+                            <Switch
+                                checked={removeEmptyBins}
+                                onChange={(e) =>
+                                    setRemoveEmptyBins(e.target.checked)
+                                }
+                            />
+                        </Box>
+
+                        <Box sx={{ textAlign: "center" }}>
+                            <Tooltip
+                                title="Automatically applies the configuration"
+                                placement="top"
+                                arrow
+                            >
+                                <Typography>Auto Apply</Typography>
+                            </Tooltip>
+                            <TextField
+                                select
+                                size="small"
+                                value={autoApply}
+                                onChange={(e) =>
+                                    handleAutoApplyChange(
+                                        e.target.value as AutoApplyOption
+                                    )
+                                }
+                            >
+                                <MenuItem value="never">Never</MenuItem>
+                                <MenuItem value="1min">1 min</MenuItem>
+                                <MenuItem value="10min">10 min</MenuItem>
+                            </TextField>
+                            {autoApply !== "never" && (
+                                <LinearProgress
+                                    variant="determinate"
+                                    value={autoApplyProgress}
+                                    sx={{ mt: 1 }}
+                                />
+                            )}
+                        </Box>
+                    </>
+                )}
+
                 <Button
                     variant="contained"
                     sx={{

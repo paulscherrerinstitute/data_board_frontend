@@ -15,13 +15,11 @@ export interface PlotWidgetProps {
     ) => void;
 }
 
-export interface PlotlyHTMLElement extends HTMLDivElement {
-    on(
-        event: "plotly_relayout" | "plotly_doubleclick",
-        callback: (data: Readonly<Plotly.PlotRelayoutEvent>) => void
-    ): void;
-    removeAllListeners(): void;
-}
+export type PlotlyHTMLElement = Plotly.PlotlyHTMLElement &
+    HTMLDivElement & {
+        removeAllListeners(): void;
+        _fullLayout: Plotly.Layout;
+    };
 
 export type CurvePoints = {
     [timestamp: string]: number;
@@ -29,6 +27,9 @@ export type CurvePoints = {
 
 export type CurveMeta = {
     raw: boolean;
+    waveform: boolean;
+    interval_avg: number | undefined;
+    interval_stddev: number | undefined;
     pointMeta: {
         [timestamp: string]: {
             count?: number;
@@ -37,17 +38,27 @@ export type CurveMeta = {
     };
 };
 
-export type CurveData = {
+export type BackendCurveData = {
     curve: {
         [channelName: string]: CurvePoints | CurveMeta;
+    };
+};
+
+export type StoredCurveData = {
+    curve: {
+        value: CurvePoints;
+        min: CurvePoints;
+        max: CurvePoints;
+        meta: CurveMeta;
     };
 };
 
 export type Curve = {
     backend: string;
     type: string;
+    shape: string | number[];
     name: string;
-    curveData: CurveData;
+    curveData: StoredCurveData;
     isLoading: boolean;
     error: string | null;
 };

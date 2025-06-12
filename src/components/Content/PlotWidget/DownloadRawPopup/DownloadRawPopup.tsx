@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -9,15 +9,74 @@ import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import * as styles from "./DownloadRawPopup.styles";
-import { Alert } from "@mui/material";
-import showSnackbarAndLog from "../../../../helpers/showSnackbar";
-import { DownloadRawPopupProps } from "./DownloadRawPopup.types";
+import { Alert, Box } from "@mui/material";
+import showSnackbarAndLog, {
+    logToConsole,
+} from "../../../../helpers/showSnackbar";
+import { DownloadLink, DownloadRawPopupProps } from "./DownloadRawPopup.types";
+import axios from "axios";
+import { useApiUrls } from "../../../ApiContext/ApiContext";
 
 const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
-    links,
+    startTime,
+    endTime,
+    curves,
     onClose,
 }) => {
-    const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
+    const [loadingLinks, setLoadingLinks] = useState(true);
+    const [loadingLinksFailed, setLoadingLinksFailed] = useState(false);
+    const [downloadingMap, setDownloadingMap] = useState<
+        Record<string, boolean>
+    >({});
+    const [links, setLinks] = useState<DownloadLink[]>([]);
+
+    const { backendUrl } = useApiUrls();
+
+    useEffect(() => {
+        const fetchRawLinks = async () => {
+            setLoadingLinks(true);
+            setLoadingLinksFailed(false);
+
+            if (!curves?.length) {
+                setLoadingLinks(false);
+                logToConsole("No channels to fetch data from.", "warning");
+                return;
+            }
+
+            try {
+                const rawDataLinks = await Promise.all(
+                    curves.flatMap(({ backend, name }) =>
+                        axios
+                            .get(`${backendUrl}/channels/raw-link`, {
+                                params: {
+                                    channel_name: name,
+                                    begin_time: startTime,
+                                    end_time: endTime,
+                                    backend,
+                                },
+                                responseType: "json",
+                            })
+                            .then((res) => {
+                                if (!res.data?.link) {
+                                    throw new Error(
+                                        `No link for ${name} in backend: ${backend}`
+                                    );
+                                }
+                                return { name, link: res.data.link };
+                            })
+                    )
+                );
+
+                setLinks(rawDataLinks);
+            } catch (err) {
+                showSnackbarAndLog("downloadDataRaw failed:", "error", err);
+                setLoadingLinksFailed(true);
+            } finally {
+                setLoadingLinks(false);
+            }
+        };
+        fetchRawLinks();
+    }, [backendUrl, startTime, endTime, curves]);
 
     const copyToClipboard = async (text: string) => {
         try {
@@ -28,7 +87,7 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
     };
 
     const downloadFile = async (name: string, url: string) => {
-        setLoadingMap((prev) => ({ ...prev, [name]: true }));
+        setDownloadingMap((prev) => ({ ...prev, [name]: true }));
         try {
             const res = await fetch(url, {
                 headers: { Accept: "application/json" },
@@ -47,7 +106,7 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
         } catch (err) {
             console.error(`Error downloading ${name}:`, err);
         } finally {
-            setLoadingMap((prev) => ({ ...prev, [name]: false }));
+            setDownloadingMap((prev) => ({ ...prev, [name]: false }));
         }
     };
 
@@ -55,7 +114,7 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
         name: string,
         url: string
     ): Promise<void> => {
-        setLoadingMap((prev) => ({ ...prev, [name]: true }));
+        setDownloadingMap((prev) => ({ ...prev, [name]: true }));
         try {
             const response = await fetch(url, {
                 headers: { Accept: "application/json-framed" },
@@ -110,7 +169,7 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
                 error
             );
         } finally {
-            setLoadingMap((prev) => ({ ...prev, [name]: false }));
+            setDownloadingMap((prev) => ({ ...prev, [name]: false }));
         }
     };
 
@@ -121,49 +180,60 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
                 <Alert severity="warning" sx={{ mb: 2 }}>
                     Raw data may be huge, bigger timespans may timeout.
                 </Alert>
-                <List sx={styles.linkListStyle}>
-                    {links.map(({ name, link }) => (
-                        <ListItem key={name} sx={styles.linkItemStyle}>
-                            <Typography sx={styles.channelNameStyle}>
-                                {name}
-                            </Typography>
-                            <Button
-                                sx={styles.buttonStyle}
-                                onClick={() => copyToClipboard(link)}
-                            >
-                                Copy Link
-                            </Button>
-                            <Button
-                                sx={styles.buttonStyle}
-                                onClick={() => downloadFile(name, link)}
-                                disabled={loadingMap[name]}
-                                startIcon={
-                                    loadingMap[name] ? (
-                                        <CircularProgress size={16} />
-                                    ) : null
-                                }
-                            >
-                                {loadingMap[name]
-                                    ? "Downloading..."
-                                    : "Download"}
-                            </Button>
-                            <Button
-                                sx={styles.buttonStyle}
-                                onClick={() => downloadFramedFile(name, link)}
-                                disabled={loadingMap[name]}
-                                startIcon={
-                                    loadingMap[name] ? (
-                                        <CircularProgress size={16} />
-                                    ) : null
-                                }
-                            >
-                                {loadingMap[name]
-                                    ? "Downloading..."
-                                    : "Download Framed"}
-                            </Button>
-                        </ListItem>
-                    ))}
-                </List>
+
+                {loadingLinks ? (
+                    <Box sx={styles.loadingBoxStyle}>
+                        <CircularProgress />
+                    </Box>
+                ) : (
+                    <List sx={styles.linkListStyle}>
+                        {links.length === 0 && "No Links available"}
+                        {loadingLinksFailed && "Failed to fetch links"}
+                        {links.map(({ name, link }) => (
+                            <ListItem key={name} sx={styles.linkItemStyle}>
+                                <Typography sx={styles.channelNameStyle}>
+                                    {name}
+                                </Typography>
+                                <Button
+                                    sx={styles.buttonStyle}
+                                    onClick={() => copyToClipboard(link)}
+                                >
+                                    Copy Link
+                                </Button>
+                                <Button
+                                    sx={styles.buttonStyle}
+                                    onClick={() => downloadFile(name, link)}
+                                    disabled={downloadingMap[name]}
+                                    startIcon={
+                                        downloadingMap[name] ? (
+                                            <CircularProgress size={16} />
+                                        ) : null
+                                    }
+                                >
+                                    {downloadingMap[name]
+                                        ? "Downloading..."
+                                        : "Download"}
+                                </Button>
+                                <Button
+                                    sx={styles.buttonStyle}
+                                    onClick={() =>
+                                        downloadFramedFile(name, link)
+                                    }
+                                    disabled={downloadingMap[name]}
+                                    startIcon={
+                                        downloadingMap[name] ? (
+                                            <CircularProgress size={16} />
+                                        ) : null
+                                    }
+                                >
+                                    {downloadingMap[name]
+                                        ? "Downloading..."
+                                        : "Download Framed"}
+                                </Button>
+                            </ListItem>
+                        ))}
+                    </List>
+                )}
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose}>Close</Button>

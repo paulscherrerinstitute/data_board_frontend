@@ -1,5 +1,9 @@
+import { Curve } from "../PlotWidget.types";
+
 export interface DownloadRawPopupProps {
-    links: DownloadLink[];
+    startTime: number;
+    endTime: number;
+    curves: Curve[];
     onClose: () => void;
 }
 
