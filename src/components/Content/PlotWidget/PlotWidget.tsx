@@ -59,11 +59,13 @@ import { WaveformPreviewData } from "./WaveformPreviewPopup/WaveformPreviewPopup
 import {
     convertLocalISOToUnix,
     convertUnixToLocalISO,
+    filterCurveAttribute,
     filterCurveData,
     getLabelForChannelAttributes,
     getLabelForCurve,
 } from "../../../helpers/curveDataTransformations";
 import { downloadBlob, hexToRgba } from "../../../helpers/misc";
+import { showWaveformPreviewChoiceDialog } from "./WaveformPreviewChoiceDialog/WaveformPreviewChoiceDialog";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -1724,7 +1726,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     // If this click does follow another one, ignore it since double-clicks are handled separately.
                     return;
                 }
-                setTimeout(() => {
+                setTimeout(async () => {
                     // Also make sure the click isn't followed by another click within 500ms
                     if (Date.now() - lastClickMsRef.current < 500) {
                         return;
@@ -1749,62 +1751,139 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 curve.shape.length === 1 &&
                                 curve.shape[0] > 1
                             ) {
+                                const choice =
+                                    await showWaveformPreviewChoiceDialog();
+                                if (choice === null) {
+                                    return;
+                                }
+
                                 // This is a waveform channel
                                 const metaData = curve.curveData.curve.meta;
                                 if (metaData.pointMeta[timestamp].count) {
-                                    const expectedPoints =
-                                        curve.shape[0] *
-                                        metaData.pointMeta[timestamp].count;
-                                    if (
-                                        expectedPoints > NUM_EXPECTED_POINTS_MAX
-                                    ) {
-                                        showSnackbarAndLog(
-                                            "Not fetching raw waveform, too many points.",
-                                            "error",
-                                            `Not fetching raw waveforms for clicked point, expecting too many raw points (${expectedPoints}) under the requested point, maximum allowed is: ${NUM_EXPECTED_POINTS_MAX}`
-                                        );
-                                        if (
-                                            expectedPoints >=
-                                            NUM_EXPECTED_POINTS_MAX * 10
-                                        ) {
-                                            logToConsole(
-                                                "Does your browser's mental health mean anything to you?!",
-                                                "warning"
-                                            );
-                                        }
-                                        return;
-                                    } else {
-                                        logToConsole(
-                                            `Fetching raw waveforms for clicked point, expecting ${expectedPoints} raw points.`,
-                                            "info"
-                                        );
-                                    }
                                     const middleTime =
                                         convertLocalISOToUnix(timestamp);
                                     let beginTime = middleTime - 5;
                                     let endTime = middleTime + 5;
-                                    let interval = 0;
-                                    if (metaData.interval_avg !== undefined) {
-                                        interval = metaData.interval_avg;
-                                    } else if (nextTimestamp) {
-                                        interval =
-                                            convertLocalISOToUnix(
-                                                nextTimestamp
-                                            ) - beginTime;
-                                    } else if (prevTimestamp) {
-                                        interval =
-                                            beginTime -
-                                            convertLocalISOToUnix(
-                                                prevTimestamp
+
+                                    if (choice === "point") {
+                                        const expectedPoints =
+                                            curve.shape[0] *
+                                            metaData.pointMeta[timestamp].count;
+                                        if (
+                                            expectedPoints >
+                                            NUM_EXPECTED_POINTS_MAX
+                                        ) {
+                                            showSnackbarAndLog(
+                                                "Not fetching raw waveform, too many points.",
+                                                "error",
+                                                `Not fetching raw waveforms for clicked point, expecting too many raw points (${expectedPoints}) under the requested point, maximum allowed is: ${NUM_EXPECTED_POINTS_MAX}`
                                             );
-                                    }
-                                    if (interval > 0) {
-                                        beginTime = Math.floor(
-                                            middleTime - interval / 2
+                                            if (
+                                                expectedPoints >=
+                                                NUM_EXPECTED_POINTS_MAX * 10
+                                            ) {
+                                                logToConsole(
+                                                    "Does your browser's mental health mean anything to you?!",
+                                                    "warning"
+                                                );
+                                            }
+                                            return;
+                                        } else {
+                                            logToConsole(
+                                                `Fetching raw waveforms for clicked point, expecting ${expectedPoints} raw points.`,
+                                                "info"
+                                            );
+                                        }
+
+                                        let interval = 0;
+                                        if (
+                                            metaData.interval_avg !== undefined
+                                        ) {
+                                            interval = metaData.interval_avg;
+                                        } else if (nextTimestamp) {
+                                            interval =
+                                                convertLocalISOToUnix(
+                                                    nextTimestamp
+                                                ) - beginTime;
+                                        } else if (prevTimestamp) {
+                                            interval =
+                                                beginTime -
+                                                convertLocalISOToUnix(
+                                                    prevTimestamp
+                                                );
+                                        }
+                                        if (interval > 0) {
+                                            beginTime = Math.floor(
+                                                middleTime - interval / 2
+                                            );
+                                            endTime = Math.ceil(
+                                                middleTime + interval / 2
+                                            );
+                                        }
+                                    } else if (
+                                        choice === "range" &&
+                                        plotRef.current
+                                    ) {
+                                        [beginTime, endTime] = (
+                                            plotRef.current._fullLayout.xaxis
+                                                .range as string[]
+                                        ).map((ts) => new Date(ts).getTime());
+
+                                        const expectedPoints = Object.values(
+                                            filterCurveAttribute(
+                                                metaData.pointMeta,
+                                                convertUnixToLocalISO(
+                                                    beginTime
+                                                ),
+                                                convertUnixToLocalISO(endTime)
+                                            )
+                                        ).reduce(
+                                            (acc, obj) =>
+                                                acc +
+                                                (curve.shape[0] as number) *
+                                                    (obj.count ?? 0),
+                                            0
                                         );
-                                        endTime = Math.ceil(
-                                            middleTime + interval / 2
+
+                                        if (
+                                            expectedPoints >
+                                            NUM_EXPECTED_POINTS_MAX
+                                        ) {
+                                            if (
+                                                expectedPoints >=
+                                                NUM_EXPECTED_POINTS_MAX * 10
+                                            ) {
+                                                showSnackbarAndLog(
+                                                    "Not fetching raw waveform, too many points.",
+                                                    "error",
+                                                    `Not fetching raw waveforms for clicked point, expecting too many raw points (${expectedPoints}) under the requested point, maximum allowed is: ${NUM_EXPECTED_POINTS_MAX}`
+                                                );
+                                                logToConsole(
+                                                    "Does your browser's mental health mean anything to you?!",
+                                                    "warning"
+                                                );
+                                                return;
+                                            }
+
+                                            if (
+                                                !confirm(
+                                                    `Expecting ${expectedPoints} from the selected range, recommended maximum is: ${NUM_EXPECTED_POINTS_MAX}, do you really want to proceed?!`
+                                                )
+                                            ) {
+                                                return;
+                                            }
+                                            logToConsole(
+                                                `Exceeding maximum expected points for raw waveform, proceeding upon user request`,
+                                                "warning",
+                                                `Expecting(${expectedPoints}) under the requested range, maximum allowed is: ${NUM_EXPECTED_POINTS_MAX}`
+                                            );
+                                        }
+                                    } else {
+                                        logToConsole(
+                                            "Invalid option from WaveformPreviewChoiceDialog",
+                                            "error"
                                         );
+                                        return;
                                     }
 
                                     const channelIdentifier =
@@ -1813,10 +1892,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     if (
                                         waveformPreviewDataIsRequesting.current
                                     ) {
+                                        showSnackbarAndLog(
+                                            "Another waveform preview is currently being requested, aborting.",
+                                            "error"
+                                        );
                                         return;
                                     }
                                     showSnackbarAndLog(
-                                        "Fetching waveform preview for clicked point...",
+                                        `Fetching waveform preview for ${choice === "point" ? "selected point" : "zoomed range"}...`,
                                         "info"
                                     );
                                     waveformPreviewDataIsRequesting.current =

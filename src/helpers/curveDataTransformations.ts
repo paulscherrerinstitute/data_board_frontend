@@ -7,11 +7,9 @@ import {
 
 const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
 
-function filterCurveAttribute<T extends CurveMeta["pointMeta"] | CurvePoints>(
-    attribute: T,
-    from: string,
-    to: string
-): T {
+export function filterCurveAttribute<
+    T extends CurveMeta["pointMeta"] | CurvePoints,
+>(attribute: T, from: string, to: string): T {
     const filteredData = {} as T;
     if (Number.isInteger(+from) && Number.isInteger(+to)) {
         for (const [timestamp, data] of Object.entries(attribute)) {
