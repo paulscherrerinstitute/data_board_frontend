@@ -278,6 +278,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         params: {
                             search_text: `^${channel.name}$`,
                             allow_cached_response: false,
+                            backend: channel.backend,
                         },
                     });
                 } catch (error: AxiosError | unknown) {
