@@ -25,7 +25,9 @@ The filters are dynamically selected based on the data the search returned. If n
 
 To add a channel to a plot, you can either:
 
-1. Mark it (and some more) as selected using the checkbox in the sidebar, and drag any one of those to the target destination.
+0. Mark it (and some more) as selected using the checkbox in the sidebar, and add them to the first plot by using the button besided the select all checkbox.
+
+1. Mark it (and some more) as selected, and drag any one of those to the target destination.
 
 2. Directly drag it to the target destination. The channel becomes selected for the duration of the drag and gets unselected right after. This way, other selected channels are also dragged.
 
@@ -39,6 +41,25 @@ The destination can be one of the following:
 
 3. If your browser supports it, you can also drag the channel outside of the browser tab and, e.g., drop it into a notepad app.
     > _Hint_: You can also do the inverse if your browser supports it (add channels by dragging from outside the browser); the DragEvent utilises simple text data.
+
+You can also [define initial channels](#initial-channels) for the first plot.
+
+### Initial Channels
+
+It is possible to define initial channels in the url, which will directly be loaded into the first plot, as long as no dashboard is provided. (A dashboard will make initial channels be ignored.)
+
+This is meant for script usage, e.g. if you want to hook a script to a button press, which will then launch the webpage with the defined channels.
+
+You can define up to 10 initial channels by setting url parameters in the following format:
+
+- `init_c` => channel name
+- `init_b` => corresponding backend name
+- `init_c0` - `init_c9` => indexed channel name (use for multiple channels)
+- `init_b0` - `init_b9` => indexed backend name
+
+Note that indexed keys overwrite non-indexed keys, so init_c0 will be used instead of init_c and init_b0 will be used instead of init_b.
+
+To also make the sidebar be collaped on load, you may specify the `closeSidebar` url parameter to any arbitrary non null value. So setting it to false will do the same as true, it is only checked if this url parameter is defined. This parameter overwrites any [settings](#settings) defining the sidebar state otherwise.
 
 ### Set Query Parameters
 
@@ -309,7 +330,7 @@ If you find any bugs, please open a GitHub issue.
 
 If you want to add a feature or extend the application in any other way, please get in contact with the [current maintainer](#contact--support).
 
-For any contribution to be merged, all pipelines need to be successful, and the linter should not give any errors. (Warnings are tolerated if reasonable)
+For any contribution to be merged, all pipelines need to be successful, and the linter should not give any errors. (Warnings are tolerated if reasonable). Additionally, all new features need to be documented here.
 
 ### 🎨 Adding Custom Themes
 
