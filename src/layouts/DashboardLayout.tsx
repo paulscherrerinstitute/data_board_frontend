@@ -4,17 +4,21 @@ import Sidebar from "../components/Sidebar/Sidebar";
 import Content from "../components/Content/Content";
 import { defaultInitialSidebarState } from "../helpers/defaults";
 import { InitialSidebarState } from "../components/Sidebar/Sidebar.types";
+import { useSearchParams } from "react-router-dom";
 
 const DashboardLayout: React.FC = () => {
+    const [searchParams] = useSearchParams();
+
     const initialSidebarState = JSON.parse(
         localStorage.getItem("initialSidebarState") ||
             JSON.stringify(defaultInitialSidebarState)
     ) as InitialSidebarState;
 
     const isSidebarOpen =
-        initialSidebarState === "alwaysOpen" ||
-        (initialSidebarState !== "alwaysClosed" &&
-            !new URLSearchParams(window.location.search).get("dashboardId"));
+        !searchParams.get("closeSidebar") &&
+        (initialSidebarState === "alwaysOpen" ||
+            (initialSidebarState !== "alwaysClosed" &&
+                !searchParams.get("dashboardId")));
 
     return (
         <Box
