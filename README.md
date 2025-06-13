@@ -25,7 +25,7 @@ The filters are dynamically selected based on the data the search returned. If n
 
 To add a channel to a plot, you can either:
 
-0. Mark it (and some more) as selected using the checkbox in the sidebar, and add them to the first plot by using the button besided the select all checkbox.
+0. Mark it (and some more) as selected using the checkbox in the sidebar, and add them to the first plot by using the button beside the select all checkbox.
 
 1. Mark it (and some more) as selected, and drag any one of those to the target destination.
 
