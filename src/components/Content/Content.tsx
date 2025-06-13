@@ -21,7 +21,7 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import PlotWidget from "./PlotWidget/PlotWidget";
 import { useSearchParams } from "react-router-dom";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { useApiUrls } from "../ApiContext/ApiContext";
 import {
     TimeSelectorHandle,
@@ -37,7 +37,7 @@ import {
     defaultWidgetHeight,
     defaultWidgetWidth,
 } from "../../helpers/defaults";
-import showSnackbarAndLog from "../../helpers/showSnackbar";
+import showSnackbarAndLog, { logToConsole } from "../../helpers/showSnackbar";
 import hash from "object-hash";
 import { stripUndefined } from "../../helpers/stripUndefined";
 
@@ -294,6 +294,44 @@ const Content: React.FC = () => {
                 // Make this not trigger a scroll to bottom
                 prevWidgetsLengthRef.current = null;
 
+                const init_backends: (string | null)[] = Array(10).fill(null);
+                const init_channel_names: (string | null)[] =
+                    Array(10).fill(null);
+
+                const b0 = searchParams.get("init_b");
+                const b0_ = searchParams.get("init_b0");
+                if (b0 && b0_) {
+                    logToConsole(
+                        "Both init_b and init_b0 are set, init_b0 will be used",
+                        "error"
+                    );
+                }
+                init_backends[0] = b0_ ?? b0;
+
+                const c0 = searchParams.get("init_c");
+                const c0_ = searchParams.get("init_c0");
+                if (c0 && c0_) {
+                    logToConsole(
+                        "Both init_c and init_c0 are set, init_c0 will be used",
+                        "error"
+                    );
+                }
+                init_channel_names[0] = c0_ ?? c0;
+
+                for (let i = 1; i < 10; i++) {
+                    const init_b = searchParams.get(`init_b${i}`);
+                    const init_c = searchParams.get(`init_c${i}`);
+                    if (init_b || init_c) {
+                        init_backends[i] = init_b ?? init_backends[i - 1];
+                        init_channel_names[i] =
+                            init_c ?? init_channel_names[i - 1];
+                    }
+                }
+
+                const isAnyInitChannelDefined = init_channel_names.some(
+                    (cn, i) => cn !== null && init_backends[i] !== null
+                );
+
                 const dashboardId = searchParams.get("dashboardId");
                 if (dashboardId) {
                     try {
@@ -328,6 +366,14 @@ const Content: React.FC = () => {
                                 `Hash stored in URL: ${dashboardHash}\nHash calculated from retrieved dashboard: ${retrievedDashboardHash}`
                             );
                         }
+
+                        if (isAnyInitChannelDefined) {
+                            showSnackbarAndLog(
+                                "Init channels will be ignored since dashboard is provided",
+                                "warning"
+                            );
+                        }
+
                         return;
                     } catch (error) {
                         showSnackbarAndLog(
@@ -337,10 +383,58 @@ const Content: React.FC = () => {
                         );
                     }
                 }
+
+                const init_channels: Channel[] = [];
+                if (isAnyInitChannelDefined) {
+                    let log = "Initializing first widget with channels:\n";
+
+                    for (let i = 0; i < 10; i++) {
+                        if (init_backends[i] && init_channel_names[i]) {
+                            let searchResults: AxiosResponse<{
+                                channels: Channel[];
+                            }>;
+
+                            try {
+                                searchResults = await axios.get<{
+                                    channels: Channel[];
+                                }>(`${backendUrl}/channels/search`, {
+                                    params: {
+                                        search_text: `^${init_channel_names[i]}$`,
+                                        backend: init_backends[i],
+                                        allow_cached_response: false,
+                                    },
+                                });
+
+                                const filteredResults =
+                                    searchResults.data.channels.filter(
+                                        (returnedChannel) =>
+                                            returnedChannel.backend ===
+                                                init_backends[i] &&
+                                            returnedChannel.name ===
+                                                init_channel_names[i]
+                                    );
+
+                                if (filteredResults.length == 0) {
+                                    throw new Error();
+                                }
+
+                                const channel = filteredResults[0];
+
+                                log += `Adding: Name: ${channel.name}, Backend: ${channel.backend}, Datatype: ${channel.type || "unknown"}\n`;
+                                init_channels.push(channel);
+                            } catch {
+                                log += `Failed to find, not adding: Name: ${init_channel_names[i]}, Backend: ${init_backends[i]}\n`;
+                            }
+                        }
+                    }
+
+                    logToConsole(log.trim(), "info");
+                }
+
                 // If no dashboard data could be fetched or parsed, create an initial dashboard
                 setWidgets([
                     {
-                        channels: [],
+                        channels: init_channels,
                         layout: {
                             i: uuid.v4(),
                             x: 0,
