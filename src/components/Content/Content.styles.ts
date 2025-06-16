@@ -16,6 +16,7 @@ export const contentContainerStyle: SxProps<Theme> = {
 export const topBarStyle: SxProps<Theme> = {
     width: "100%",
     height: "10vh",
+    minHeight: "80px",
     display: "flex",
     justifyContent: "left",
     alignItems: "center",
@@ -27,19 +28,19 @@ export const topBarStyle: SxProps<Theme> = {
 
 export const gridContainerStyle: SxProps<Theme> = {
     width: "100%",
-    height: "90vh",
+    height: "calc(min(90vh, 100vh - 80px))",
     position: "absolute",
     left: "2.5vw",
-    top: "10vh",
+    top: "calc(max(10vh, 80px))",
     display: "flex",
     flexDirection: "column",
     padding: "16px",
+    paddingTop: 0,
+    paddingBottom: 0,
     overflowY: "auto",
 };
 
 export const gridItemStyle: SxProps<Theme> = {
-    width: "max(40vw, 280px)",
-    height: "40vh",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
@@ -55,8 +56,7 @@ export const gridItemStyle: SxProps<Theme> = {
 
 export const createWidgetStyle: SxProps<Theme> = {
     ...gridItemStyle,
-    height: "5vh",
-    minHeight: "5vh",
+    height: "100%",
     width: "10vw",
     backgroundImage: (theme) =>
         theme.palette.mode === "dark"
@@ -81,21 +81,27 @@ export const removeWidgetButtonStyle: SxProps<Theme> = {
 
 export const actionButtonBoxPlaceholderStyle: SxProps<Theme> = {
     height: "5vh",
-    minHeight: "5vh",
+    minHeight: "60px",
+    width: "100%",
+    alignSelf: "flex-end",
 };
 
 export const actionButtonBoxStyle: SxProps<Theme> = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    gap: "50px",
+    gap: "10px",
     position: "fixed",
-    bottom: 10,
-    left: 0,
-    right: 0,
+    bottom: 0,
+    paddingBottom: "10px",
+    left: "calc(max(30px, 2.5vw) + 20px)",
+    right: 10,
     pointerEvents: "none",
+    height: "5vh",
+    minHeight: "60px",
 };
 
 export const actionButtonStyle: SxProps<Theme> = {
+    height: "100%",
     pointerEvents: "all",
 };

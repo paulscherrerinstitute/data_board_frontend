@@ -694,7 +694,12 @@ const Content: React.FC = () => {
             </Box>
 
             <Box sx={styles.gridContainerStyle} ref={gridContainerRef}>
-                <div>
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                    }}
+                >
                     <ReactGridLayout
                         cols={12}
                         rowHeight={30}

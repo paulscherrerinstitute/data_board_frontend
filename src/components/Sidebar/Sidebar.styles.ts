@@ -20,6 +20,7 @@ export const buttonContainerStyle: SxProps<Theme> = {
     width: "90px",
     top: "1vh",
     height: "7vh",
+    minHeight: "57px",
     zIndex: 100,
     transform: "translateX(100%)",
     display: "flex",
