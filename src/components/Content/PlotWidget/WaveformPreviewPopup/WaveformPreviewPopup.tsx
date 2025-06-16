@@ -12,6 +12,8 @@ import {
     IconButton,
     Box,
     useTheme,
+    InputLabel,
+    Input,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { WaveformPreviewPopupProps } from "./WaveformPreviewPopup.types";
@@ -30,6 +32,27 @@ import showSnackbarAndLog from "../../../../helpers/showSnackbar";
 import Plotly from "plotly.js";
 import { cloneDeep, isEqual } from "lodash";
 import { formatDateWithMs } from "../../../../helpers/curveDataTransformations";
+
+const colorScale = [
+    [0.0, "rgb(255,0,0)"],
+    [0.025, "rgb(255,165,0)"],
+    [0.05, "rgb(255,255,0)"],
+    [0.1, "rgb(0,128,0)"],
+    [0.2, "rgb(144,238,144)"],
+    [0.3, "rgb(173,216,230)"],
+    [0.4, "rgb(135,206,235)"],
+    [0.5, "rgb(0,191,255)"],
+    [0.6, "rgb(70,130,180)"],
+    [0.7, "rgb(123,104,238)"],
+    [0.8, "rgb(147,112,219)"],
+    [0.9, "rgb(75,0,130)"],
+    [0.925, "rgb(238,130,238)"],
+    [0.95, "rgb(255,20,147)"],
+    [0.975, "rgb(199,21,133)"],
+    [1.0, "rgb(128,0,128)"],
+] as Plotly.ColorScale;
+
+const colorScaleGradient = `linear-gradient(to top, ${(colorScale as [number, string][]).map(([stop, color]) => `${color} ${stop * 100}%`).join(", ")})`;
 
 const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
     waveformPreviewData,
@@ -70,6 +93,9 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
     const [yAxisIndices, setYAxisIndices] = useState<number[]>([]);
     const [yAxisTimestamps, setYAxisTimestamps] = useState<string[]>([]);
     const [visibleTimestamps, setVisibleTimestamps] = useState<string[]>([]);
+    const [colorMin, setColorMin] = useState(0);
+    const [colorMax, setColorMax] = useState(1);
+    const [manualColorLimits, setManualColorLimits] = useState(false);
 
     const plotRef = useRef<PlotlyHTMLElement | null>(null);
     const previousLayoutRef = useRef<Plotly.Layout | null>(null);
@@ -185,11 +211,16 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                 const xIndices = waveformsData[0].indices;
                 const zMatrix = waveformsData.map((wf) => wf.values);
 
-                if (useWebGL) {
-                    const allZValues = zMatrix.flat();
-                    const zMin = Math.min(...allZValues);
-                    const zMax = Math.max(...allZValues);
+                const allZValues = zMatrix.flat();
+                const zMin = Math.min(...allZValues);
+                const zMax = Math.max(...allZValues);
 
+                if (!manualColorLimits) {
+                    setColorMin(zMin);
+                    setColorMax(zMax);
+                }
+
+                if (useWebGL) {
                     const traces: Plotly.Data[] = [];
 
                     for (let yi = 0; yi < yTimestampIndices.length; yi++) {
@@ -221,14 +252,9 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                             marker: {
                                 size: 3,
                                 color: z,
-                                colorscale: "RdBu",
-                                cmin: zMin,
-                                cmax: zMax,
-                                colorbar:
-                                    yi === 0
-                                        ? { title: { text: "Value" } }
-                                        : undefined,
-                                showscale: yi === 0,
+                                colorscale: colorScale,
+                                cmin: manualColorLimits ? colorMin : zMin,
+                                cmax: manualColorLimits ? colorMax : zMax,
                             },
                         });
                     }
@@ -244,6 +270,10 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                             hovertemplate:
                                 "Timestamp: %{x}<br>Point No.: %{y}<br>Value: %{z}<extra></extra>",
                             transpose: true,
+                            colorscale: colorScale,
+                            zmin: manualColorLimits ? colorMin : zMin,
+                            zmax: manualColorLimits ? colorMax : zMax,
+                            showscale: false,
                         },
                     ];
                 }
@@ -253,7 +283,14 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
             showSnackbarAndLog("Failed to parse channel data", "error", error);
         }
         return [];
-    }, [waveformPreviewData, useWebGL, curveColor]);
+    }, [
+        waveformPreviewData,
+        useWebGL,
+        curveColor,
+        colorMin,
+        colorMax,
+        manualColorLimits,
+    ]);
 
     const layout = useMemo(() => {
         const maxTicks = 5;
@@ -427,7 +464,8 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
             Plotly.react(
                 currentPlotDiv,
                 cloneDeep(data),
-                cloneDeep(layout) || {}
+                cloneDeep(layout) || {},
+                { displaylogo: false }
             );
         }
     }, [data]);
@@ -506,11 +544,59 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ display: "flex", height: 400, gap: 2 }}>
                     <div
                         ref={plotRef}
-                        style={{ width: "100%", height: "100%" }}
+                        style={{
+                            width:
+                                yAxisTimestampsShort.length > 1
+                                    ? "90%"
+                                    : "100%",
+                            height: "100%",
+                        }}
                     />
+                    {yAxisTimestampsShort.length > 1 && (
+                        <Box sx={styles.colorBarContainerStyle}>
+                            <Box sx={styles.colorBarLimitsContainerStyle}>
+                                <InputLabel>Max</InputLabel>
+                                <Input
+                                    type="number"
+                                    defaultValue={colorMax}
+                                    onChange={(e) => {
+                                        const val = parseFloat(e.target.value);
+                                        if (!isNaN(val) && val > colorMin) {
+                                            setManualColorLimits(true);
+                                            setColorMax(val);
+                                        }
+                                    }}
+                                />
+                            </Box>
+                            <div
+                                style={{
+                                    flex: 1,
+                                    marginTop: 8,
+                                    marginBottom: 8,
+                                    width: "100%",
+                                    background: colorScaleGradient,
+                                    border: "1px solid #000",
+                                }}
+                            ></div>
+                            <Box sx={styles.colorBarLimitsContainerStyle}>
+                                <Input
+                                    type="number"
+                                    defaultValue={colorMin}
+                                    onChange={(e) => {
+                                        const val = parseFloat(e.target.value);
+                                        if (!isNaN(val) && val < colorMax) {
+                                            setManualColorLimits(true);
+                                            setColorMin(val);
+                                        }
+                                    }}
+                                />{" "}
+                                <InputLabel>Min</InputLabel>
+                            </Box>
+                        </Box>
+                    )}
                 </DialogContent>
             </Dialog>
         </Box>
