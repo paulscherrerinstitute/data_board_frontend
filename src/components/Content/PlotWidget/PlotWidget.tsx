@@ -1227,7 +1227,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const yAxis =
                             curveAttributes.get(label)?.axisAssignment || "y1";
                         const shape =
-                            curveAttributes.get(label)?.curveShape || "label";
+                            curveAttributes.get(label)?.curveShape || "linear";
                         const mode =
                             curveAttributes.get(label)?.curveMode ||
                             "lines+markers";
@@ -1313,7 +1313,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 mode: "lines",
                                 fill: "toself",
                                 fillcolor: hexToRgba(color, 0.3),
-                                line: { color: "transparent", shape: "vh" },
+                                line: { color: "transparent", shape: shape },
                                 showlegend: false,
                                 showscale: false,
                                 yaxis: yAxis === "y1" ? "y" : yAxis,
