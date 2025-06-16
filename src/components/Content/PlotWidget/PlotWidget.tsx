@@ -57,10 +57,9 @@ import DownloadRawPopup from "./DownloadRawPopup/DownloadRawPopup";
 import WaveformPreviewPopup from "./WaveformPreviewPopup/WaveformPreviewPopup";
 import { WaveformPreviewData } from "./WaveformPreviewPopup/WaveformPreviewPopup.types";
 import {
-    convertLocalISOToUnix,
-    convertUnixToLocalISO,
     filterCurveAttribute,
     filterCurveData,
+    formatDateWithMs,
     getLabelForChannelAttributes,
     getLabelForCurve,
 } from "../../../helpers/curveDataTransformations";
@@ -513,11 +512,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     channel.type
                 );
 
-                const beginTimestamp = convertUnixToLocalISO(
-                    fetchTimeValues.startTime
+                const beginTimestamp = formatDateWithMs(
+                    new Date(fetchTimeValues.startTime)
                 );
-                const endTimeStamp = convertUnixToLocalISO(
-                    fetchTimeValues.endTime
+                const endTimeStamp = formatDateWithMs(
+                    new Date(fetchTimeValues.endTime)
                 );
 
                 try {
@@ -611,8 +610,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             responseCurveData.curve[key] as CurvePoints
                         )
                             .map(([timestamp, value]) => ({
-                                convertedTimestamp: convertUnixToLocalISO(
-                                    Number(timestamp) / 1e6
+                                convertedTimestamp: formatDateWithMs(
+                                    new Date(Number(timestamp) / 1e6)
                                 ),
                                 value,
                             }))
@@ -655,8 +654,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                         const pointMeta = Object.entries(metaBlock.pointMeta)
                             .map(([timestamp, meta]) => ({
-                                convertedTimestamp: convertUnixToLocalISO(
-                                    Number(timestamp) / 1e6
+                                convertedTimestamp: formatDateWithMs(
+                                    new Date(Number(timestamp) / 1e6)
                                 ),
                                 meta: meta as {
                                     count?: number;
@@ -767,8 +766,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         }, [timeValues]);
 
         useEffect(() => {
-            const beginTimestamp = convertUnixToLocalISO(timeValues.startTime);
-            const endTimeStamp = convertUnixToLocalISO(timeValues.endTime);
+            const beginTimestamp = formatDateWithMs(
+                new Date(timeValues.startTime)
+            );
+            const endTimeStamp = formatDateWithMs(
+                new Date(timeValues.startTime)
+            );
 
             for (const channel of channels) {
                 const label = getLabelForChannelAttributes(
@@ -1760,8 +1763,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 // This is a waveform channel
                                 const metaData = curve.curveData.curve.meta;
                                 if (metaData.pointMeta[timestamp].count) {
-                                    const middleTime =
-                                        convertLocalISOToUnix(timestamp);
+                                    const middleTime = new Date(
+                                        timestamp
+                                    ).getTime();
                                     let beginTime = middleTime - 5;
                                     let endTime = middleTime + 5;
 
@@ -1802,15 +1806,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                             interval = metaData.interval_avg;
                                         } else if (nextTimestamp) {
                                             interval =
-                                                convertLocalISOToUnix(
+                                                new Date(
                                                     nextTimestamp
-                                                ) - beginTime;
+                                                ).getTime() - beginTime;
                                         } else if (prevTimestamp) {
                                             interval =
                                                 beginTime -
-                                                convertLocalISOToUnix(
+                                                new Date(
                                                     prevTimestamp
-                                                );
+                                                ).getTime();
                                         }
                                         if (interval > 0) {
                                             beginTime = Math.floor(
@@ -1832,10 +1836,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         const expectedPoints = Object.values(
                                             filterCurveAttribute(
                                                 metaData.pointMeta,
-                                                convertUnixToLocalISO(
-                                                    beginTime
+                                                formatDateWithMs(
+                                                    new Date(beginTime)
                                                 ),
-                                                convertUnixToLocalISO(endTime)
+                                                formatDateWithMs(
+                                                    new Date(endTime)
+                                                )
                                             )
                                         ).reduce(
                                             (acc, obj) =>
