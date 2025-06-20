@@ -358,27 +358,28 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
             document.body.appendChild(dragPreview);
             event.dataTransfer.setDragImage(dragPreview, 0, 0);
 
-            // To allow plots overlayed by the sidebar to be reached
-            setSidebarIsFocused(false);
+            setTimeout(() => {
+                // Remove the preview after the drag starts
+                dragPreview.remove();
+                // To allow plots overlayed by the sidebar to be reached
+                setSidebarIsFocused(false);
+            });
 
-            // Remove the preview after the drag starts
-            setTimeout(() => dragPreview.remove(), 0);
-
-            // Unselect the channel if it was previously unselected once the drag ends
-            if (!initiatorIsSelected) {
-                const onDragEnd = () => {
-                    setSidebarIsFocused(true);
+            const onDragEnd = () => {
+                setSidebarIsFocused(true);
+                // Unselect the channel if it was previously unselected once the drag ends
+                if (!initiatorIsSelected) {
                     newStoredChannels = newStoredChannels.map((channel) =>
                         channel.attributes.seriesId === initiatorSeriesId
                             ? { ...channel, selected: false }
                             : channel
                     );
                     setStoredChannels(newStoredChannels);
-                    document.removeEventListener("dragend", onDragEnd);
-                };
+                }
+                event.currentTarget.removeEventListener("dragend", onDragEnd);
+            };
 
-                document.addEventListener("dragend", onDragEnd);
-            }
+            event.currentTarget.addEventListener("dragend", onDragEnd);
         },
         [storedChannels, setSidebarIsFocused]
     );

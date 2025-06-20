@@ -74,6 +74,8 @@ const Content: React.FC = () => {
 
     const handleDrop = (event: React.DragEvent<HTMLElement>, key: string) => {
         event.preventDefault();
+        document.dispatchEvent(new DragEvent("dragend"));
+
         setDraggedOverKey("");
         setHoveredOverKey("");
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
@@ -16,27 +16,24 @@ const Sidebar: React.FC<SidebarProps> = ({
     const [sidebarWidth, setSidebarWidth] = useState(
         (window.innerWidth * initialWidthPercent) / 100
     );
-    const [storedSidebarWidth, setStoredSidebarWidth] = useState(0);
     const [openSettings, setOpenSettings] = useState(false);
-    const [sidebarIsFocused, setSidebarIsFocused] = useState(true);
 
-    const prevSidebarIsFocused = useRef(true);
+    const storedSidebarWidth = useRef(0);
 
     const maxWidth = (windowWidth * maxWidthPercent) / 100;
     const minWidth = Math.max(30, (windowWidth * 2.5) / 100);
 
-    useEffect(() => {
-        if (prevSidebarIsFocused.current !== sidebarIsFocused) {
-            prevSidebarIsFocused.current = sidebarIsFocused;
-
-            if (sidebarIsFocused) {
-                setSidebarWidth(storedSidebarWidth);
+    const setSidebarFocus = useCallback(
+        (focus: boolean) => {
+            if (focus) {
+                setSidebarWidth(storedSidebarWidth.current);
             } else {
-                setStoredSidebarWidth(sidebarWidth);
+                storedSidebarWidth.current = sidebarWidth;
                 setSidebarWidth(minWidth);
             }
-        }
-    }, [sidebarIsFocused, sidebarWidth, storedSidebarWidth, minWidth]);
+        },
+        [sidebarWidth, minWidth]
+    );
 
     const renderToggleButton = () => {
         return (
@@ -156,7 +153,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         height: "100%",
                     }}
                 >
-                    <Selector setSidebarIsFocused={setSidebarIsFocused} />
+                    <Selector setSidebarIsFocused={setSidebarFocus} />
                 </Box>
             </Resizable>
         </Box>
