@@ -132,6 +132,10 @@ The general section contains settings that affect all plots.
 
     > ⚠️ **Warning:** This setting is an experimental _workaround_ and may break the plotting.
 
+- **Keep Sidebar Closed after Dragging a Channel**
+  If this is enabled, the sidebar will stay closed after one or multiple channels have been dragged. (It is closed upon starting the drag to make plots visible currently under the sidebar). The sidebar will stay closed, no matter what happend with the dragged channels. So even if they were not dragged into a plot, the sidebar will stay closed until it is opened again manually.
+- **Close Sidebar when Outside is Clicked**
+  This setting decides whether or not the sidebar should be closed if the user clicks anywhere outside of the sidebar. The general settings popup is exempt from this and will not trigger a sidebar collapse.
 - **Initial Widget Height / Width:** Initial dimensions new plots take when they are created. Does not affect the very first plot.
 
 #### Plot Defaults
