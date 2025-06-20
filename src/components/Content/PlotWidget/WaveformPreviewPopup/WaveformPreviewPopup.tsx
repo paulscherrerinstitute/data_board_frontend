@@ -30,7 +30,7 @@ import {
 } from "../../../../helpers/defaults";
 import showSnackbarAndLog from "../../../../helpers/showSnackbar";
 import Plotly from "plotly.js";
-import { cloneDeep, isEqual } from "lodash";
+import { cloneDeep, debounce, isEqual } from "lodash";
 import { formatDateWithMs } from "../../../../helpers/curveDataTransformations";
 
 const colorScale = [
@@ -194,30 +194,50 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                 setYAxisTimestamps(convertedTimestamps);
                 setVisibleTimestamps(convertedTimestamps);
 
+                const waveformsMap: Record<string, [number, number][]> = {};
+
+                for (const key in baseData) {
+                    const [timestamp, indexStr] = key.split("_");
+                    const index = Number(indexStr);
+                    if (!waveformsMap[timestamp]) waveformsMap[timestamp] = [];
+                    waveformsMap[timestamp].push([index, baseData[key]]);
+                }
+
                 const waveformsData = timestamps.map((timestamp) => {
-                    const entries = Object.entries(baseData).filter(([key]) =>
-                        key.startsWith(`${timestamp}_`)
-                    );
-                    const indexedEntries = entries.map(([key, value]) => {
-                        const index = Number(key.split("_").at(-1));
-                        return [index, value] as [number, number];
-                    });
-                    indexedEntries.sort((a, b) => a[0] - b[0]);
-                    return {
-                        indices: indexedEntries.map(([idx]) => idx),
-                        values: indexedEntries.map(([, val]) => val),
-                    };
+                    const entries = waveformsMap[timestamp] || [];
+                    entries.sort((a, b) => a[0] - b[0]);
+
+                    const indices = new Array(entries.length);
+                    const values = new Array(entries.length);
+                    for (let i = 0; i < entries.length; i++) {
+                        indices[i] = entries[i][0];
+                        values[i] = entries[i][1];
+                    }
+
+                    return { indices, values };
                 });
+
                 const xIndices = waveformsData[0].indices;
                 const zMatrix = waveformsData.map((wf) => wf.values);
 
-                const allZValues = zMatrix.flat();
-                const zMin = Math.min(...allZValues);
-                const zMax = Math.max(...allZValues);
+                let zMin = Infinity;
+                let zMax = -Infinity;
 
-                if (!manualColorLimits) {
+                for (const row of zMatrix) {
+                    for (const z of row) {
+                        if (z < zMin) zMin = z;
+                        if (z > zMax) zMax = z;
+                    }
+                }
+
+                if (
+                    !manualColorLimits &&
+                    (colorMin !== zMin || colorMax !== zMax)
+                ) {
                     setColorMin(zMin);
                     setColorMax(zMax);
+                    // Return here since the data will be recalculated either way with the new min/max
+                    return [];
                 }
 
                 if (useWebGL) {
@@ -461,12 +481,9 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
     useEffect(() => {
         const currentPlotDiv = plotRef.current;
         if (currentPlotDiv) {
-            Plotly.react(
-                currentPlotDiv,
-                cloneDeep(data),
-                cloneDeep(layout) || {},
-                { displaylogo: false }
-            );
+            Plotly.react(currentPlotDiv, data, layout || {}, {
+                displaylogo: false,
+            });
         }
     }, [data]);
 
@@ -508,6 +525,24 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
             Plotly.relayout(currentPlotDiv, newPlotlyLayout);
         }
     }, [layout]);
+
+    const debouncedSetColorMin = useMemo(
+        () =>
+            debounce((val: number) => {
+                setManualColorLimits(true);
+                setColorMin(val);
+            }, 1000),
+        []
+    );
+
+    const debouncedSetColorMax = useMemo(
+        () =>
+            debounce((val: number) => {
+                setManualColorLimits(true);
+                setColorMax(val);
+            }, 1000),
+        []
+    );
 
     return (
         <Box
@@ -565,8 +600,7 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                                     onChange={(e) => {
                                         const val = parseFloat(e.target.value);
                                         if (!isNaN(val) && val > colorMin) {
-                                            setManualColorLimits(true);
-                                            setColorMax(val);
+                                            debouncedSetColorMax(val);
                                         }
                                     }}
                                 />
@@ -588,8 +622,7 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                                     onChange={(e) => {
                                         const val = parseFloat(e.target.value);
                                         if (!isNaN(val) && val < colorMax) {
-                                            setManualColorLimits(true);
-                                            setColorMin(val);
+                                            debouncedSetColorMin(val);
                                         }
                                     }}
                                 />{" "}

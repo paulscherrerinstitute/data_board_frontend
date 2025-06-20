@@ -1874,7 +1874,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                                             if (
                                                 !confirm(
-                                                    `Expecting ${expectedPoints} from the selected range, recommended maximum is: ${NUM_EXPECTED_POINTS_MAX}, do you really want to proceed?!`
+                                                    `Expecting ${expectedPoints} points under the selected range, recommended maximum is: ${NUM_EXPECTED_POINTS_MAX}, do you really want to proceed?!`
                                                 )
                                             ) {
                                                 return;
@@ -1882,7 +1882,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                             logToConsole(
                                                 `Exceeding maximum expected points for raw waveform, proceeding upon user request`,
                                                 "warning",
-                                                `Expecting(${expectedPoints}) under the requested range, maximum allowed is: ${NUM_EXPECTED_POINTS_MAX}`
+                                                `Expecting ${expectedPoints} points under the requested range, maximum allowed is: ${NUM_EXPECTED_POINTS_MAX}`
                                             );
                                         }
                                     } else {
@@ -1927,7 +1927,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                             );
                                         setWaveformPreviewData({
                                             ...cloneDeep(curve),
-                                            curveData: cloneDeep(response.data),
+                                            curveData: response.data,
                                         });
                                     } catch (error) {
                                         showSnackbarAndLog(
