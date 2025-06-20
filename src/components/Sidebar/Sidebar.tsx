@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
@@ -7,11 +7,18 @@ import { SidebarProps } from "./Sidebar.types";
 import * as styles from "./Sidebar.styles";
 import Selector from "../Selector/Selector";
 import GeneralSettingsPopup from "../GeneralSettingsPopup/GeneralSettingsPopup";
+import { useLocalStorage } from "../../helpers/useLocalStorage";
+import { defaultCloseSidebarOnOutsideClick } from "../../helpers/defaults";
 
 const Sidebar: React.FC<SidebarProps> = ({
     initialWidthPercent = 10,
     maxWidthPercent = 100,
 }) => {
+    const [closeSidebarOnOutsideClick] = useLocalStorage(
+        "closeSidebarOnOutsideClick",
+        defaultCloseSidebarOnOutsideClick
+    );
+
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const [sidebarWidth, setSidebarWidth] = useState(
         (window.innerWidth * initialWidthPercent) / 100
@@ -19,6 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     const [openSettings, setOpenSettings] = useState(false);
 
     const storedSidebarWidth = useRef(0);
+    const sidebarRef = useRef<HTMLDivElement>(null);
 
     const maxWidth = (windowWidth * maxWidthPercent) / 100;
     const minWidth = Math.max(30, (windowWidth * 2.5) / 100);
@@ -34,6 +42,29 @@ const Sidebar: React.FC<SidebarProps> = ({
         },
         [sidebarWidth, minWidth]
     );
+
+    useEffect(() => {
+        if (closeSidebarOnOutsideClick) {
+            const handleClickOutside = (event: MouseEvent) => {
+                if (
+                    sidebarRef.current &&
+                    !(
+                        sidebarRef.current.contains(event.target as Node) ||
+                        (event.target as HTMLElement).closest(
+                            ".sidebar-ignore-click-outside"
+                        )
+                    )
+                ) {
+                    setSidebarFocus(false);
+                }
+            };
+
+            document.addEventListener("mousedown", handleClickOutside);
+            return () => {
+                document.removeEventListener("mousedown", handleClickOutside);
+            };
+        }
+    }, [closeSidebarOnOutsideClick, setSidebarFocus]);
 
     const renderToggleButton = () => {
         return (
@@ -93,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
 
     return (
-        <Box sx={styles.sidebarStyle}>
+        <Box sx={styles.sidebarStyle} ref={sidebarRef}>
             <Resizable
                 size={{ width: sidebarWidth, height: "100%" }}
                 minWidth={minWidth}

@@ -35,9 +35,16 @@ import {
 import showSnackbarAndLog from "../../helpers/showSnackbar";
 import AddIcon from "@mui/icons-material/Add";
 import AutoSizer from "react-virtualized-auto-sizer";
+import { useLocalStorage } from "../../helpers/useLocalStorage";
+import { defaultKeepSidebarClosedAfterDrag } from "../../helpers/defaults";
+import { SidebarIgnoredMenuProps } from "../../helpers/misc";
 
 const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
     const { backendUrl } = useApiUrls();
+    const [keepSidebarClosedAfterDrag] = useLocalStorage(
+        "keepSidebarClosedAfterDrag",
+        defaultKeepSidebarClosedAfterDrag
+    );
     const [searchTerm, setSearchTerm] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -366,7 +373,9 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
             });
 
             const onDragEnd = () => {
-                setSidebarIsFocused(true);
+                if (!keepSidebarClosedAfterDrag) {
+                    setSidebarIsFocused(true);
+                }
                 // Unselect the channel if it was previously unselected once the drag ends
                 if (!initiatorIsSelected) {
                     newStoredChannels = newStoredChannels.map((channel) =>
@@ -381,7 +390,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
 
             event.currentTarget.addEventListener("dragend", onDragEnd);
         },
-        [storedChannels, setSidebarIsFocused]
+        [storedChannels, keepSidebarClosedAfterDrag, setSidebarIsFocused]
     );
 
     const handleSelectAll = useCallback(() => {
@@ -466,6 +475,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                                 : concatenated;
                         }}
                         sx={styles.filterDropdownStyle}
+                        MenuProps={SidebarIgnoredMenuProps}
                     >
                         {backendOptions.map((backend) => (
                             <MenuItem
@@ -495,6 +505,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                                 : concatenated;
                         }}
                         sx={styles.filterDropdownStyle}
+                        MenuProps={SidebarIgnoredMenuProps}
                     >
                         {typeOptions.map((type) => (
                             <MenuItem
