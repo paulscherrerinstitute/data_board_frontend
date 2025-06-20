@@ -561,17 +561,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             [channel.name + "_min"]:
                                 response?.data.curve[
                                     channelIdentifier + "_min"
-                                ],
+                                ] || {},
                             [channel.name + "_max"]:
                                 response?.data.curve[
                                     channelIdentifier + "_max"
-                                ],
+                                ] || {},
                             [channel.name + "_meta"]:
                                 response?.data.curve[
                                     channelIdentifier + "_meta"
-                                ],
+                                ] || {},
                         },
                     };
+
                     if (
                         !responseCurveData.curve[channel.name] ||
                         Object.keys(responseCurveData.curve[channel.name])
