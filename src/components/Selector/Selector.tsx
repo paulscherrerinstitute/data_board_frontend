@@ -385,7 +385,6 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                     );
                     setStoredChannels(newStoredChannels);
                 }
-                event.currentTarget.removeEventListener("dragend", onDragEnd);
             };
 
             event.currentTarget.addEventListener("dragend", onDragEnd);
