@@ -12,6 +12,8 @@ import {
     IconButton,
     Box,
     useTheme,
+    InputLabel,
+    Input,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { WaveformPreviewPopupProps } from "./WaveformPreviewPopup.types";
@@ -28,8 +30,29 @@ import {
 } from "../../../../helpers/defaults";
 import showSnackbarAndLog from "../../../../helpers/showSnackbar";
 import Plotly from "plotly.js";
-import { cloneDeep, isEqual } from "lodash";
-import { convertUnixToLocalISO } from "../../../../helpers/curveDataTransformations";
+import { cloneDeep, debounce, isEqual } from "lodash";
+import { formatDateWithMs } from "../../../../helpers/curveDataTransformations";
+
+const colorScale = [
+    [0.0, "rgb(255,0,0)"],
+    [0.025, "rgb(255,165,0)"],
+    [0.05, "rgb(255,255,0)"],
+    [0.1, "rgb(0,128,0)"],
+    [0.2, "rgb(144,238,144)"],
+    [0.3, "rgb(173,216,230)"],
+    [0.4, "rgb(135,206,235)"],
+    [0.5, "rgb(0,191,255)"],
+    [0.6, "rgb(70,130,180)"],
+    [0.7, "rgb(123,104,238)"],
+    [0.8, "rgb(147,112,219)"],
+    [0.9, "rgb(75,0,130)"],
+    [0.925, "rgb(238,130,238)"],
+    [0.95, "rgb(255,20,147)"],
+    [0.975, "rgb(199,21,133)"],
+    [1.0, "rgb(128,0,128)"],
+] as Plotly.ColorScale;
+
+const colorScaleGradient = `linear-gradient(to top, ${(colorScale as [number, string][]).map(([stop, color]) => `${color} ${stop * 100}%`).join(", ")})`;
 
 const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
     waveformPreviewData,
@@ -64,10 +87,15 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
             JSON.stringify(defaultCurveColors)
     )[0];
 
-    const [yAxisTimestamps, setYAxisTimestamps] = useState<string[]>([]);
+    const [yAxisTimestampsShort, setYAxisTimestampsShort] = useState<string[]>(
+        []
+    );
     const [yAxisIndices, setYAxisIndices] = useState<number[]>([]);
-    const [yAxisIsoTimestamps, setYAxisIsoTimestamps] = useState<string[]>([]);
+    const [yAxisTimestamps, setYAxisTimestamps] = useState<string[]>([]);
     const [visibleTimestamps, setVisibleTimestamps] = useState<string[]>([]);
+    const [colorMin, setColorMin] = useState(0);
+    const [colorMax, setColorMax] = useState(1);
+    const [manualColorLimits, setManualColorLimits] = useState(false);
 
     const plotRef = useRef<PlotlyHTMLElement | null>(null);
     const previousLayoutRef = useRef<Plotly.Layout | null>(null);
@@ -117,7 +145,7 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                     text += "<br>This curve is a waveform.<br>Waveform info:";
 
                     if (metaKeys.length === 1) {
-                        text += `<br>   Timestamp: ${convertUnixToLocalISO(Number(metaKeys[0]) / 1e6)}`;
+                        text += `<br>   Timestamp: ${formatDateWithMs(new Date(Number(metaKeys[0]) / 1e6))}`;
                         if (hasPulseIds) {
                             const pulseId = Object.values(metaData.pointMeta)[0]
                                 .pulseId;
@@ -152,7 +180,7 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                     (a, b) => Number(a) - Number(b)
                 );
                 const convertedTimestamps = timestamps.map((timestamp) =>
-                    convertUnixToLocalISO(Number(timestamp) / 1e6)
+                    formatDateWithMs(new Date(Number(timestamp) / 1e6))
                 );
                 const shortTimestamps = convertedTimestamps.map((timestamp) =>
                     timestamp.slice(11, 23)
@@ -162,32 +190,57 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                     (_, i) => i
                 );
                 setYAxisIndices(yTimestampIndices);
-                setYAxisTimestamps(shortTimestamps);
-                setYAxisIsoTimestamps(convertedTimestamps);
+                setYAxisTimestampsShort(shortTimestamps);
+                setYAxisTimestamps(convertedTimestamps);
                 setVisibleTimestamps(convertedTimestamps);
 
+                const waveformsMap: Record<string, [number, number][]> = {};
+
+                for (const key in baseData) {
+                    const [timestamp, indexStr] = key.split("_");
+                    const index = Number(indexStr);
+                    if (!waveformsMap[timestamp]) waveformsMap[timestamp] = [];
+                    waveformsMap[timestamp].push([index, baseData[key]]);
+                }
+
                 const waveformsData = timestamps.map((timestamp) => {
-                    const entries = Object.entries(baseData).filter(([key]) =>
-                        key.startsWith(`${timestamp}_`)
-                    );
-                    const indexedEntries = entries.map(([key, value]) => {
-                        const index = Number(key.split("_").at(-1));
-                        return [index, value] as [number, number];
-                    });
-                    indexedEntries.sort((a, b) => a[0] - b[0]);
-                    return {
-                        indices: indexedEntries.map(([idx]) => idx),
-                        values: indexedEntries.map(([, val]) => val),
-                    };
+                    const entries = waveformsMap[timestamp] || [];
+                    entries.sort((a, b) => a[0] - b[0]);
+
+                    const indices = new Array(entries.length);
+                    const values = new Array(entries.length);
+                    for (let i = 0; i < entries.length; i++) {
+                        indices[i] = entries[i][0];
+                        values[i] = entries[i][1];
+                    }
+
+                    return { indices, values };
                 });
+
                 const xIndices = waveformsData[0].indices;
                 const zMatrix = waveformsData.map((wf) => wf.values);
 
-                if (useWebGL) {
-                    const allZValues = zMatrix.flat();
-                    const zMin = Math.min(...allZValues);
-                    const zMax = Math.max(...allZValues);
+                let zMin = Infinity;
+                let zMax = -Infinity;
 
+                for (const row of zMatrix) {
+                    for (const z of row) {
+                        if (z < zMin) zMin = z;
+                        if (z > zMax) zMax = z;
+                    }
+                }
+
+                if (
+                    !manualColorLimits &&
+                    (colorMin !== zMin || colorMax !== zMax)
+                ) {
+                    setColorMin(zMin);
+                    setColorMax(zMax);
+                    // Return here since the data will be recalculated either way with the new min/max
+                    return [];
+                }
+
+                if (useWebGL) {
                     const traces: Plotly.Data[] = [];
 
                     for (let yi = 0; yi < yTimestampIndices.length; yi++) {
@@ -219,14 +272,9 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                             marker: {
                                 size: 3,
                                 color: z,
-                                colorscale: "RdBu",
-                                cmin: zMin,
-                                cmax: zMax,
-                                colorbar:
-                                    yi === 0
-                                        ? { title: { text: "Value" } }
-                                        : undefined,
-                                showscale: yi === 0,
+                                colorscale: colorScale,
+                                cmin: manualColorLimits ? colorMin : zMin,
+                                cmax: manualColorLimits ? colorMax : zMax,
                             },
                         });
                     }
@@ -242,6 +290,10 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                             hovertemplate:
                                 "Timestamp: %{x}<br>Point No.: %{y}<br>Value: %{z}<extra></extra>",
                             transpose: true,
+                            colorscale: colorScale,
+                            zmin: manualColorLimits ? colorMin : zMin,
+                            zmax: manualColorLimits ? colorMax : zMax,
+                            showscale: false,
                         },
                     ];
                 }
@@ -251,7 +303,14 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
             showSnackbarAndLog("Failed to parse channel data", "error", error);
         }
         return [];
-    }, [waveformPreviewData, useWebGL, curveColor]);
+    }, [
+        waveformPreviewData,
+        useWebGL,
+        curveColor,
+        colorMin,
+        colorMax,
+        manualColorLimits,
+    ]);
 
     const layout = useMemo(() => {
         const maxTicks = 5;
@@ -264,14 +323,14 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
         for (let i = 0; i < totalPoints; i += step) {
             const tickIndex = yAxisIndices[i];
             tickvals.push(tickIndex);
-            ticktext.push(yAxisTimestamps[tickIndex]);
+            ticktext.push(yAxisTimestampsShort[tickIndex]);
         }
 
         // Make sure the last tick is included
         if (tickvals[tickvals.length - 1] !== totalPoints - 1) {
             const lastTickIndex = yAxisIndices.at(-1)!;
             tickvals.push(lastTickIndex);
-            ticktext.push(yAxisTimestamps[lastTickIndex]);
+            ticktext.push(yAxisTimestampsShort[lastTickIndex]);
         }
 
         return {
@@ -304,25 +363,31 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                     },
                 },
             },
+            margin: {
+                t: 50,
+                pad: 0,
+                ...(useWebGL &&
+                    yAxisTimestampsShort.length > 1 && {
+                        l: 0,
+                        r: 0,
+                        b: 0,
+                    }),
+            },
             title: {
                 text: waveformPreviewData?.name,
             },
             autosize: true,
-            margin: {
-                l: useWebGL ? 0 : 70,
-                r: useWebGL ? 0 : 40,
-                t: 50,
-                b: useWebGL ? 0 : 90,
-                pad: 0,
-            },
             xaxis: {
                 gridcolor: xAxisGridColor,
                 linecolor: xAxisGridColor,
                 zerolinecolor: xAxisGridColor,
                 title: {
-                    text: yAxisTimestamps.length === 1 ? "Point Index" : "Time",
+                    text:
+                        yAxisTimestampsShort.length === 1
+                            ? "Point Index"
+                            : "Time",
                 },
-                ...(yAxisTimestamps.length > 1 && {
+                ...(yAxisTimestampsShort.length > 1 && {
                     type: "array",
                     tickmode: "date",
                     tickvals: visibleTimestamps,
@@ -335,7 +400,9 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                 zerolinecolor: yAxisGridColor,
                 title: {
                     text:
-                        yAxisTimestamps.length === 1 ? "Value" : "Point Index",
+                        yAxisTimestampsShort.length === 1
+                            ? "Value"
+                            : "Point Index",
                 },
             },
             showlegend: false,
@@ -368,7 +435,7 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
         xAxisGridColor,
         yAxisGridColor,
         yAxisIndices,
-        yAxisTimestamps,
+        yAxisTimestampsShort,
         visibleTimestamps,
         theme,
         useWebGL,
@@ -384,13 +451,13 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
             ) {
                 return;
             }
-            const [rangeStartIso, rangeEndIso] = layoutAxis.range.map((ts) =>
-                convertUnixToLocalISO(new Date(ts).getTime())
+            const [rangeStart, rangeEnd] = layoutAxis.range.map((ts) =>
+                formatDateWithMs(new Date(ts))
             );
 
             // Filter timestamps within current range
-            const visibleTicks = yAxisIsoTimestamps.filter(
-                (ts) => ts >= rangeStartIso && ts <= rangeEndIso
+            const visibleTicks = yAxisTimestamps.filter(
+                (ts) => ts >= rangeStart && ts <= rangeEnd
             );
             if (visibleTicks.length === 0) {
                 return;
@@ -408,17 +475,15 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                 setVisibleTimestamps(newTicks);
             }
         },
-        [yAxisIsoTimestamps, visibleTimestamps]
+        [yAxisTimestamps, visibleTimestamps]
     );
 
     useEffect(() => {
         const currentPlotDiv = plotRef.current;
         if (currentPlotDiv) {
-            Plotly.react(
-                currentPlotDiv,
-                cloneDeep(data),
-                cloneDeep(layout) || {}
-            );
+            Plotly.react(currentPlotDiv, data, layout || {}, {
+                displaylogo: false,
+            });
         }
     }, [data]);
 
@@ -461,6 +526,24 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
         }
     }, [layout]);
 
+    const debouncedSetColorMin = useMemo(
+        () =>
+            debounce((val: number) => {
+                setManualColorLimits(true);
+                setColorMin(val);
+            }, 1000),
+        []
+    );
+
+    const debouncedSetColorMax = useMemo(
+        () =>
+            debounce((val: number) => {
+                setManualColorLimits(true);
+                setColorMax(val);
+            }, 1000),
+        []
+    );
+
     return (
         <Box
             // Prevent manipulation of parent container (plot, content)
@@ -496,11 +579,57 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ display: "flex", height: 400, gap: 2 }}>
                     <div
                         ref={plotRef}
-                        style={{ width: "100%", height: "100%" }}
+                        style={{
+                            width:
+                                yAxisTimestampsShort.length > 1
+                                    ? "90%"
+                                    : "100%",
+                            height: "100%",
+                        }}
                     />
+                    {yAxisTimestampsShort.length > 1 && (
+                        <Box sx={styles.colorBarContainerStyle}>
+                            <Box sx={styles.colorBarLimitsContainerStyle}>
+                                <InputLabel>Max</InputLabel>
+                                <Input
+                                    type="number"
+                                    defaultValue={colorMax}
+                                    onChange={(e) => {
+                                        const val = parseFloat(e.target.value);
+                                        if (!isNaN(val) && val > colorMin) {
+                                            debouncedSetColorMax(val);
+                                        }
+                                    }}
+                                />
+                            </Box>
+                            <div
+                                style={{
+                                    flex: 1,
+                                    marginTop: 8,
+                                    marginBottom: 8,
+                                    width: "100%",
+                                    background: colorScaleGradient,
+                                    border: "1px solid #000",
+                                }}
+                            ></div>
+                            <Box sx={styles.colorBarLimitsContainerStyle}>
+                                <Input
+                                    type="number"
+                                    defaultValue={colorMin}
+                                    onChange={(e) => {
+                                        const val = parseFloat(e.target.value);
+                                        if (!isNaN(val) && val < colorMax) {
+                                            debouncedSetColorMin(val);
+                                        }
+                                    }}
+                                />{" "}
+                                <InputLabel>Min</InputLabel>
+                            </Box>
+                        </Box>
+                    )}
                 </DialogContent>
             </Dialog>
         </Box>

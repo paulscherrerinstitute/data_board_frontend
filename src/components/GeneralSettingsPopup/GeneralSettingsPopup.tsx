@@ -27,10 +27,12 @@ import { GeneralSettingsPopupProps } from "./GeneralSettingsPopup.types";
 import * as styles from "./GeneralSettingsPopup.styles";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import {
+    defaultCloseSidebarOnOutsideClick,
     defaultCurveColors,
     defaultCurveMode,
     defaultCurveShape,
     defaultInitialSidebarState,
+    defaultKeepSidebarClosedAfterDrag,
     defaultPlotBackgroundColor,
     defaultTheme,
     defaultUseVirtualWebGL,
@@ -53,6 +55,7 @@ import {
     loadVirtualWebGLScript,
     unloadVirtualWebGLScript,
 } from "../../helpers/loadVirtualWebGLScript";
+import { SidebarIgnoredMenuProps } from "../../helpers/misc";
 
 const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     open,
@@ -111,6 +114,24 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     const [useVirtualWebGL, setUseVirtualWebGLStorage, setUseVirtualWebGL] =
         useLocalStorage("useVirtualWebGL", defaultUseVirtualWebGL);
     const [
+        keepSidebarClosedAfterDrag,
+        setKeepSidebarClosedAfterDragStorage,
+        setKeepSidebarClosedAfterDrag,
+    ] = useLocalStorage(
+        "keepSidebarClosedAfterDrag",
+        defaultKeepSidebarClosedAfterDrag
+    );
+
+    const [
+        closeSidebarOnOutsideClick,
+        setCloseSidebarOnOutsideClickStorage,
+        setCloseSidebarOnOutsideClick,
+    ] = useLocalStorage(
+        "closeSidebarOnOutsideClick",
+        defaultCloseSidebarOnOutsideClick
+    );
+
+    const [
         initialWidgetHeight,
         setInitialWidgetHeightStorage,
         setInitialWidgetHeight,
@@ -163,6 +184,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setXAxisGridColorStorage(xAxisGridColor);
         setYAxisGridColorStorage(yAxisGridColor);
         setUseWebGLStorage(useWebGL);
+        setKeepSidebarClosedAfterDragStorage(keepSidebarClosedAfterDrag);
+        setCloseSidebarOnOutsideClickStorage(closeSidebarOnOutsideClick);
         setInitialWidgetHeightStorage(initialWidgetHeight);
         setInitialWidgetWidthStorage(initialWidgetWidth);
         setCurveColorsStorage(curveColors);
@@ -188,6 +211,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         yAxisGridColor,
         useWebGL,
         useVirtualWebGL,
+        keepSidebarClosedAfterDrag,
+        closeSidebarOnOutsideClick,
         initialWidgetHeight,
         initialWidgetWidth,
         curveColors,
@@ -204,6 +229,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setYAxisGridColorStorage,
         setUseWebGLStorage,
         setUseVirtualWebGLStorage,
+        setKeepSidebarClosedAfterDragStorage,
+        setCloseSidebarOnOutsideClickStorage,
         setInitialWidgetHeightStorage,
         setInitialWidgetWidthStorage,
         setCurveColorsStorage,
@@ -219,6 +246,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setYAxisGridColor(defaultYAxisGridColor);
         setUseWebGL(isWebGLSupported ? defaultUseWebGL : false);
         setUseVirtualWebGL(defaultUseVirtualWebGL);
+        setKeepSidebarClosedAfterDrag(defaultKeepSidebarClosedAfterDrag);
+        setCloseSidebarOnOutsideClick(defaultCloseSidebarOnOutsideClick);
         setInitialWidgetHeight(defaultWidgetHeight);
         setInitialWidgetWidth(defaultWidgetWidth);
         setCurveColors(defaultCurveColors);
@@ -237,6 +266,8 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
             yAxisGridColor,
             useWebGL,
             useVirtualWebGL,
+            keepSidebarClosedAfterDrag,
+            closeSidebarOnOutsideClick,
             initialWidgetHeight,
             initialWidgetWidth,
             curveColors,
@@ -278,6 +309,14 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     setUseWebGL(imported.useWebGL);
                 if (imported.useVirtualWebGL !== undefined)
                     setUseVirtualWebGL(imported.useVirtualWebGL);
+                if (imported.keepSidebarClosedAfterDrag !== undefined)
+                    setKeepSidebarClosedAfterDrag(
+                        imported.keepSidebarClosedAfterDrag
+                    );
+                if (imported.closeSidebarOnOutsideClick !== undefined)
+                    setCloseSidebarOnOutsideClick(
+                        imported.closeSidebarOnOutsideClick
+                    );
                 if (imported.initialWidgetHeight !== undefined)
                     setInitialWidgetHeight(imported.initialWidgetHeight);
                 if (imported.initialWidgetWidth !== undefined)
@@ -461,6 +500,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                 fullWidth
                 maxWidth={false}
                 sx={styles.dialogStyle}
+                className="sidebar-ignore-click-outside"
             >
                 <DialogTitle>
                     Settings
@@ -496,6 +536,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                     )
                                 }
                                 label="Initial Sidebar State"
+                                MenuProps={SidebarIgnoredMenuProps}
                             >
                                 <MenuItem value="closedIfDashboard">
                                     Closed if Dashboard is Provided
@@ -526,6 +567,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                         );
                                     }}
                                     label="Theme"
+                                    MenuProps={SidebarIgnoredMenuProps}
                                 >
                                     {Object.entries(themes).map(
                                         ([key, { displayName }]) => (
@@ -621,6 +663,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                             e.target.value === "enabled"
                                         )
                                     }
+                                    MenuProps={SidebarIgnoredMenuProps}
                                 >
                                     <MenuItem value="enabled">Enabled</MenuItem>
                                     <MenuItem value="disabled">
@@ -665,6 +708,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                             e.target.value === "enabled"
                                         )
                                     }
+                                    MenuProps={SidebarIgnoredMenuProps}
                                 >
                                     <MenuItem value="enabled">Enabled</MenuItem>
                                     <MenuItem value="disabled">
@@ -683,6 +727,72 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                 some things.
                             </Typography>
                         )}
+                    </Box>
+
+                    <Box sx={styles.settingBoxStyle}>
+                        <FormControl fullWidth>
+                            <InputLabel>
+                                Keep Sidebar Closed after Dragging a Channel
+                            </InputLabel>
+                            <Tooltip
+                                title="If enabled, the sidebar won't reopen after a channel(s) drag was completed. Instead, it will stay closed, even if the dragevent was cancelled."
+                                arrow
+                                placement="top"
+                            >
+                                <Select
+                                    label="Keep Sidebar Closed after Dragging a Channel"
+                                    value={
+                                        keepSidebarClosedAfterDrag
+                                            ? "enabled"
+                                            : "disabled"
+                                    }
+                                    onChange={(e) =>
+                                        setKeepSidebarClosedAfterDrag(
+                                            e.target.value === "enabled"
+                                        )
+                                    }
+                                    MenuProps={SidebarIgnoredMenuProps}
+                                >
+                                    <MenuItem value="enabled">Enabled</MenuItem>
+                                    <MenuItem value="disabled">
+                                        Disabled
+                                    </MenuItem>
+                                </Select>
+                            </Tooltip>
+                        </FormControl>
+                    </Box>
+
+                    <Box sx={styles.settingBoxStyle}>
+                        <FormControl fullWidth>
+                            <InputLabel>
+                                Close Sidebar when Outside is Clicked
+                            </InputLabel>
+                            <Tooltip
+                                title="If enabled, the sidebar will be collapsed on clicks outside of it."
+                                arrow
+                                placement="top"
+                            >
+                                <Select
+                                    label="Close Sidebar when Outside is Clicked"
+                                    value={
+                                        closeSidebarOnOutsideClick
+                                            ? "enabled"
+                                            : "disabled"
+                                    }
+                                    onChange={(e) =>
+                                        setCloseSidebarOnOutsideClick(
+                                            e.target.value === "enabled"
+                                        )
+                                    }
+                                    MenuProps={SidebarIgnoredMenuProps}
+                                >
+                                    <MenuItem value="enabled">Enabled</MenuItem>
+                                    <MenuItem value="disabled">
+                                        Disabled
+                                    </MenuItem>
+                                </Select>
+                            </Tooltip>
+                        </FormControl>
                     </Box>
 
                     <Box sx={styles.settingBoxStyle}>
@@ -791,6 +901,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                     )
                                 }
                                 label="Y-Axis Scaling"
+                                MenuProps={SidebarIgnoredMenuProps}
                             >
                                 <MenuItem value="linear">Linear</MenuItem>
                                 <MenuItem value="log">Log10</MenuItem>
@@ -815,6 +926,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                         )
                                     }
                                     label="Curve Shape"
+                                    MenuProps={SidebarIgnoredMenuProps}
                                 >
                                     <MenuItem value="linear">
                                         Direct (linear)
@@ -844,6 +956,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                         )
                                     }
                                     label="Curve Mode"
+                                    MenuProps={SidebarIgnoredMenuProps}
                                 >
                                     <MenuItem value="lines+markers">
                                         Lines and Markers
@@ -865,7 +978,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                         ref={plotRefCallback}
                         style={{ width: "100%", height: "100%" }}
                     />
-                    <Box sx={styles.resetButtonStyle}>
+                    <Box sx={styles.ButtonBoxStyle}>
                         <Button
                             variant="contained"
                             color="primary"

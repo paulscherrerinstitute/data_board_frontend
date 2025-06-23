@@ -57,13 +57,14 @@ import DownloadRawPopup from "./DownloadRawPopup/DownloadRawPopup";
 import WaveformPreviewPopup from "./WaveformPreviewPopup/WaveformPreviewPopup";
 import { WaveformPreviewData } from "./WaveformPreviewPopup/WaveformPreviewPopup.types";
 import {
-    convertLocalISOToUnix,
-    convertUnixToLocalISO,
+    filterCurveAttribute,
     filterCurveData,
+    formatDateWithMs,
     getLabelForChannelAttributes,
     getLabelForCurve,
 } from "../../../helpers/curveDataTransformations";
 import { downloadBlob, hexToRgba } from "../../../helpers/misc";
+import { showWaveformPreviewChoiceDialog } from "./WaveformPreviewChoiceDialog/WaveformPreviewChoiceDialog";
 
 const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
     ({
@@ -88,14 +89,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const [yAxisAttributes, setYAxisAttributes] = useState<
             YAxisAttributes[]
         >(() => {
-            const savedScaling = JSON.parse(
-                localStorage.getItem("yAxisScaling") ||
-                    JSON.stringify(defaultYAxisScaling)
-            );
             return [
                 {
                     label: "y1",
-                    scaling: savedScaling,
                     min: null,
                     max: null,
                     displayLabel: "y1",
@@ -103,7 +99,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 },
                 {
                     label: "y2",
-                    scaling: savedScaling,
                     min: null,
                     max: null,
                     displayLabel: "y2",
@@ -111,7 +106,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 },
                 {
                     label: "y3",
-                    scaling: savedScaling,
                     min: null,
                     max: null,
                     displayLabel: "y3",
@@ -119,7 +113,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 },
                 {
                     label: "y4",
-                    scaling: savedScaling,
                     min: null,
                     max: null,
                     displayLabel: "y4",
@@ -157,7 +150,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const isCtrlPressed = useRef(false);
         const curvesRef = useRef(curves);
-        const colorMap = useRef<Map<string, string>>(new Map());
         const previousTimeValues = useRef(timeValues);
         const plotRef = useRef<PlotlyHTMLElement | null>(null);
         const settingsInitialized = useRef(false);
@@ -178,26 +170,28 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const NUM_BINS = 1000;
         const NUM_EXPECTED_POINTS_MAX = 102400;
 
-        const initialCurveColors = useMemo(() => {
-            return JSON.parse(
-                localStorage.getItem("curveColors") ||
-                    JSON.stringify(defaultCurveColors)
-            );
-        }, []);
+        const [initialCurveColors] = useLocalStorage(
+            "curveColors",
+            defaultCurveColors,
+            true
+        );
 
-        const initialCurveShape = useMemo(() => {
-            return JSON.parse(
-                localStorage.getItem("curveShape") ||
-                    JSON.stringify(defaultCurveShape)
-            );
-        }, []);
+        const [initialCurveShape] = useLocalStorage(
+            "curveShape",
+            defaultCurveShape,
+            true
+        );
 
-        const initialCurveMode = useMemo(() => {
-            return JSON.parse(
-                localStorage.getItem("curveMode") ||
-                    JSON.stringify(defaultCurveMode)
-            );
-        }, []);
+        const [initialCurveMode] = useLocalStorage(
+            "curveMode",
+            defaultCurveMode,
+            true
+        );
+        const [initialAxisScaling] = useLocalStorage(
+            "yAxisScaling",
+            defaultYAxisScaling,
+            true
+        );
 
         if (!settingsInitialized.current) {
             settingsInitialized.current = true;
@@ -215,26 +209,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 );
             }
         }
-
-        const getColorForChannel = useCallback(
-            (channel: Channel) => {
-                const channelKey = getLabelForChannelAttributes(
-                    channel.name,
-                    channel.backend,
-                    channel.type
-                );
-                if (!colorMap.current.has(channelKey)) {
-                    // Assign a color if not already assigned
-                    const color =
-                        initialCurveColors[
-                            colorMap.current.size % initialCurveColors.length
-                        ];
-                    colorMap.current.set(channelKey, color);
-                }
-                return colorMap.current.get(channelKey)!; // Ensure it has a value
-            },
-            [initialCurveColors]
-        );
 
         // Prevent event bubbling if its on a draggable surface so an event to drag the plot will not be handled by the grid layout to move the whole widget.
         const handleEventPropagation = (
@@ -278,6 +252,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         params: {
                             search_text: `^${channel.name}$`,
                             allow_cached_response: false,
+                            backend: channel.backend,
                         },
                     });
                 } catch (error: AxiosError | unknown) {
@@ -368,15 +343,17 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     newCurveAttributes.set(label, {
                         channel: channel,
-                        color:
-                            curveAttributes.get(label)?.color ||
-                            getColorForChannel(channel),
-                        curveShape:
-                            curveAttributes.get(label)?.curveShape ||
-                            initialCurveShape,
-                        curveMode:
-                            curveAttributes.get(label)?.curveMode ||
-                            initialCurveMode,
+                        ...(curveAttributes.get(label)?.color !== undefined && {
+                            color: curveAttributes.get(label)?.color,
+                        }),
+                        ...(curveAttributes.get(label)?.curveShape !==
+                            undefined && {
+                            curveShape: curveAttributes.get(label)?.curveShape,
+                        }),
+                        ...(curveAttributes.get(label)?.curveMode !==
+                            undefined && {
+                            curveMode: curveAttributes.get(label)?.curveMode,
+                        }),
                         displayLabel:
                             curveAttributes.get(label)?.displayLabel || label,
                         axisAssignment: assignedAxis,
@@ -411,14 +388,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             ) {
                 setCurveAttributes(newCurveAttributes);
             }
-        }, [
-            channels,
-            getColorForChannel,
-            getChannelIdentifier,
-            initialCurveShape,
-            initialCurveMode,
-            manualAxisAssignment,
-        ]);
+        }, [channels, getChannelIdentifier, manualAxisAssignment]);
 
         useEffect(() => {
             const handleKeyDown = (event: KeyboardEvent) => {
@@ -510,11 +480,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     channel.type
                 );
 
-                const beginTimestamp = convertUnixToLocalISO(
-                    fetchTimeValues.startTime
+                const beginTimestamp = formatDateWithMs(
+                    new Date(fetchTimeValues.startTime)
                 );
-                const endTimeStamp = convertUnixToLocalISO(
-                    fetchTimeValues.endTime
+                const endTimeStamp = formatDateWithMs(
+                    new Date(fetchTimeValues.endTime)
                 );
 
                 try {
@@ -559,17 +529,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             [channel.name + "_min"]:
                                 response?.data.curve[
                                     channelIdentifier + "_min"
-                                ],
+                                ] || {},
                             [channel.name + "_max"]:
                                 response?.data.curve[
                                     channelIdentifier + "_max"
-                                ],
+                                ] || {},
                             [channel.name + "_meta"]:
                                 response?.data.curve[
                                     channelIdentifier + "_meta"
-                                ],
+                                ] || {},
                         },
                     };
+
                     if (
                         !responseCurveData.curve[channel.name] ||
                         Object.keys(responseCurveData.curve[channel.name])
@@ -608,8 +579,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             responseCurveData.curve[key] as CurvePoints
                         )
                             .map(([timestamp, value]) => ({
-                                convertedTimestamp: convertUnixToLocalISO(
-                                    Number(timestamp) / 1e6
+                                convertedTimestamp: formatDateWithMs(
+                                    new Date(Number(timestamp) / 1e6)
                                 ),
                                 value,
                             }))
@@ -652,8 +623,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                         const pointMeta = Object.entries(metaBlock.pointMeta)
                             .map(([timestamp, meta]) => ({
-                                convertedTimestamp: convertUnixToLocalISO(
-                                    Number(timestamp) / 1e6
+                                convertedTimestamp: formatDateWithMs(
+                                    new Date(Number(timestamp) / 1e6)
                                 ),
                                 meta: meta as {
                                     count?: number;
@@ -764,8 +735,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         }, [timeValues]);
 
         useEffect(() => {
-            const beginTimestamp = convertUnixToLocalISO(timeValues.startTime);
-            const endTimeStamp = convertUnixToLocalISO(timeValues.endTime);
+            const beginTimestamp = formatDateWithMs(
+                new Date(timeValues.startTime)
+            );
+            const endTimeStamp = formatDateWithMs(
+                new Date(timeValues.startTime)
+            );
 
             for (const channel of channels) {
                 const label = getLabelForChannelAttributes(
@@ -1045,28 +1020,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const onPlotSettingsSave = useCallback(
             (newPlotSettings: PlotSettings) => {
                 setPlotTitle(cloneDeep(newPlotSettings.plotTitle));
-
-                if (
-                    [...newPlotSettings.curveAttributes].some(
-                        ([key, value]) =>
-                            curveAttributes.get(key)?.axisAssignment !==
-                            value.axisAssignment
-                    )
-                ) {
-                    setManualAxisAssignment(true);
-                }
-
+                setManualAxisAssignment(newPlotSettings.manualAxisAssignment);
                 setCurveAttributes(new Map(newPlotSettings.curveAttributes));
-                newPlotSettings.yAxisAttributes =
-                    newPlotSettings.yAxisAttributes.map((value, index) => ({
-                        ...value,
-                        manualDisplayLabel:
-                            value.displayLabel !==
-                            yAxisAttributes[index].displayLabel
-                                ? true
-                                : value.manualDisplayLabel,
-                    }));
-
                 setYAxisAttributes([...newPlotSettings.yAxisAttributes]);
             },
             [curveAttributes, yAxisAttributes]
@@ -1164,14 +1119,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const displayLabel =
                             curveAttributes.get(label)?.displayLabel;
                         const color =
-                            curveAttributes.get(label)?.color || "#ffffff";
+                            curveAttributes.get(label)?.color ||
+                            initialCurveColors[
+                                index % initialCurveColors.length
+                            ];
                         const yAxis =
                             curveAttributes.get(label)?.axisAssignment || "y1";
                         const shape =
-                            curveAttributes.get(label)?.curveShape || "label";
+                            curveAttributes.get(label)?.curveShape ||
+                            initialCurveShape;
                         const mode =
                             curveAttributes.get(label)?.curveMode ||
-                            "lines+markers";
+                            initialCurveMode;
 
                         // Calculate correlation coefficients.
                         const pearson: number = pearsonCoefficient(
@@ -1217,14 +1176,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const displayLabel =
                             curveAttributes.get(label)?.displayLabel;
                         const color =
-                            curveAttributes.get(label)?.color || "#ffffff";
+                            curveAttributes.get(label)?.color ||
+                            initialCurveColors[
+                                index % initialCurveColors.length
+                            ];
                         const yAxis =
                             curveAttributes.get(label)?.axisAssignment || "y1";
                         const shape =
-                            curveAttributes.get(label)?.curveShape || "label";
+                            curveAttributes.get(label)?.curveShape ||
+                            initialCurveShape;
                         const mode =
                             curveAttributes.get(label)?.curveMode ||
-                            "lines+markers";
+                            initialCurveMode;
 
                         const baseData = curve.curveData.curve.value;
                         const minData = curve.curveData.curve.min;
@@ -1307,7 +1270,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 mode: "lines",
                                 fill: "toself",
                                 fillcolor: hexToRgba(color, 0.3),
-                                line: { color: "transparent", shape: "vh" },
+                                line: { color: "transparent", shape: shape },
                                 showlegend: false,
                                 showscale: false,
                                 yaxis: yAxis === "y1" ? "y" : yAxis,
@@ -1327,7 +1290,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 );
             }
             return [];
-        }, [curves, curveAttributes, useWebGL]);
+        }, [
+            curves,
+            curveAttributes,
+            initialCurveColors,
+            initialCurveShape,
+            initialCurveMode,
+            useWebGL,
+        ]);
 
         const layout = useMemo(() => {
             const yAxes: { [key: string]: Partial<Plotly.LayoutAxis> }[] = [];
@@ -1350,7 +1320,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             (attributes) => attributes.label === assignment
                         );
 
-                        const scaling = attributes?.scaling || "linear";
+                        const scaling =
+                            attributes?.scaling || initialAxisScaling;
                         const displayLabel =
                             attributes?.displayLabel || assignment;
 
@@ -1419,7 +1390,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         (attr) => attr.label === assignment
                     );
 
-                    const scaling = attributes?.scaling || "linear";
+                    const scaling = attributes?.scaling || initialAxisScaling;
                     const displayLabel = attributes?.displayLabel || assignment;
 
                     const range: { [key: string]: AxisLimit[] } = {};
@@ -1533,7 +1504,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     gridcolor: yAxisGridColor,
                     linecolor: yAxisGridColor,
                     zerolinecolor: yAxisGridColor,
-                    type: yAxisAttributes[0].scaling,
+                    type: yAxisAttributes[0].scaling || initialAxisScaling,
                     title: {
                         text:
                             channels.length === 0
@@ -1584,6 +1555,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             watermarkOpacity,
             plotBackgroundColor,
             manualAxisAssignment,
+            initialAxisScaling,
             curveAttributes,
             yAxisAttributes,
             xAxisGridColor,
@@ -1723,7 +1695,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     // If this click does follow another one, ignore it since double-clicks are handled separately.
                     return;
                 }
-                setTimeout(() => {
+                setTimeout(async () => {
                     // Also make sure the click isn't followed by another click within 500ms
                     if (Date.now() - lastClickMsRef.current < 500) {
                         return;
@@ -1748,62 +1720,142 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 curve.shape.length === 1 &&
                                 curve.shape[0] > 1
                             ) {
+                                const choice =
+                                    await showWaveformPreviewChoiceDialog();
+                                if (choice === null) {
+                                    return;
+                                }
+
                                 // This is a waveform channel
                                 const metaData = curve.curveData.curve.meta;
                                 if (metaData.pointMeta[timestamp].count) {
-                                    const expectedPoints =
-                                        curve.shape[0] *
-                                        metaData.pointMeta[timestamp].count;
-                                    if (
-                                        expectedPoints > NUM_EXPECTED_POINTS_MAX
-                                    ) {
-                                        showSnackbarAndLog(
-                                            "Not fetching raw waveform, too many points.",
-                                            "error",
-                                            `Not fetching raw waveforms for clicked point, expecting too many raw points (${expectedPoints}) under the requested point, maximum allowed is: ${NUM_EXPECTED_POINTS_MAX}`
-                                        );
-                                        if (
-                                            expectedPoints >=
-                                            NUM_EXPECTED_POINTS_MAX * 10
-                                        ) {
-                                            logToConsole(
-                                                "Does your browser's mental health mean anything to you?!",
-                                                "warning"
-                                            );
-                                        }
-                                        return;
-                                    } else {
-                                        logToConsole(
-                                            `Fetching raw waveforms for clicked point, expecting ${expectedPoints} raw points.`,
-                                            "info"
-                                        );
-                                    }
-                                    const middleTime =
-                                        convertLocalISOToUnix(timestamp);
+                                    const middleTime = new Date(
+                                        timestamp
+                                    ).getTime();
                                     let beginTime = middleTime - 5;
                                     let endTime = middleTime + 5;
-                                    let interval = 0;
-                                    if (metaData.interval_avg !== undefined) {
-                                        interval = metaData.interval_avg;
-                                    } else if (nextTimestamp) {
-                                        interval =
-                                            convertLocalISOToUnix(
-                                                nextTimestamp
-                                            ) - beginTime;
-                                    } else if (prevTimestamp) {
-                                        interval =
-                                            beginTime -
-                                            convertLocalISOToUnix(
-                                                prevTimestamp
+
+                                    if (choice === "point") {
+                                        const expectedPoints =
+                                            curve.shape[0] *
+                                            metaData.pointMeta[timestamp].count;
+                                        if (
+                                            expectedPoints >
+                                            NUM_EXPECTED_POINTS_MAX
+                                        ) {
+                                            showSnackbarAndLog(
+                                                "Not fetching raw waveform, too many points.",
+                                                "error",
+                                                `Not fetching raw waveforms for clicked point, expecting too many raw points (${expectedPoints}) under the requested point, maximum allowed is: ${NUM_EXPECTED_POINTS_MAX}`
                                             );
-                                    }
-                                    if (interval > 0) {
-                                        beginTime = Math.floor(
-                                            middleTime - interval / 2
+                                            if (
+                                                expectedPoints >=
+                                                NUM_EXPECTED_POINTS_MAX * 10
+                                            ) {
+                                                logToConsole(
+                                                    "Does your browser's mental health mean anything to you?!",
+                                                    "warning"
+                                                );
+                                            }
+                                            return;
+                                        } else {
+                                            logToConsole(
+                                                `Fetching raw waveforms for clicked point, expecting ${expectedPoints} raw points.`,
+                                                "info"
+                                            );
+                                        }
+
+                                        let interval = 0;
+                                        if (
+                                            metaData.interval_avg !== undefined
+                                        ) {
+                                            interval = metaData.interval_avg;
+                                        } else if (nextTimestamp) {
+                                            interval =
+                                                new Date(
+                                                    nextTimestamp
+                                                ).getTime() - beginTime;
+                                        } else if (prevTimestamp) {
+                                            interval =
+                                                beginTime -
+                                                new Date(
+                                                    prevTimestamp
+                                                ).getTime();
+                                        }
+                                        if (interval > 0) {
+                                            beginTime = Math.floor(
+                                                middleTime - interval / 2
+                                            );
+                                            endTime = Math.ceil(
+                                                middleTime + interval / 2
+                                            );
+                                        }
+                                    } else if (
+                                        choice === "range" &&
+                                        plotRef.current
+                                    ) {
+                                        [beginTime, endTime] = (
+                                            plotRef.current._fullLayout.xaxis
+                                                .range as string[]
+                                        ).map((ts) => new Date(ts).getTime());
+
+                                        const expectedPoints = Object.values(
+                                            filterCurveAttribute(
+                                                metaData.pointMeta,
+                                                formatDateWithMs(
+                                                    new Date(beginTime)
+                                                ),
+                                                formatDateWithMs(
+                                                    new Date(endTime)
+                                                )
+                                            )
+                                        ).reduce(
+                                            (acc, obj) =>
+                                                acc +
+                                                (curve.shape[0] as number) *
+                                                    (obj.count ?? 0),
+                                            0
                                         );
-                                        endTime = Math.ceil(
-                                            middleTime + interval / 2
+
+                                        if (
+                                            expectedPoints >
+                                            NUM_EXPECTED_POINTS_MAX
+                                        ) {
+                                            if (
+                                                expectedPoints >=
+                                                NUM_EXPECTED_POINTS_MAX * 10
+                                            ) {
+                                                showSnackbarAndLog(
+                                                    "Not fetching raw waveform, too many points.",
+                                                    "error",
+                                                    `Not fetching raw waveforms for clicked point, expecting too many raw points (${expectedPoints}) under the requested point, maximum allowed is: ${NUM_EXPECTED_POINTS_MAX}`
+                                                );
+                                                logToConsole(
+                                                    "Does your browser's mental health mean anything to you?!",
+                                                    "warning"
+                                                );
+                                                return;
+                                            }
+
+                                            if (
+                                                !confirm(
+                                                    `Expecting ${expectedPoints} points under the selected range, recommended maximum is: ${NUM_EXPECTED_POINTS_MAX}, do you really want to proceed?!`
+                                                )
+                                            ) {
+                                                return;
+                                            }
+                                            logToConsole(
+                                                `Exceeding maximum expected points for raw waveform, proceeding upon user request`,
+                                                "warning",
+                                                `Expecting ${expectedPoints} points under the requested range, maximum allowed is: ${NUM_EXPECTED_POINTS_MAX}`
+                                            );
+                                        }
+                                    } else {
+                                        logToConsole(
+                                            "Invalid option from WaveformPreviewChoiceDialog",
+                                            "error"
                                         );
+                                        return;
                                     }
 
                                     const channelIdentifier =
@@ -1812,10 +1864,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     if (
                                         waveformPreviewDataIsRequesting.current
                                     ) {
+                                        showSnackbarAndLog(
+                                            "Another waveform preview is currently being requested, aborting.",
+                                            "error"
+                                        );
                                         return;
                                     }
                                     showSnackbarAndLog(
-                                        "Fetching waveform preview for clicked point...",
+                                        `Fetching waveform preview for ${choice === "point" ? "selected point" : "zoomed range"}...`,
                                         "info"
                                     );
                                     waveformPreviewDataIsRequesting.current =
@@ -1836,7 +1892,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                             );
                                         setWaveformPreviewData({
                                             ...cloneDeep(curve),
-                                            curveData: cloneDeep(response.data),
+                                            curveData: response.data,
                                         });
                                     } catch (error) {
                                         showSnackbarAndLog(
@@ -1985,11 +2041,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         <Typography variant="h5" sx={styles.legendTitleStyle}>
                             Legend
                         </Typography>
-                        {curves.map((curve) => {
+                        {curves.map((curve, index) => {
                             const label = getLabelForCurve(curve);
                             const displayLabel =
                                 curveAttributes.get(label)?.displayLabel;
-                            const color = curveAttributes.get(label)?.color;
+                            const color =
+                                curveAttributes.get(label)?.color ||
+                                initialCurveColors[
+                                    index % initialCurveColors.length
+                                ];
 
                             return (
                                 <LegendEntry

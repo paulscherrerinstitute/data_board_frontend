@@ -5,13 +5,9 @@ import {
     StoredCurveData,
 } from "../components/Content/PlotWidget/PlotWidget.types";
 
-const timezoneOffsetMs = new Date().getTimezoneOffset() * -60000;
-
-function filterCurveAttribute<T extends CurveMeta["pointMeta"] | CurvePoints>(
-    attribute: T,
-    from: string,
-    to: string
-): T {
+export function filterCurveAttribute<
+    T extends CurveMeta["pointMeta"] | CurvePoints,
+>(attribute: T, from: string, to: string): T {
     const filteredData = {} as T;
     if (Number.isInteger(+from) && Number.isInteger(+to)) {
         for (const [timestamp, data] of Object.entries(attribute)) {
@@ -76,16 +72,24 @@ export const getLabelForCurve = (curve: Curve) => {
 };
 
 /**
- * Converts a unix timestamp in milliseconds to it's ISO representation, but in local time. Used to trick plotly into displaying local time, as it only accepts UTC time.
- * Converted timestamps therefore look like UTC-Timestamps, but are actually in local time.
+ * Creates a string representation of the date with millisecond precision, compatible with new Date() and Plotly.
  */
-export const convertUnixToLocalISO = (timestamp: number) => {
-    return new Date(Number(timestamp) + timezoneOffsetMs).toISOString();
-};
+export const formatDateWithMs = (date: Date): string => {
+    const pad = (n: number, l = 2) => String(n).padStart(l, "0");
 
-/**
- * Converts a local timestap written in UTC-Format back to the correct unix timestamp in milliseconds as an integer.
- */
-export const convertLocalISOToUnix = (timestamp: string) => {
-    return new Date(timestamp).getTime() - timezoneOffsetMs;
+    return (
+        date.getFullYear() +
+        "-" +
+        pad(date.getMonth() + 1) +
+        "-" +
+        pad(date.getDate()) +
+        " " +
+        pad(date.getHours()) +
+        ":" +
+        pad(date.getMinutes()) +
+        ":" +
+        pad(date.getSeconds()) +
+        "." +
+        pad(date.getMilliseconds(), 3)
+    );
 };

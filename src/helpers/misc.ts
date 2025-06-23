@@ -1,3 +1,5 @@
+import { MenuProps } from "@mui/material";
+
 export function downloadBlob(blob: Blob, fileName: string) {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -13,4 +15,15 @@ export const hexToRgba = (hexString: string, alpha: number) => {
     const g = (hexValue >> 8) & 255;
     const b = hexValue & 255;
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+export const SidebarIgnoredMenuProps: Partial<MenuProps> = {
+    PaperProps: {
+        className: "sidebar-ignore-click-outside",
+    },
+    slotProps: {
+        backdrop: {
+            className: "sidebar-ignore-click-outside",
+        },
+    },
 };

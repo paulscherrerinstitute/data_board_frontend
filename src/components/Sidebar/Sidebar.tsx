@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
@@ -7,36 +7,64 @@ import { SidebarProps } from "./Sidebar.types";
 import * as styles from "./Sidebar.styles";
 import Selector from "../Selector/Selector";
 import GeneralSettingsPopup from "../GeneralSettingsPopup/GeneralSettingsPopup";
+import { useLocalStorage } from "../../helpers/useLocalStorage";
+import { defaultCloseSidebarOnOutsideClick } from "../../helpers/defaults";
 
 const Sidebar: React.FC<SidebarProps> = ({
     initialWidthPercent = 10,
     maxWidthPercent = 100,
 }) => {
+    const [closeSidebarOnOutsideClick] = useLocalStorage(
+        "closeSidebarOnOutsideClick",
+        defaultCloseSidebarOnOutsideClick
+    );
+
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const [sidebarWidth, setSidebarWidth] = useState(
         (window.innerWidth * initialWidthPercent) / 100
     );
-    const [storedSidebarWidth, setStoredSidebarWidth] = useState(0);
     const [openSettings, setOpenSettings] = useState(false);
-    const [sidebarIsFocused, setSidebarIsFocused] = useState(true);
 
-    const prevSidebarIsFocused = useRef(true);
+    const storedSidebarWidth = useRef(0);
+    const sidebarRef = useRef<HTMLDivElement>(null);
 
     const maxWidth = (windowWidth * maxWidthPercent) / 100;
     const minWidth = Math.max(30, (windowWidth * 2.5) / 100);
 
-    useEffect(() => {
-        if (prevSidebarIsFocused.current !== sidebarIsFocused) {
-            prevSidebarIsFocused.current = sidebarIsFocused;
-
-            if (sidebarIsFocused) {
-                setSidebarWidth(storedSidebarWidth);
+    const setSidebarFocus = useCallback(
+        (focus: boolean) => {
+            if (focus) {
+                setSidebarWidth(storedSidebarWidth.current);
             } else {
-                setStoredSidebarWidth(sidebarWidth);
+                storedSidebarWidth.current = sidebarWidth;
                 setSidebarWidth(minWidth);
             }
+        },
+        [sidebarWidth, minWidth]
+    );
+
+    useEffect(() => {
+        if (closeSidebarOnOutsideClick) {
+            const handleClickOutside = (event: MouseEvent) => {
+                if (
+                    sidebarRef.current &&
+                    !(
+                        sidebarRef.current.contains(event.target as Node) ||
+                        (event.target as HTMLElement).closest(
+                            ".sidebar-ignore-click-outside"
+                        )
+                    )
+                ) {
+                    setSidebarFocus(false);
+                }
+            };
+
+            document.addEventListener("mousedown", handleClickOutside);
+            return () => {
+                document.removeEventListener("mousedown", handleClickOutside);
+            };
         }
-    }, [sidebarIsFocused, sidebarWidth, storedSidebarWidth, minWidth]);
+    }, [closeSidebarOnOutsideClick, setSidebarFocus]);
 
     const renderToggleButton = () => {
         return (
@@ -96,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
 
     return (
-        <Box sx={styles.sidebarStyle}>
+        <Box sx={styles.sidebarStyle} ref={sidebarRef}>
             <Resizable
                 size={{ width: sidebarWidth, height: "100%" }}
                 minWidth={minWidth}
@@ -156,7 +184,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         height: "100%",
                     }}
                 >
-                    <Selector setSidebarIsFocused={setSidebarIsFocused} />
+                    <Selector setSidebarIsFocused={setSidebarFocus} />
                 </Box>
             </Resizable>
         </Box>

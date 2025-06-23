@@ -25,7 +25,9 @@ The filters are dynamically selected based on the data the search returned. If n
 
 To add a channel to a plot, you can either:
 
-1. Mark it (and some more) as selected using the checkbox in the sidebar, and drag any one of those to the target destination.
+0. Mark it (and some more) as selected using the checkbox in the sidebar, and add them to the first plot by using the button beside the select all checkbox.
+
+1. Mark it (and some more) as selected, and drag any one of those to the target destination.
 
 2. Directly drag it to the target destination. The channel becomes selected for the duration of the drag and gets unselected right after. This way, other selected channels are also dragged.
 
@@ -39,6 +41,25 @@ The destination can be one of the following:
 
 3. If your browser supports it, you can also drag the channel outside of the browser tab and, e.g., drop it into a notepad app.
     > _Hint_: You can also do the inverse if your browser supports it (add channels by dragging from outside the browser); the DragEvent utilises simple text data.
+
+You can also [define initial channels](#initial-channels) for the first plot.
+
+### Initial Channels
+
+It is possible to define initial channels in the url, which will directly be loaded into the first plot, as long as no dashboard is provided. (A dashboard will make initial channels be ignored.)
+
+This is meant for script usage, e.g. if you want to hook a script to a button press, which will then launch the webpage with the defined channels.
+
+You can define up to 10 initial channels by setting url parameters in the following format:
+
+- `init_c` => channel name
+- `init_b` => corresponding backend name
+- `init_c0` - `init_c9` => indexed channel name (use for multiple channels)
+- `init_b0` - `init_b9` => indexed backend name
+
+Note that indexed keys overwrite non-indexed keys, so init_c0 will be used instead of init_c and init_b0 will be used instead of init_b.
+
+To also make the sidebar be collaped on load, you may specify the `closeSidebar` url parameter to any arbitrary non null value. So setting it to false will do the same as true, it is only checked if this url parameter is defined. This parameter overwrites any [settings](#settings) defining the sidebar state otherwise.
 
 ### Set Query Parameters
 
@@ -111,11 +132,15 @@ The general section contains settings that affect all plots.
 
     > ⚠️ **Warning:** This setting is an experimental _workaround_ and may break the plotting.
 
+- **Keep Sidebar Closed after Dragging a Channel**
+  If this is enabled, the sidebar will stay closed after one or multiple channels have been dragged. (It is closed upon starting the drag to make plots visible currently under the sidebar). The sidebar will stay closed, no matter what happend with the dragged channels. So even if they were not dragged into a plot, the sidebar will stay closed until it is opened again manually.
+- **Close Sidebar when Outside is Clicked**
+  This setting decides whether or not the sidebar should be closed if the user clicks anywhere outside of the sidebar. The general settings popup is exempt from this and will not trigger a sidebar collapse.
 - **Initial Widget Height / Width:** Initial dimensions new plots take when they are created. Does not affect the very first plot.
 
 #### Plot Defaults
 
-The plot default section contains settings which are applied to new plots upon creation and then saved for those plots. Changing anything here will **NOT** have an effect on existing plots at all.
+The plot default section contains settings which are also applied to all plots, but can be overwritten for each plot individually, using [plot specific settings](#plot-specific-settings). As long as such a setting isn't explicitly defined for a plot, the default value will be used.
 
 - **Curve Color Scheme:** The scheme with which new curves are colored.
 - **Y-Axis Scaling:** Choose between logarithmic and linear scaling.
@@ -143,7 +168,9 @@ The modebar buttons are buttons that define some quick actions you can perform o
 
 #### Plot-Specific Settings
 
-In these settings, you can define properties that only affect the current plot, and are saved to the dashboard.
+In these settings, you can define properties that only affect the current plot, and are saved to the dashboard. If a setting isn't explicitly saved, its value will be displayed normally. If you [share](#sharing--saving-stuff) a plot, other people might have different values for non-explicitly-defined settings. The displayed value is simply the default value taken from your [plot default settings](#plot-defaults). Settings that are explicitly configured are displayed in a **bold font**. If a color has been explicitly selected for a curve, its color selector will have a black frame. Using the button at the bottom, you can unset all settings, so the default values are taken again.
+
+> _Hint_: If you explicitly want to select a setting that is already the default, clicking it while it's already selected (by default) won't do anything. For that, you have to select another option first (which enables explicit mode for this setting), and then re-select the desired option.
 
 - **Plot Title:** The title of the plot, as displayed
 - **Curve Settings:** Settings for single curves; every defined curve is mapped out and can be configured by itself.
@@ -158,8 +185,8 @@ In these settings, you can define properties that only affect the current plot, 
 - **Y-Axes:** There are at most 4 axes in a plot. These can be configured in here.
     - **#:** The axis to modify
     - **Scaling:** Either linear or logarithmic
-    - **Min:** Minimum value displayed on the scale. Leave blank to have it auto-calculated.
-    - **Max:** Maximum value displayed on the scale. Leave blank to have it auto-calculated.
+    - **Min:** Minimum value displayed on the scale. Leave blank to have it auto-calculated. If the axis is logarithmic (log10), it will be interpreted as a power of ten.
+    - **Max:** Maximum value displayed on the scale. Leave blank to have it auto-calculated. If the axis is logarithmic (log10), it will be interpreted as a power of ten.
     - **Label:** The text displayed on the axis.
         > 💡 **Tip:** You can also set the axis limits (Min/Max) by clicking the top/bottom of an axis. Limits set this way are saved as if they were set via the settings.
 
@@ -184,7 +211,7 @@ Waveform only show the waveform's average by default, thus behaving like regular
 
 ##### **Waveform Preview**
 
-When a point of a waveform curve in it's binned representation is clicked and the number of waveform points under the clicked point is reasonably small (See console.log output on the browser for this limit if it is reached), a popup window will open above the plot, allowing you to preview all raw waveforms under that point. If it only one waveform, it will be displayed as a regular curve.
+When a point of a waveform curve in its binned representation is clicked and the number of waveform points under the clicked point is reasonably small (See console.log output on the browser for this limit if it is reached), a popup window will open above the plot, allowing you to preview all raw waveforms under that point. If it only one waveform, it will be displayed as a regular curve.
 
 When there are multiple waveforms:
 
@@ -193,7 +220,7 @@ When there are multiple waveforms:
 
 ##### **Zoom to Waveform**
 
-If you zoom in enough on the time axis ([while holding control](#requery-on-zoom)), such that only one waveform corresponds to the current timerange, it will be displayed instead of it's binned point.
+If you zoom in enough on the time axis ([while holding control](#requery-on-zoom)), such that only one waveform corresponds to the current timerange, it will be displayed instead of its binned point.
 
 This is effective when paired together with [undoing the timerange](#undo-redo-timerange). This way, you can [control zoom](#requery-on-zoom) in on a single waveform, and then [undo the zoom](#undo-redo-timerange) again to get back to the binned representation, enabling you to zoom in on another waveform.
 
@@ -309,7 +336,7 @@ If you find any bugs, please open a GitHub issue.
 
 If you want to add a feature or extend the application in any other way, please get in contact with the [current maintainer](#contact--support).
 
-For any contribution to be merged, all pipelines need to be successful, and the linter should not give any errors. (Warnings are tolerated if reasonable)
+For any contribution to be merged, all pipelines need to be successful, and the linter should not give any errors. (Warnings are tolerated if reasonable). Additionally, all new features need to be documented here.
 
 ### 🎨 Adding Custom Themes
 

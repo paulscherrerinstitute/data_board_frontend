@@ -16,12 +16,25 @@ import {
     MenuItem,
     Select,
     Tooltip,
+    Button,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { PlotSettingsPopupProps } from "./PlotSettingsPopup.types";
 import * as styles from "./PlotSettingsPopup.styles";
-import { CurveAttributes } from "../PlotWidget.types";
+import {
+    CurveAttributes,
+    Y_AXIS_ASSIGNMENT_OPTIONS,
+    YAxisAttributes,
+} from "../PlotWidget.types";
 import showSnackbarAndLog from "../../../../helpers/showSnackbar";
+import {
+    defaultCurveColors,
+    defaultCurveMode,
+    defaultCurveShape,
+    defaultYAxisScaling,
+} from "../../../../helpers/defaults";
+import { useLocalStorage } from "../../../../helpers/useLocalStorage";
+import { getLabelForChannelAttributes } from "../../../../helpers/curveDataTransformations";
 
 const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
     open,
@@ -29,6 +42,30 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
     plotSettings,
     onSave,
 }) => {
+    const [initialCurveColors] = useLocalStorage(
+        "curveColors",
+        defaultCurveColors,
+        true
+    );
+
+    const [initialCurveShape] = useLocalStorage(
+        "curveShape",
+        defaultCurveShape,
+        true
+    );
+
+    const [initialCurveMode] = useLocalStorage(
+        "curveMode",
+        defaultCurveMode,
+        true
+    );
+
+    const [initialAxisScaling] = useLocalStorage(
+        "yAxisScaling",
+        defaultYAxisScaling,
+        true
+    );
+
     const [inputsMin, setInputsMin] = useState(
         plotSettings.yAxisAttributes.map((attributes) =>
             (attributes.min || "").toString()
@@ -112,47 +149,50 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                     newCurveAttributes.set(key, { ...attr, [field]: value });
                 }
 
-                if (field === "axisAssignment" && value === "x") {
-                    let collidingAssignmentFound = false;
-                    let notAllLinesWereMarkers = false;
-                    for (const [
-                        entryKey,
-                        entryValue,
-                    ] of newCurveAttributes.entries()) {
-                        // Check if there is already another x axis assignment, and remove it
-                        if (
-                            entryKey != key &&
-                            entryValue.axisAssignment === "x"
-                        ) {
-                            newCurveAttributes.set(entryKey, {
-                                ...entryValue,
-                                axisAssignment: "y1",
-                            });
-                            collidingAssignmentFound = true;
+                if (field === "axisAssignment") {
+                    prev.manualAxisAssignment = true;
+                    if (value === "x") {
+                        let collidingAssignmentFound = false;
+                        let notAllLinesWereMarkers = false;
+                        for (const [
+                            entryKey,
+                            entryValue,
+                        ] of newCurveAttributes.entries()) {
+                            // Check if there is already another x axis assignment, and remove it
+                            if (
+                                entryKey != key &&
+                                entryValue.axisAssignment === "x"
+                            ) {
+                                newCurveAttributes.set(entryKey, {
+                                    ...entryValue,
+                                    axisAssignment: "y1",
+                                });
+                                collidingAssignmentFound = true;
+                            }
+
+                            // Check if any curve has a different mode than markers, if yes reset it
+                            if (entryValue.curveMode !== "markers") {
+                                newCurveAttributes.set(entryKey, {
+                                    ...entryValue,
+                                    curveMode: "markers",
+                                });
+                                notAllLinesWereMarkers = true;
+                            }
                         }
 
-                        // Check if any curve has a different mode than markers, if yes reset it
-                        if (entryValue.curveMode !== "markers") {
-                            newCurveAttributes.set(entryKey, {
-                                ...entryValue,
-                                curveMode: "markers",
-                            });
-                            notAllLinesWereMarkers = true;
+                        if (collidingAssignmentFound) {
+                            showSnackbarAndLog(
+                                "Cannot have more than one curve assigned to 'x'. Other assigned curves have been set to first axis.",
+                                "warning"
+                            );
                         }
-                    }
 
-                    if (collidingAssignmentFound) {
-                        showSnackbarAndLog(
-                            "Cannot have more than one curve assigned to 'x'. Other assigned curves have been set to first axis.",
-                            "warning"
-                        );
-                    }
-
-                    if (notAllLinesWereMarkers) {
-                        showSnackbarAndLog(
-                            "By default, all curve modes have been reset to markers, since correlation plot was activated",
-                            "info"
-                        );
+                        if (notAllLinesWereMarkers) {
+                            showSnackbarAndLog(
+                                "By default, all curve modes have been reset to markers, since correlation plot was activated",
+                                "info"
+                            );
+                        }
                     }
                 }
                 return { ...prev, curveAttributes: newCurveAttributes };
@@ -160,6 +200,79 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
         },
         []
     );
+
+    const resetToDefaults = useCallback(() => {
+        setLocalPlotSettings((prev) => {
+            prev.manualAxisAssignment = false;
+            prev.plotTitle = "New Plot";
+
+            const curveLabels: string[] = [];
+
+            prev.curveAttributes.forEach((attr, key) => {
+                const label = getLabelForChannelAttributes(
+                    attr.channel.name,
+                    attr.channel.backend,
+                    attr.channel.type
+                );
+                curveLabels.push(label);
+                prev.curveAttributes.set(key, {
+                    channel: attr.channel,
+                    displayLabel: label,
+                    axisAssignment: attr.axisAssignment,
+                });
+            });
+
+            prev.yAxisAttributes = prev.yAxisAttributes.map((attr, index) => {
+                const newAttributes: YAxisAttributes = {
+                    label: attr.label,
+                    min: null,
+                    max: null,
+                    displayLabel: Y_AXIS_ASSIGNMENT_OPTIONS[index],
+                    manualDisplayLabel: false,
+                };
+
+                if (curveLabels.length <= 4 && index < curveLabels.length) {
+                    newAttributes.displayLabel = curveLabels[index];
+                } else if (index === 0) {
+                    newAttributes.displayLabel = "value (multiple channels)";
+                }
+
+                return newAttributes;
+            });
+
+            return { ...prev };
+        });
+
+        setInputsMin(["", "", "", ""]);
+        setInputsMax(["", "", "", ""]);
+    }, []);
+
+    const curveShapeOptions = [
+        { value: "linear", label: "Direct (linear)" },
+        { value: "hv", label: "Digital (hv)" },
+        { value: "vh", label: "vh" },
+        { value: "hvh", label: "hvh" },
+        { value: "vhv", label: "vhv" },
+    ] as const;
+
+    const curveModeOptions = [
+        { value: "lines+markers", label: "Lines and Markers" },
+        { value: "markers", label: "Only Markers (points)" },
+        { value: "lines", label: "Only Lines" },
+    ] as const;
+
+    const axisAssignmentOptions = [
+        { value: "x", label: "x" },
+        { value: "y1", label: "y1" },
+        { value: "y2", label: "y2" },
+        { value: "y3", label: "y3" },
+        { value: "y4", label: "y4" },
+    ] as const;
+
+    const axisScalingOptions = [
+        { value: "linear", label: "Linear" },
+        { value: "log", label: "Log10" },
+    ] as const;
 
     return (
         <Box
@@ -231,17 +344,24 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                     <TableBody>
                                         {Array.from(
                                             localPlotSettings.curveAttributes.entries()
-                                        ).map(([key, attr]) => (
+                                        ).map(([key, attr], index) => (
                                             <TableRow key={key}>
                                                 <TableCell>
                                                     <Input
                                                         type="color"
                                                         defaultValue={
-                                                            attr.color
+                                                            attr.color ||
+                                                            initialCurveColors[
+                                                                index %
+                                                                    initialCurveColors.length
+                                                            ]
                                                         }
-                                                        sx={
-                                                            styles.colorPickerStyle
-                                                        }
+                                                        sx={{
+                                                            ...styles.colorPickerStyle,
+                                                            border: attr.color
+                                                                ? "2px solid #000"
+                                                                : undefined,
+                                                        }}
                                                         onBlur={(e) =>
                                                             handleCurveAttributesChanged(
                                                                 key,
@@ -260,8 +380,15 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                     >
                                                         <Select
                                                             value={
-                                                                attr.curveShape
+                                                                attr.curveShape ||
+                                                                initialCurveShape
                                                             }
+                                                            style={{
+                                                                fontWeight:
+                                                                    attr.curveShape
+                                                                        ? "bold"
+                                                                        : "normal",
+                                                            }}
                                                             onChange={(e) =>
                                                                 handleCurveAttributesChanged(
                                                                     key,
@@ -271,21 +398,30 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                                 )
                                                             }
                                                         >
-                                                            <MenuItem value="linear">
-                                                                Direct (linear)
-                                                            </MenuItem>
-                                                            <MenuItem value="hv">
-                                                                Digital (hv)
-                                                            </MenuItem>
-                                                            <MenuItem value="vh">
-                                                                vh
-                                                            </MenuItem>
-                                                            <MenuItem value="hvh">
-                                                                hvh
-                                                            </MenuItem>
-                                                            <MenuItem value="vhv">
-                                                                vhv
-                                                            </MenuItem>
+                                                            {curveShapeOptions.map(
+                                                                ({
+                                                                    value,
+                                                                    label,
+                                                                }) => (
+                                                                    <MenuItem
+                                                                        key={
+                                                                            value
+                                                                        }
+                                                                        value={
+                                                                            value
+                                                                        }
+                                                                        style={{
+                                                                            fontWeight:
+                                                                                attr.curveShape ===
+                                                                                value
+                                                                                    ? "bold"
+                                                                                    : "normal",
+                                                                        }}
+                                                                    >
+                                                                        {label}
+                                                                    </MenuItem>
+                                                                )
+                                                            )}
                                                         </Select>
                                                     </Tooltip>
                                                 </TableCell>
@@ -298,8 +434,15 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                     >
                                                         <Select
                                                             value={
-                                                                attr.curveMode
+                                                                attr.curveMode ||
+                                                                initialCurveMode
                                                             }
+                                                            style={{
+                                                                fontWeight:
+                                                                    attr.curveMode
+                                                                        ? "bold"
+                                                                        : "normal",
+                                                            }}
                                                             onChange={(e) =>
                                                                 handleCurveAttributesChanged(
                                                                     key,
@@ -309,17 +452,30 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                                 )
                                                             }
                                                         >
-                                                            <MenuItem value="lines+markers">
-                                                                Lines and
-                                                                Markers
-                                                            </MenuItem>
-                                                            <MenuItem value="markers">
-                                                                Only Markers
-                                                                (points)
-                                                            </MenuItem>
-                                                            <MenuItem value="lines">
-                                                                Only Lines
-                                                            </MenuItem>
+                                                            {curveModeOptions.map(
+                                                                ({
+                                                                    value,
+                                                                    label,
+                                                                }) => (
+                                                                    <MenuItem
+                                                                        key={
+                                                                            value
+                                                                        }
+                                                                        value={
+                                                                            value
+                                                                        }
+                                                                        style={{
+                                                                            fontWeight:
+                                                                                attr.curveMode ===
+                                                                                value
+                                                                                    ? "bold"
+                                                                                    : "normal",
+                                                                        }}
+                                                                    >
+                                                                        {label}
+                                                                    </MenuItem>
+                                                                )
+                                                            )}
                                                         </Select>
                                                     </Tooltip>
                                                 </TableCell>
@@ -373,6 +529,20 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                         value={
                                                             attr.displayLabel
                                                         }
+                                                        style={{
+                                                            fontWeight:
+                                                                attr.displayLabel !==
+                                                                getLabelForChannelAttributes(
+                                                                    attr.channel
+                                                                        .name,
+                                                                    attr.channel
+                                                                        .backend,
+                                                                    attr.channel
+                                                                        .type
+                                                                )
+                                                                    ? "bold"
+                                                                    : "normal",
+                                                        }}
                                                         onChange={(e) =>
                                                             handleCurveAttributesChanged(
                                                                 key,
@@ -388,6 +558,12 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                         value={
                                                             attr.axisAssignment
                                                         }
+                                                        style={{
+                                                            fontWeight:
+                                                                localPlotSettings.manualAxisAssignment
+                                                                    ? "bold"
+                                                                    : "normal",
+                                                        }}
                                                         onChange={(e) =>
                                                             handleCurveAttributesChanged(
                                                                 key,
@@ -396,21 +572,29 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                             )
                                                         }
                                                     >
-                                                        <MenuItem value="x">
-                                                            x
-                                                        </MenuItem>
-                                                        <MenuItem value="y1">
-                                                            y1
-                                                        </MenuItem>
-                                                        <MenuItem value="y2">
-                                                            y2
-                                                        </MenuItem>
-                                                        <MenuItem value="y3">
-                                                            y3
-                                                        </MenuItem>
-                                                        <MenuItem value="y4">
-                                                            y4
-                                                        </MenuItem>
+                                                        {axisAssignmentOptions.map(
+                                                            ({
+                                                                value,
+                                                                label,
+                                                            }) => (
+                                                                <MenuItem
+                                                                    key={value}
+                                                                    value={
+                                                                        value
+                                                                    }
+                                                                    style={{
+                                                                        fontWeight:
+                                                                            localPlotSettings.manualAxisAssignment &&
+                                                                            attr.axisAssignment ===
+                                                                                value
+                                                                                ? "bold"
+                                                                                : "normal",
+                                                                    }}
+                                                                >
+                                                                    {label}
+                                                                </MenuItem>
+                                                            )
+                                                        )}
                                                     </Select>
                                                 </TableCell>
                                             </TableRow>
@@ -443,7 +627,16 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                     </TableCell>
                                                     <TableCell>
                                                         <Select
-                                                            value={axis.scaling}
+                                                            value={
+                                                                axis.scaling ||
+                                                                initialAxisScaling
+                                                            }
+                                                            style={{
+                                                                fontWeight:
+                                                                    axis.scaling
+                                                                        ? "bold"
+                                                                        : "normal",
+                                                            }}
                                                             onChange={(e) => {
                                                                 const newScaling =
                                                                     e.target
@@ -465,47 +658,122 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                                 );
                                                             }}
                                                         >
-                                                            <MenuItem value="linear">
-                                                                Linear
-                                                            </MenuItem>
-                                                            <MenuItem value="log">
-                                                                Log10
-                                                            </MenuItem>
+                                                            {axisScalingOptions.map(
+                                                                ({
+                                                                    value,
+                                                                    label,
+                                                                }) => (
+                                                                    <MenuItem
+                                                                        key={
+                                                                            value
+                                                                        }
+                                                                        value={
+                                                                            value
+                                                                        }
+                                                                        style={{
+                                                                            fontWeight:
+                                                                                axis.scaling ===
+                                                                                value
+                                                                                    ? "bold"
+                                                                                    : "normal",
+                                                                        }}
+                                                                    >
+                                                                        {label}
+                                                                    </MenuItem>
+                                                                )
+                                                            )}
                                                         </Select>
                                                     </TableCell>
-
                                                     <TableCell>
-                                                        <Input
-                                                            type="text"
-                                                            value={
-                                                                inputsMin[index]
-                                                            }
-                                                            placeholder="auto"
-                                                            onChange={(e) =>
-                                                                handleLimitInputChanged(
-                                                                    e,
-                                                                    index,
-                                                                    "min"
-                                                                )
-                                                            }
-                                                        />
+                                                        <Tooltip
+                                                            title="Interpreted as a power of ten"
+                                                            arrow
+                                                            placement="top"
+                                                            {...(localPlotSettings
+                                                                .yAxisAttributes[
+                                                                index
+                                                            ].scaling !== "log"
+                                                                ? {
+                                                                      disableHoverListener:
+                                                                          true,
+                                                                      disableTouchListener:
+                                                                          true,
+                                                                      disableFocusListener:
+                                                                          true,
+                                                                  }
+                                                                : {})}
+                                                        >
+                                                            <Input
+                                                                type="text"
+                                                                value={
+                                                                    inputsMin[
+                                                                        index
+                                                                    ]
+                                                                }
+                                                                style={{
+                                                                    fontWeight:
+                                                                        inputsMin[
+                                                                            index
+                                                                        ]
+                                                                            ? "bold"
+                                                                            : "normal",
+                                                                }}
+                                                                placeholder="auto"
+                                                                onChange={(e) =>
+                                                                    handleLimitInputChanged(
+                                                                        e,
+                                                                        index,
+                                                                        "min"
+                                                                    )
+                                                                }
+                                                            />
+                                                        </Tooltip>
                                                     </TableCell>
 
                                                     <TableCell>
-                                                        <Input
-                                                            type="text"
-                                                            value={
-                                                                inputsMax[index]
-                                                            }
-                                                            placeholder="auto"
-                                                            onChange={(e) =>
-                                                                handleLimitInputChanged(
-                                                                    e,
-                                                                    index,
-                                                                    "max"
-                                                                )
-                                                            }
-                                                        />
+                                                        <Tooltip
+                                                            title="Interpreted as a power of ten"
+                                                            arrow
+                                                            placement="top"
+                                                            {...(localPlotSettings
+                                                                .yAxisAttributes[
+                                                                index
+                                                            ].scaling !== "log"
+                                                                ? {
+                                                                      disableHoverListener:
+                                                                          true,
+                                                                      disableTouchListener:
+                                                                          true,
+                                                                      disableFocusListener:
+                                                                          true,
+                                                                  }
+                                                                : {})}
+                                                        >
+                                                            <Input
+                                                                type="text"
+                                                                value={
+                                                                    inputsMax[
+                                                                        index
+                                                                    ]
+                                                                }
+                                                                style={{
+                                                                    fontWeight:
+                                                                        inputsMax[
+                                                                            index
+                                                                        ]
+                                                                            ? "bold"
+                                                                            : "normal",
+                                                                }}
+                                                                placeholder="auto"
+                                                                onChange={(e) =>
+                                                                    handleLimitInputChanged(
+                                                                        e,
+                                                                        index,
+                                                                        "max"
+                                                                    )
+                                                                }
+                                                            />
+                                                        </Tooltip>
                                                     </TableCell>
 
                                                     <TableCell>
@@ -513,7 +781,17 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                             value={
                                                                 axis.displayLabel
                                                             }
-                                                            onChange={(e) =>
+                                                            style={{
+                                                                fontWeight:
+                                                                    localPlotSettings
+                                                                        .yAxisAttributes[
+                                                                        index
+                                                                    ]
+                                                                        .manualDisplayLabel
+                                                                        ? "bold"
+                                                                        : "normal",
+                                                            }}
+                                                            onChange={(e) => {
                                                                 setLocalPlotSettings(
                                                                     (
                                                                         prevLocalPlotSettings
@@ -526,10 +804,14 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                                             index
                                                                         ].displayLabel =
                                                                             e.target.value;
+                                                                        newLocalPlotSettings.yAxisAttributes[
+                                                                            index
+                                                                        ].manualDisplayLabel =
+                                                                            true;
                                                                         return newLocalPlotSettings;
                                                                     }
-                                                                )
-                                                            }
+                                                                );
+                                                            }}
                                                         />
                                                     </TableCell>
                                                 </TableRow>
@@ -539,6 +821,15 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                 </Table>
                             </TableContainer>
                         </Box>
+                    </Box>
+                    <Box sx={styles.resetButtonBoxStyle}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={resetToDefaults}
+                        >
+                            Reset to Defaults
+                        </Button>
                     </Box>
                 </DialogContent>
             </Dialog>

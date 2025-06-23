@@ -1,10 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
     filterCurveData,
+    formatDateWithMs,
     getLabelForChannelAttributes,
     getLabelForCurve,
-    convertUnixToLocalISO,
-    convertLocalISOToUnix,
 } from "./curveDataTransformations";
 import {
     Curve,
@@ -103,11 +102,25 @@ describe("getLabelForCurve", () => {
     });
 });
 
-describe("timestamp conversions", () => {
-    it("converts unix to local ISO and back", () => {
-        const original = Date.now();
-        const iso = convertUnixToLocalISO(original);
-        const reverted = convertLocalISOToUnix(iso);
-        expect(reverted).toBe(original);
+describe("formatDateWithMs", () => {
+    it("should include exactly 3-digit millisecond precision", () => {
+        const date = new Date(2025, 5, 13, 16, 40, 44, 893);
+        const result = formatDateWithMs(date);
+
+        expect(result).toBe("2025-06-13 16:40:44.893");
+    });
+
+    it("should pad missing ms", () => {
+        const date = new Date(2025, 5, 13, 16, 40, 44, 83);
+        const result = formatDateWithMs(date);
+
+        expect(result).toBe("2025-06-13 16:40:44.083");
+    });
+
+    it("should show zeroes for no ms", () => {
+        const date = new Date(2025, 5, 13, 16, 40, 44);
+        const result = formatDateWithMs(date);
+
+        expect(result).toBe("2025-06-13 16:40:44.000");
     });
 });

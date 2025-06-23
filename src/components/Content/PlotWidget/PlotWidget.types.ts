@@ -77,9 +77,9 @@ export type UsedYAxis = (typeof USED_Y_AXES)[number];
 
 export type CurveAttributes = {
     channel: Channel;
-    color: string;
-    curveShape: Plotly.PlotData["line.shape"];
-    curveMode: Plotly.PlotData["mode"];
+    color?: string;
+    curveShape?: Plotly.PlotData["line.shape"];
+    curveMode?: Plotly.PlotData["mode"];
     displayLabel: string;
     axisAssignment: AxisAssignment;
 };
@@ -88,7 +88,7 @@ export type AxisLimit = number | null;
 
 export type YAxisAttributes = {
     label: YAxisAssignment;
-    scaling: Plotly.AxisType;
+    scaling?: Plotly.AxisType;
     min: AxisLimit;
     max: AxisLimit;
     displayLabel: string;

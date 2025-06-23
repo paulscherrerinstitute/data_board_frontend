@@ -14,3 +14,17 @@ export const closeButtonStyle: SxProps<Theme> = {
     right: 8,
     top: 8,
 };
+
+export const colorBarContainerStyle: SxProps<Theme> = {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    alignItems: "center",
+    height: "100%",
+    width: 60,
+};
+
+export const colorBarLimitsContainerStyle: SxProps<Theme> = {
+    width: "100%",
+    textAlign: "center",
+};

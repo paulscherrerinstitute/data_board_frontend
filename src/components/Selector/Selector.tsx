@@ -35,9 +35,16 @@ import {
 import showSnackbarAndLog from "../../helpers/showSnackbar";
 import AddIcon from "@mui/icons-material/Add";
 import AutoSizer from "react-virtualized-auto-sizer";
+import { useLocalStorage } from "../../helpers/useLocalStorage";
+import { defaultKeepSidebarClosedAfterDrag } from "../../helpers/defaults";
+import { SidebarIgnoredMenuProps } from "../../helpers/misc";
 
 const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
     const { backendUrl } = useApiUrls();
+    const [keepSidebarClosedAfterDrag] = useLocalStorage(
+        "keepSidebarClosedAfterDrag",
+        defaultKeepSidebarClosedAfterDrag
+    );
     const [searchTerm, setSearchTerm] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -358,29 +365,33 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
             document.body.appendChild(dragPreview);
             event.dataTransfer.setDragImage(dragPreview, 0, 0);
 
-            // To allow plots overlayed by the sidebar to be reached
-            setSidebarIsFocused(false);
+            setTimeout(() => {
+                // Remove the preview after the drag starts
+                dragPreview.remove();
+                // To allow plots overlayed by the sidebar to be reached
+                setSidebarIsFocused(false);
+            });
 
-            // Remove the preview after the drag starts
-            setTimeout(() => dragPreview.remove(), 0);
-
-            // Unselect the channel if it was previously unselected once the drag ends
-            if (!initiatorIsSelected) {
-                const onDragEnd = () => {
+            const onDragEnd = () => {
+                if (!keepSidebarClosedAfterDrag) {
                     setSidebarIsFocused(true);
+                }
+                // Unselect the channel if it was previously unselected once the drag ends
+                if (!initiatorIsSelected) {
                     newStoredChannels = newStoredChannels.map((channel) =>
                         channel.attributes.seriesId === initiatorSeriesId
                             ? { ...channel, selected: false }
                             : channel
                     );
                     setStoredChannels(newStoredChannels);
-                    document.removeEventListener("dragend", onDragEnd);
-                };
+                }
+            };
 
-                document.addEventListener("dragend", onDragEnd);
-            }
+            event.currentTarget.addEventListener("dragend", onDragEnd, {
+                once: true,
+            });
         },
-        [storedChannels, setSidebarIsFocused]
+        [storedChannels, keepSidebarClosedAfterDrag, setSidebarIsFocused]
     );
 
     const handleSelectAll = useCallback(() => {
@@ -465,6 +476,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                                 : concatenated;
                         }}
                         sx={styles.filterDropdownStyle}
+                        MenuProps={SidebarIgnoredMenuProps}
                     >
                         {backendOptions.map((backend) => (
                             <MenuItem
@@ -494,6 +506,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                                 : concatenated;
                         }}
                         sx={styles.filterDropdownStyle}
+                        MenuProps={SidebarIgnoredMenuProps}
                     >
                         {typeOptions.map((type) => (
                             <MenuItem

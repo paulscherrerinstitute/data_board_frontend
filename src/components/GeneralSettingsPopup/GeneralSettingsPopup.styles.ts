@@ -33,7 +33,7 @@ export const curveColorsBoxStyle: SxProps<Theme> = {
     overflow: "auto",
 };
 
-export const resetButtonStyle: SxProps<Theme> = {
+export const ButtonBoxStyle: SxProps<Theme> = {
     display: "flex",
     justifyContent: "center",
     marginTop: "15px",
