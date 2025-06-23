@@ -140,7 +140,7 @@ The general section contains settings that affect all plots.
 
 #### Plot Defaults
 
-The plot default section contains settings which are applied to new plots upon creation and then saved for those plots. Changing anything here will **NOT** have an effect on existing plots at all.
+The plot default section contains settings which are also applied to all plots, but can be overwritten for each plot individually, using [plot specific settings](#plot-specific-settings). As long as such a setting isn't explicitely defined for a plot, the default value will be used.
 
 - **Curve Color Scheme:** The scheme with which new curves are colored.
 - **Y-Axis Scaling:** Choose between logarithmic and linear scaling.
@@ -168,7 +168,9 @@ The modebar buttons are buttons that define some quick actions you can perform o
 
 #### Plot-Specific Settings
 
-In these settings, you can define properties that only affect the current plot, and are saved to the dashboard.
+In these settings, you can define properties that only affect the current plot, and are saved to the dashboard. If a setting isn't explicitely saved, it's value will be displayed normally. If you [share](#sharing--saving-stuff) a plot, other people might have different values for non-explicitely-defined settings. The displayed value is simply the default value taken from your [plot default settings](#plot-defaults). Settings that are explicitely configured are displayed in a **bold font**. If a color has been explicitely selected for a curve, it's color selector will have a black frame. Using the button at the bottom, you can unset all settings, so the default values are taken again.
+
+> _Hint_: If you explicitly want to select a setting that is already the default, clicking it while it's already selected (by default) won't do anything. For that, you have to select another option first (which enables explicit mode for this setting), and then re-select the desired option.
 
 - **Plot Title:** The title of the plot, as displayed
 - **Curve Settings:** Settings for single curves; every defined curve is mapped out and can be configured by itself.
@@ -183,8 +185,8 @@ In these settings, you can define properties that only affect the current plot, 
 - **Y-Axes:** There are at most 4 axes in a plot. These can be configured in here.
     - **#:** The axis to modify
     - **Scaling:** Either linear or logarithmic
-    - **Min:** Minimum value displayed on the scale. Leave blank to have it auto-calculated.
-    - **Max:** Maximum value displayed on the scale. Leave blank to have it auto-calculated.
+    - **Min:** Minimum value displayed on the scale. Leave blank to have it auto-calculated. If the axis is logarithmic (log10), it will be interpreted as a power of ten.
+    - **Max:** Maximum value displayed on the scale. Leave blank to have it auto-calculated. If the axis is logarithmic (log10), it will be interpreted as a power of ten.
     - **Label:** The text displayed on the axis.
         > 💡 **Tip:** You can also set the axis limits (Min/Max) by clicking the top/bottom of an axis. Limits set this way are saved as if they were set via the settings.
 
