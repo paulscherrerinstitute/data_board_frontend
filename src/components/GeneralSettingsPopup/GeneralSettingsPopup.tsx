@@ -978,7 +978,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                         ref={plotRefCallback}
                         style={{ width: "100%", height: "100%" }}
                     />
-                    <Box sx={styles.resetButtonStyle}>
+                    <Box sx={styles.ButtonBoxStyle}>
                         <Button
                             variant="contained"
                             color="primary"

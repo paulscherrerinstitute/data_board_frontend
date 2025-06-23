@@ -129,9 +129,6 @@
       },
       "required": [
         "channel",
-        "color",
-        "curveShape",
-        "curveMode",
         "displayLabel",
         "axisAssignment"
       ],
@@ -335,7 +332,6 @@
       },
       "required": [
         "label",
-        "scaling",
         "min",
         "max",
         "displayLabel",

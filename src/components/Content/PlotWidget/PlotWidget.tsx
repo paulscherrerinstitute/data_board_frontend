@@ -89,14 +89,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const [yAxisAttributes, setYAxisAttributes] = useState<
             YAxisAttributes[]
         >(() => {
-            const savedScaling = JSON.parse(
-                localStorage.getItem("yAxisScaling") ||
-                    JSON.stringify(defaultYAxisScaling)
-            );
             return [
                 {
                     label: "y1",
-                    scaling: savedScaling,
                     min: null,
                     max: null,
                     displayLabel: "y1",
@@ -104,7 +99,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 },
                 {
                     label: "y2",
-                    scaling: savedScaling,
                     min: null,
                     max: null,
                     displayLabel: "y2",
@@ -112,7 +106,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 },
                 {
                     label: "y3",
-                    scaling: savedScaling,
                     min: null,
                     max: null,
                     displayLabel: "y3",
@@ -120,7 +113,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 },
                 {
                     label: "y4",
-                    scaling: savedScaling,
                     min: null,
                     max: null,
                     displayLabel: "y4",
@@ -158,7 +150,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         const isCtrlPressed = useRef(false);
         const curvesRef = useRef(curves);
-        const colorMap = useRef<Map<string, string>>(new Map());
         const previousTimeValues = useRef(timeValues);
         const plotRef = useRef<PlotlyHTMLElement | null>(null);
         const settingsInitialized = useRef(false);
@@ -179,26 +170,28 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const NUM_BINS = 1000;
         const NUM_EXPECTED_POINTS_MAX = 102400;
 
-        const initialCurveColors = useMemo(() => {
-            return JSON.parse(
-                localStorage.getItem("curveColors") ||
-                    JSON.stringify(defaultCurveColors)
-            );
-        }, []);
+        const [initialCurveColors] = useLocalStorage(
+            "curveColors",
+            defaultCurveColors,
+            true
+        );
 
-        const initialCurveShape = useMemo(() => {
-            return JSON.parse(
-                localStorage.getItem("curveShape") ||
-                    JSON.stringify(defaultCurveShape)
-            );
-        }, []);
+        const [initialCurveShape] = useLocalStorage(
+            "curveShape",
+            defaultCurveShape,
+            true
+        );
 
-        const initialCurveMode = useMemo(() => {
-            return JSON.parse(
-                localStorage.getItem("curveMode") ||
-                    JSON.stringify(defaultCurveMode)
-            );
-        }, []);
+        const [initialCurveMode] = useLocalStorage(
+            "curveMode",
+            defaultCurveMode,
+            true
+        );
+        const [initialAxisScaling] = useLocalStorage(
+            "yAxisScaling",
+            defaultYAxisScaling,
+            true
+        );
 
         if (!settingsInitialized.current) {
             settingsInitialized.current = true;
@@ -216,26 +209,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 );
             }
         }
-
-        const getColorForChannel = useCallback(
-            (channel: Channel) => {
-                const channelKey = getLabelForChannelAttributes(
-                    channel.name,
-                    channel.backend,
-                    channel.type
-                );
-                if (!colorMap.current.has(channelKey)) {
-                    // Assign a color if not already assigned
-                    const color =
-                        initialCurveColors[
-                            colorMap.current.size % initialCurveColors.length
-                        ];
-                    colorMap.current.set(channelKey, color);
-                }
-                return colorMap.current.get(channelKey)!; // Ensure it has a value
-            },
-            [initialCurveColors]
-        );
 
         // Prevent event bubbling if its on a draggable surface so an event to drag the plot will not be handled by the grid layout to move the whole widget.
         const handleEventPropagation = (
@@ -370,15 +343,17 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                     newCurveAttributes.set(label, {
                         channel: channel,
-                        color:
-                            curveAttributes.get(label)?.color ||
-                            getColorForChannel(channel),
-                        curveShape:
-                            curveAttributes.get(label)?.curveShape ||
-                            initialCurveShape,
-                        curveMode:
-                            curveAttributes.get(label)?.curveMode ||
-                            initialCurveMode,
+                        ...(curveAttributes.get(label)?.color !== undefined && {
+                            color: curveAttributes.get(label)?.color,
+                        }),
+                        ...(curveAttributes.get(label)?.curveShape !==
+                            undefined && {
+                            curveShape: curveAttributes.get(label)?.curveShape,
+                        }),
+                        ...(curveAttributes.get(label)?.curveMode !==
+                            undefined && {
+                            curveMode: curveAttributes.get(label)?.curveMode,
+                        }),
                         displayLabel:
                             curveAttributes.get(label)?.displayLabel || label,
                         axisAssignment: assignedAxis,
@@ -413,14 +388,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             ) {
                 setCurveAttributes(newCurveAttributes);
             }
-        }, [
-            channels,
-            getColorForChannel,
-            getChannelIdentifier,
-            initialCurveShape,
-            initialCurveMode,
-            manualAxisAssignment,
-        ]);
+        }, [channels, getChannelIdentifier, manualAxisAssignment]);
 
         useEffect(() => {
             const handleKeyDown = (event: KeyboardEvent) => {
@@ -1052,28 +1020,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         const onPlotSettingsSave = useCallback(
             (newPlotSettings: PlotSettings) => {
                 setPlotTitle(cloneDeep(newPlotSettings.plotTitle));
-
-                if (
-                    [...newPlotSettings.curveAttributes].some(
-                        ([key, value]) =>
-                            curveAttributes.get(key)?.axisAssignment !==
-                            value.axisAssignment
-                    )
-                ) {
-                    setManualAxisAssignment(true);
-                }
-
+                setManualAxisAssignment(newPlotSettings.manualAxisAssignment);
                 setCurveAttributes(new Map(newPlotSettings.curveAttributes));
-                newPlotSettings.yAxisAttributes =
-                    newPlotSettings.yAxisAttributes.map((value, index) => ({
-                        ...value,
-                        manualDisplayLabel:
-                            value.displayLabel !==
-                            yAxisAttributes[index].displayLabel
-                                ? true
-                                : value.manualDisplayLabel,
-                    }));
-
                 setYAxisAttributes([...newPlotSettings.yAxisAttributes]);
             },
             [curveAttributes, yAxisAttributes]
@@ -1171,14 +1119,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const displayLabel =
                             curveAttributes.get(label)?.displayLabel;
                         const color =
-                            curveAttributes.get(label)?.color || "#ffffff";
+                            curveAttributes.get(label)?.color ||
+                            initialCurveColors[
+                                index % initialCurveColors.length
+                            ];
                         const yAxis =
                             curveAttributes.get(label)?.axisAssignment || "y1";
                         const shape =
-                            curveAttributes.get(label)?.curveShape || "label";
+                            curveAttributes.get(label)?.curveShape ||
+                            initialCurveShape;
                         const mode =
                             curveAttributes.get(label)?.curveMode ||
-                            "lines+markers";
+                            initialCurveMode;
 
                         // Calculate correlation coefficients.
                         const pearson: number = pearsonCoefficient(
@@ -1224,14 +1176,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const displayLabel =
                             curveAttributes.get(label)?.displayLabel;
                         const color =
-                            curveAttributes.get(label)?.color || "#ffffff";
+                            curveAttributes.get(label)?.color ||
+                            initialCurveColors[
+                                index % initialCurveColors.length
+                            ];
                         const yAxis =
                             curveAttributes.get(label)?.axisAssignment || "y1";
                         const shape =
-                            curveAttributes.get(label)?.curveShape || "linear";
+                            curveAttributes.get(label)?.curveShape ||
+                            initialCurveShape;
                         const mode =
                             curveAttributes.get(label)?.curveMode ||
-                            "lines+markers";
+                            initialCurveMode;
 
                         const baseData = curve.curveData.curve.value;
                         const minData = curve.curveData.curve.min;
@@ -1334,7 +1290,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 );
             }
             return [];
-        }, [curves, curveAttributes, useWebGL]);
+        }, [
+            curves,
+            curveAttributes,
+            initialCurveColors,
+            initialCurveShape,
+            initialCurveMode,
+            useWebGL,
+        ]);
 
         const layout = useMemo(() => {
             const yAxes: { [key: string]: Partial<Plotly.LayoutAxis> }[] = [];
@@ -1357,7 +1320,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             (attributes) => attributes.label === assignment
                         );
 
-                        const scaling = attributes?.scaling || "linear";
+                        const scaling =
+                            attributes?.scaling || initialAxisScaling;
                         const displayLabel =
                             attributes?.displayLabel || assignment;
 
@@ -1426,7 +1390,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         (attr) => attr.label === assignment
                     );
 
-                    const scaling = attributes?.scaling || "linear";
+                    const scaling = attributes?.scaling || initialAxisScaling;
                     const displayLabel = attributes?.displayLabel || assignment;
 
                     const range: { [key: string]: AxisLimit[] } = {};
@@ -1540,7 +1504,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     gridcolor: yAxisGridColor,
                     linecolor: yAxisGridColor,
                     zerolinecolor: yAxisGridColor,
-                    type: yAxisAttributes[0].scaling,
+                    type: yAxisAttributes[0].scaling || initialAxisScaling,
                     title: {
                         text:
                             channels.length === 0
@@ -1591,6 +1555,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             watermarkOpacity,
             plotBackgroundColor,
             manualAxisAssignment,
+            initialAxisScaling,
             curveAttributes,
             yAxisAttributes,
             xAxisGridColor,
@@ -2076,11 +2041,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         <Typography variant="h5" sx={styles.legendTitleStyle}>
                             Legend
                         </Typography>
-                        {curves.map((curve) => {
+                        {curves.map((curve, index) => {
                             const label = getLabelForCurve(curve);
                             const displayLabel =
                                 curveAttributes.get(label)?.displayLabel;
-                            const color = curveAttributes.get(label)?.color;
+                            const color =
+                                curveAttributes.get(label)?.color ||
+                                initialCurveColors[
+                                    index % initialCurveColors.length
+                                ];
 
                             return (
                                 <LegendEntry

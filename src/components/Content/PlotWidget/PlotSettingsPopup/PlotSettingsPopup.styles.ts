@@ -36,3 +36,9 @@ export const tableContainerStyle: SxProps<Theme> = {
 export const colorPickerStyle: SxProps<Theme> = {
     width: "50px",
 };
+
+export const resetButtonBoxStyle: SxProps<Theme> = {
+    display: "flex",
+    justifyContent: "center",
+    marginTop: "15px",
+};
