@@ -100,6 +100,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         const convertQuickOptionToTimestamps = (option: QuickSelectOption) => {
             const now = new Date();
             const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+            const diffToMonday = (startOfDay.getDay() + 6) % 7;
             let start, end;
 
             if (typeof option === "number") {
@@ -119,28 +120,40 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                         break;
                     case "last_week":
                         start = new Date(
-                            startOfDay.getTime() - 14 * 24 * 60 * 60 * 1000
+                            startOfDay.getTime() -
+                                (diffToMonday + 7) * 24 * 60 * 60 * 1000
                         );
+
                         end = new Date(
-                            startOfDay.getTime() - 7 * 24 * 60 * 60 * 1000
+                            startOfDay.getTime() -
+                                diffToMonday * 24 * 60 * 60 * 1000
                         );
                         break;
                     case "this_week":
                         start = new Date(
-                            now.getTime() - now.getDay() * 24 * 60 * 60 * 1000
+                            startOfDay.getTime() -
+                                diffToMonday * 24 * 60 * 60 * 1000
                         );
                         end = now;
                         break;
                     case "last_month":
                         start = new Date(
-                            now.getFullYear(),
-                            now.getMonth() - 1,
+                            startOfDay.getFullYear(),
+                            startOfDay.getMonth() - 1,
                             1
                         );
-                        end = new Date(now.getFullYear(), now.getMonth(), 1);
+                        end = new Date(
+                            startOfDay.getFullYear(),
+                            startOfDay.getMonth(),
+                            1
+                        );
                         break;
                     case "this_month":
-                        start = new Date(now.getFullYear(), now.getMonth(), 1);
+                        start = new Date(
+                            startOfDay.getFullYear(),
+                            startOfDay.getMonth(),
+                            1
+                        );
                         end = now;
                         break;
                     default:
