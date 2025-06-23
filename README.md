@@ -140,7 +140,7 @@ The general section contains settings that affect all plots.
 
 #### Plot Defaults
 
-The plot default section contains settings which are also applied to all plots, but can be overwritten for each plot individually, using [plot specific settings](#plot-specific-settings). As long as such a setting isn't explicitely defined for a plot, the default value will be used.
+The plot default section contains settings which are also applied to all plots, but can be overwritten for each plot individually, using [plot specific settings](#plot-specific-settings). As long as such a setting isn't explicitly defined for a plot, the default value will be used.
 
 - **Curve Color Scheme:** The scheme with which new curves are colored.
 - **Y-Axis Scaling:** Choose between logarithmic and linear scaling.
