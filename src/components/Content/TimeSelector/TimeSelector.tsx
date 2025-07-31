@@ -100,7 +100,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         const convertQuickOptionToTimestamps = (option: QuickSelectOption) => {
             const now = new Date();
             const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
-            const diffToMonday = (startOfDay.getDay() + 6) % 7;
+            const daysToLastMonday = startOfDay.getDay() - 1; // getDay() returns 1-based-index
             let start, end;
 
             if (typeof option === "number") {
@@ -121,18 +121,18 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                     case "last_week":
                         start = new Date(
                             startOfDay.getTime() -
-                                (diffToMonday + 7) * 24 * 60 * 60 * 1000
+                                (daysToLastMonday + 7) * 24 * 60 * 60 * 1000
                         );
 
                         end = new Date(
                             startOfDay.getTime() -
-                                diffToMonday * 24 * 60 * 60 * 1000
+                                daysToLastMonday * 24 * 60 * 60 * 1000
                         );
                         break;
                     case "this_week":
                         start = new Date(
                             startOfDay.getTime() -
-                                diffToMonday * 24 * 60 * 60 * 1000
+                                daysToLastMonday * 24 * 60 * 60 * 1000
                         );
                         end = now;
                         break;
