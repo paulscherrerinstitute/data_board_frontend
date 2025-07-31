@@ -25,8 +25,7 @@ const SnackbarStack = ({
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            pointerEvents: "none",
-            zIndex: 1300,
+            zIndex: 2000,
         }}
     >
         {messages.map((m, idx) => (
@@ -79,7 +78,6 @@ const SnackbarContainer = ({
             anchorOrigin={{ vertical: "top", horizontal: "center" }}
             autoHideDuration={duration >= 0 ? duration : undefined}
             sx={{
-                pointerEvents: "auto",
                 mt: `${8 + offset * 60}px`,
                 transition: "margin 500ms ease",
             }}
