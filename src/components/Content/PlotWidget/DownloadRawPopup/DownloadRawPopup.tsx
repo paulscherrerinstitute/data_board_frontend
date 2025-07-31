@@ -9,7 +9,7 @@ import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import * as styles from "./DownloadRawPopup.styles";
-import { Alert, Box } from "@mui/material";
+import { Alert, Box, Tooltip } from "@mui/material";
 import showSnackbarAndLog, {
     logToConsole,
 } from "../../../../helpers/showSnackbar";
@@ -68,8 +68,8 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
                 );
 
                 setLinks(rawDataLinks);
-            } catch (err) {
-                showSnackbarAndLog("downloadDataRaw failed:", "error", err);
+            } catch (error) {
+                showSnackbarAndLog("downloadDataRaw failed:", "error", error);
                 setLoadingLinksFailed(true);
             } finally {
                 setLoadingLinks(false);
@@ -79,11 +79,23 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
     }, [backendUrl, startTime, endTime, curves]);
 
     const copyToClipboard = async (text: string) => {
-        try {
-            await navigator.clipboard.writeText(text);
-        } catch (err) {
-            console.error("Failed to copy to clipboard", err);
+        const isSecureContext = window.isSecureContext;
+
+        if (isSecureContext && navigator.clipboard?.writeText) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return;
+            } catch (error) {
+                logToConsole("Clipboard API copy failed", "error", error);
+            }
         }
+
+        showSnackbarAndLog(
+            `Copying to clipboard isn't available.\n\nPlease copy the text manually:\n\n${text}`,
+            "error",
+            null,
+            60000
+        );
     };
 
     const downloadFile = async (name: string, url: string) => {
@@ -103,8 +115,47 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(downloadUrl);
-        } catch (err) {
-            console.error(`Error downloading ${name}:`, err);
+        } catch (error) {
+            showSnackbarAndLog(`Error downloading ${name}:`, "error", error);
+        } finally {
+            setDownloadingMap((prev) => ({ ...prev, [name]: false }));
+        }
+    };
+
+    const downloadAndDisplay = async (name: string, url: string) => {
+        setDownloadingMap((prev) => ({ ...prev, [name]: true }));
+        try {
+            const res = await fetch(url, {
+                headers: { Accept: "application/json" },
+            });
+            if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+
+            let formattedJson = "No Data";
+            try {
+                const data = await res.json();
+                formattedJson = JSON.stringify(data, null, 2);
+            } catch {
+                // JSON parse failed, leave formattedJson as "No Data"
+            }
+
+            const popup = window.open(
+                "",
+                "_blank",
+                "width=600,height=400,scrollbars=yes,resizable=yes"
+            );
+            if (!popup) throw new Error("Popup blocked");
+
+            popup.document.title = `${name} - JSON Data`;
+            popup.document.body.style.whiteSpace = "pre-wrap";
+            popup.document.body.style.fontFamily = "monospace";
+            popup.document.body.style.padding = "10px";
+            popup.document.body.textContent = formattedJson;
+        } catch (error) {
+            showSnackbarAndLog(
+                `Error fetching/displaying ${name}:`,
+                "error",
+                error
+            );
         } finally {
             setDownloadingMap((prev) => ({ ...prev, [name]: false }));
         }
@@ -174,7 +225,13 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
     };
 
     return (
-        <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
+        <Dialog
+            open
+            onClose={onClose}
+            maxWidth="sm"
+            fullWidth
+            disableEnforceFocus
+        >
             <DialogTitle>Raw Data Download Links</DialogTitle>
             <DialogContent dividers>
                 <Alert severity="warning" sx={{ mb: 2 }}>
@@ -194,11 +251,29 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
                                 <Typography sx={styles.channelNameStyle}>
                                     {name}
                                 </Typography>
+                                <Tooltip title={link} placement="top" arrow>
+                                    <Button
+                                        sx={styles.buttonStyle}
+                                        onClick={() => copyToClipboard(link)}
+                                    >
+                                        Copy Link
+                                    </Button>
+                                </Tooltip>
                                 <Button
                                     sx={styles.buttonStyle}
-                                    onClick={() => copyToClipboard(link)}
+                                    onClick={() =>
+                                        downloadAndDisplay(name, link)
+                                    }
+                                    disabled={downloadingMap[name]}
+                                    startIcon={
+                                        downloadingMap[name] ? (
+                                            <CircularProgress size={16} />
+                                        ) : null
+                                    }
                                 >
-                                    Copy Link
+                                    {downloadingMap[name]
+                                        ? "Downloading..."
+                                        : "Download & Display"}
                                 </Button>
                                 <Button
                                     sx={styles.buttonStyle}
@@ -212,7 +287,7 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
                                 >
                                     {downloadingMap[name]
                                         ? "Downloading..."
-                                        : "Download"}
+                                        : "Download At Once"}
                                 </Button>
                                 <Button
                                     sx={styles.buttonStyle}
