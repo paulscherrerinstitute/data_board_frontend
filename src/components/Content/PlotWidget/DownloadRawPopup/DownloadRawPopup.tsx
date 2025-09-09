@@ -273,7 +273,7 @@ const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
                                 >
                                     {downloadingMap[name]
                                         ? "Downloading..."
-                                        : "Download & Display"}
+                                        : "Display Data"}
                                 </Button>
                                 <Button
                                     sx={styles.buttonStyle}
