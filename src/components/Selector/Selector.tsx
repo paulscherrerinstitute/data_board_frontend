@@ -17,12 +17,10 @@ import {
     Checkbox,
     ListItemText,
     useTheme,
-    type Theme,
 } from "@mui/material";
 import debounce from "lodash/debounce";
 import axios from "axios";
-import { List as ListWindow, RowComponentProps } from "react-window";
-import * as stylesRW from "./ListItemRow/ListItemRow.styles";
+import { List as ListWindow } from "react-window";
 import { useApiUrls } from "../ApiContext/ApiContext";
 import ListItemRowComponent from "./ListItemRow/ListItemRow";
 import * as styles from "./Selector.styles";
@@ -39,6 +37,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import { defaultKeepSidebarClosedAfterDrag } from "../../helpers/defaults";
 import { SidebarIgnoredMenuProps } from "../../helpers/misc";
+import AutoSizer from "react-virtualized-auto-sizer";
 
 const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
     const { backendUrl } = useApiUrls();
@@ -565,7 +564,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                     <ListWindow
                         rowComponent={ListItemRowComponent}
                         rowCount={filteredChannels.length}
-                        rowHeight={45}
+                        rowHeight={55}
                         rowProps={{
                             filteredChannels,
                             theme,
