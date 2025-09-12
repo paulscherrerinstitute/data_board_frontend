@@ -33,7 +33,7 @@
         "react-resizable": "^3.0.5",
         "react-router-dom": "^7.8.2",
         "react-virtualized-auto-sizer": "^1.0.26",
-        "react-window": "^1.8.11",
+        "react-window": "^2.1.0",
         "uuid": "^11.1.0"
     },
     "devDependencies": {
