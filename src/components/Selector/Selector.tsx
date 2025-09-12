@@ -17,12 +17,14 @@ import {
     Checkbox,
     ListItemText,
     useTheme,
+    type Theme,
 } from "@mui/material";
 import debounce from "lodash/debounce";
 import axios from "axios";
-import { FixedSizeList as ListWindow } from "react-window";
-import ListItemRow from "./ListItemRow/ListItemRow";
+import { List as ListWindow, RowComponentProps } from "react-window";
+import * as stylesRW from "./ListItemRow/ListItemRow.styles";
 import { useApiUrls } from "../ApiContext/ApiContext";
+import ListItemRowComponent from "./ListItemRow/ListItemRow";
 import * as styles from "./Selector.styles";
 import { throttle } from "lodash";
 import {
@@ -34,7 +36,6 @@ import {
 } from "./Selector.types";
 import showSnackbarAndLog from "../../helpers/showSnackbar";
 import AddIcon from "@mui/icons-material/Add";
-import AutoSizer from "react-virtualized-auto-sizer";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import { defaultKeepSidebarClosedAfterDrag } from "../../helpers/defaults";
 import { SidebarIgnoredMenuProps } from "../../helpers/misc";
@@ -561,35 +562,21 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                     </Alert>
                 )}
                 <Box sx={styles.autoSizerBoxStyle}>
-                    <AutoSizer>
-                        {({ height, width }) => (
-                            <ListWindow
-                                style={{
-                                    background:
-                                        theme.palette.custom.sidebar.background
-                                            .secondary,
-                                }}
-                                height={height - 10}
-                                itemCount={filteredChannels.length}
-                                itemSize={46}
-                                width={width}
-                                itemData={{
-                                    items: filteredChannels,
-                                    onSelect: handleSelectChannel,
-                                    onDeselect: handleDeselectChannel,
-                                    onDragStart: handleDragStart,
-                                    isDraggable: true,
-                                    theme,
-                                }}
-                            >
-                                {ListItemRow}
-                            </ListWindow>
-                        )}
-                    </AutoSizer>
+                    <ListWindow
+                        rowComponent={ListItemRowComponent}
+                        rowCount={filteredChannels.length}
+                        rowHeight={45}
+                        rowProps={{
+                            filteredChannels,
+                            theme,
+                            handleSelectChannel,
+                            handleDeselectChannel,
+                            handleDragStart,
+                        }}
+                    />
                 </Box>
             </Box>
         </Box>
     );
 };
-
 export default Selector;
