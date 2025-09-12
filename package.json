@@ -43,7 +43,7 @@
         "@types/html2canvas": "^1.0.0",
         "@types/jest": "^30.0.0",
         "@types/lodash": "^4.17.20",
-        "@types/node": "^24.1.0",
+        "@types/node": "^24.3.1",
         "@types/object-hash": "^3.0.6",
         "@types/plotly.js": "^3.0.4",
         "@types/react": "^19.1.12",
