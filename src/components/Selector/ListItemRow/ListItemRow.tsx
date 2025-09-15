@@ -46,6 +46,7 @@ export default function ListItemRowComponent({
                         ? theme.palette.custom.sidebar.results.primary
                         : theme.palette.custom.sidebar.results.secondary,
             }}
+            role="listitem"
             key={seriesId}
         >
             <Box sx={styles.boxStyle}>

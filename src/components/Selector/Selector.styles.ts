@@ -124,7 +124,20 @@ export const checkboxStyle: SxProps<Theme> = {
 };
 
 export const autoSizerBoxStyle: SxProps<Theme> = {
-    flex: 1,
+    display: "flex",
     minHeight: 0,
     width: "100%",
+    height: "80%",
+    "@media (max-height: 1200px)": {
+        height: "70vh",
+    },
+        "@media (max-height: 1000px)": {
+        height: "50vh",
+    },
+    "@media (max-height: 800px)": {
+        height: "40vh",
+    },
+    "@media (max-height: 600px)": {
+        height: "20vh",
+    },
 };

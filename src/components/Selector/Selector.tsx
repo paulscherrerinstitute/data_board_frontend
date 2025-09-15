@@ -37,7 +37,6 @@ import AddIcon from "@mui/icons-material/Add";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import { defaultKeepSidebarClosedAfterDrag } from "../../helpers/defaults";
 import { SidebarIgnoredMenuProps } from "../../helpers/misc";
-import AutoSizer from "react-virtualized-auto-sizer";
 
 const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
     const { backendUrl } = useApiUrls();
@@ -562,9 +561,10 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                 )}
                 <Box sx={styles.autoSizerBoxStyle}>
                     <ListWindow
+                        role="list"
                         rowComponent={ListItemRowComponent}
                         rowCount={filteredChannels.length}
-                        rowHeight={55}
+                        rowHeight={50}
                         rowProps={{
                             filteredChannels,
                             theme,
