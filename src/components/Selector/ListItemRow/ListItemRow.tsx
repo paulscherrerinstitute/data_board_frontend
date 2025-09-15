@@ -11,24 +11,31 @@ import {
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import * as styles from "./ListItemRow.styles";
 import { ListItemRowProps } from "./ListItemRow.types";
+import { RowComponentProps } from "react-window";
 
-const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
-    const { items, onSelect, onDeselect, onDragStart, isDraggable, theme } =
-        data;
-    const seriesId = items[index].attributes.seriesId;
-    const isSelected = items[index].selected;
-    const name = items[index].attributes.name;
-    const type = items[index].attributes.type;
+export default function ListItemRowComponent({
+    index,
+    style,
+    filteredChannels,
+    theme,
+    handleSelectChannel,
+    handleDeselectChannel,
+    handleDragStart,
+}: RowComponentProps<ListItemRowProps>) {
+    const seriesId = filteredChannels[index].attributes.seriesId;
+    const name = filteredChannels[index].attributes.name;
+    const type = filteredChannels[index].attributes.type;
+    const isSelected = filteredChannels[index].selected;
     const shape =
-        Array.isArray(items[index].attributes.shape) &&
-        items[index].attributes.shape.length === 1
-            ? "[" + items[index].attributes.shape + "]"
+        Array.isArray(filteredChannels[index].attributes.shape) &&
+        filteredChannels[index].attributes.shape.length === 1
+            ? "[" + filteredChannels[index].attributes.shape + "]"
             : undefined;
-    const backend = items[index].attributes.backend;
-
+    const backend = filteredChannels[index].attributes.backend;
     const primaryText = name;
     const secondaryText =
         `${backend} - ${type || "unknown"}` + (shape ? ` - ${shape}` : "");
+    const isDraggable = true;
 
     return (
         <ListItem
@@ -39,13 +46,16 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
                         ? theme.palette.custom.sidebar.results.primary
                         : theme.palette.custom.sidebar.results.secondary,
             }}
+            role="listitem"
             key={seriesId}
         >
             <Box sx={styles.boxStyle}>
                 <ListItemButton
                     sx={styles.listItemButtonStyle}
                     onClick={() =>
-                        isSelected ? onDeselect(seriesId) : onSelect(seriesId)
+                        isSelected
+                            ? handleDeselectChannel(seriesId)
+                            : handleSelectChannel(seriesId)
                     }
                 >
                     <ListItemIcon>
@@ -64,10 +74,14 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
                     sx={styles.listItemTextStyle}
                     slotProps={{
                         primary: {
-                            style: { color: theme.palette.custom.sidebar.text },
+                            style: {
+                                color: theme.palette.custom.sidebar.text,
+                            },
                         },
                         secondary: {
-                            style: { color: theme.palette.custom.sidebar.text },
+                            style: {
+                                color: theme.palette.custom.sidebar.text,
+                            },
                         },
                     }}
                     primary={primaryText}
@@ -78,7 +92,7 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
                         sx={styles.dragIconStyle}
                         draggable={true}
                         onDragStart={(e: React.DragEvent) =>
-                            onDragStart(e, seriesId)
+                            handleDragStart(e, seriesId)
                         }
                     >
                         <DragIndicatorIcon />
@@ -87,6 +101,4 @@ const ListItemRow: React.FC<ListItemRowProps> = ({ index, style, data }) => {
             </Box>
         </ListItem>
     );
-};
-
-export default ListItemRow;
+}
