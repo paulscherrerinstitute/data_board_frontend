@@ -495,17 +495,15 @@ const Content: React.FC = () => {
                 dashboardData
             );
             const dashboardId = response.data.id;
+            const dashboardHash = hash(stripUndefined(dashboardData.dashboard));
+
             setSearchParams((searchParams) => {
                 const newSearchParams = searchParams;
                 newSearchParams.set("dashboardId", dashboardId);
-                return newSearchParams;
-            });
-            const dashboardHash = hash(stripUndefined(dashboardData.dashboard));
-            setSearchParams((searchParams) => {
-                const newSearchParams = searchParams;
                 newSearchParams.set("dashboardHash", dashboardHash);
                 return newSearchParams;
             });
+
             showSnackbarAndLog(
                 "Successfully saved dashboard to server! We don't guarantee persistent storage, export to JSON if needed.",
                 "success",

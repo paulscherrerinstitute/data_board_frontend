@@ -96,7 +96,6 @@ To apply query parameters, you have to click the `APPLY`-button. Or, activating 
     #### Layouting Mode
 
     You can toggle the layouting mode by clicking the button in the bottom right, overlaying the dashboard. In this mode:
-
     - Plots can be arranged using drag and drop, but make sure not to drag the canvas or legend. It is easiest to drag the bottom of the plot, for example, by the X-axis title.
 
     - Plots can be resized within the plotting area by dragging one of the marked corners of the plot.
@@ -158,9 +157,19 @@ The modebar buttons are buttons that define some quick actions you can perform o
 
 - **Download data as CSV/JSON:** Downloads the data, as received from the archiver, in the selected format.
 
+    > ℹ️ **Note**: The downloaded file does not only contain the points of the graph where points differ in either X- or Y-Axis, but the values at regular intervals inbetween too (f.ex. when a graph flatlines over the course of 1 second, there will still be 5 entries with identical value, with a time interval of abt. 200 milliseconds instead of a single entry). As a result, this file is multiple times larger than the raw data of the graph. **RECOMMENDATION**: For details use `Download as JSON`, for an overview, use `Download Raw Data`
+
 - **Download Picture as PNG:** Downloads a picture of the plot and legend as PNG. The resolution is 4x the display resolution; therefore, the generating process may take a second or two.
 
     > ⚠️ **Warning**: If the legend is scrollable due to its size, only the visible area will be captured. Zooming out may help capture more of the legend.
+
+- **Download Raw Data:** Opens a Pop-Up where you can access the raw data displayed in the graph: It provides 4 options:
+    - `Copy Link To Raw Data`: Copies the link to the raw data of the graph to your clipboard.
+    - `Display Data`: Opens a new window containing a formatted view of the raw data.
+    - `Download At Once`: Downloads the raw data as JSON, as a oneliner.
+    - `Download Framed`: Downloads the raw data as JSON, formatted to be human readable.
+
+    > ℹ️ **Note**: Although the buttons `Download data as JSON` and `Download Raw Data` BOTH result in JSONs, the data contained is not entirely the same. The JSON originating from `Download Raw Data` contains essentially the points on the graph where something changes (f.ex. when the data only changes twice in the graph, only two entries will be in the JSON - the value and the point in time it occured).
 
 - **Zoom In/ Zoom Out, Autoscale, Reset Axes:** These are default Plotly buttons.
 
@@ -174,7 +183,6 @@ In these settings, you can define properties that only affect the current plot, 
 
 - **Plot Title:** The title of the plot, as displayed
 - **Curve Settings:** Settings for single curves; every defined curve is mapped out and can be configured by itself.
-
     - **Color:** This curve's color
     - **Name, Backend, Datatype:** Attributes of this curve, as received from the Archiver.
     - **Label:** The label displayed for this curve.
@@ -343,14 +351,12 @@ For any contribution to be merged, all pipelines need to be successful, and the 
 Adding a custom theme can be done by opening a PR with the following changes:
 
 1.  **Define the Theme**
-
     - Create a new file in [`src/themes`](./src/themes) (e.g. `myCustomTheme.ts`)
     - Use [`base.ts`](./src/themes/base.ts) as a reference for structure.
     - If your theme includes a **custom watermark image**, add it to the [`src/media`](./src/media) folder.
         - The watermark can be any file supported by [Plotly](https://plotly.com/javascript/images/).
 
 2.  **Update the Theme Type**
-
     - Open [`src/themes/themes.types.ts`](./src/themes/themes.types.ts)
     - Add your new theme key to the `AvailableTheme` type:
         ```ts
@@ -358,7 +364,6 @@ Adding a custom theme can be done by opening a PR with the following changes:
         ```
 
 3.  **Extend the `themes.ts` List**
-
     - Open [`src/themes/themes.ts`](./src/themes/themes.ts)
     - Add your new theme to the `themes` record:
 
