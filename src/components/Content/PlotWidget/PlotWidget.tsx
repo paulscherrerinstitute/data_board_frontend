@@ -1347,6 +1347,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             [`yaxis${index === 0 ? "" : index + 1}`]: {
                                 type: scaling,
                                 autorange: autorange,
+                                automargin: true,
                                 gridcolor: yAxisGridColor,
                                 linecolor: yAxisGridColor,
                                 zerolinecolor: yAxisGridColor,
@@ -1414,6 +1415,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         [`yaxis${index === 0 ? "" : index + 1}`]: {
                             type: scaling,
                             autorange: autorange,
+                            automargin: true,
                             gridcolor: yAxisGridColor,
                             linecolor: yAxisGridColor,
                             zerolinecolor: yAxisGridColor,
@@ -1498,9 +1500,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                               title: { text: "Point Index", standoff: 0 },
                               overlaying: "x",
                               side: "top",
+                              automargin: true,
                           }
                         : { visible: false },
                 yaxis: {
+                    automargin: true,
                     gridcolor: yAxisGridColor,
                     linecolor: yAxisGridColor,
                     zerolinecolor: yAxisGridColor,
@@ -1874,8 +1878,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         `Fetching waveform preview for ${choice === "point" ? "selected point" : "zoomed range"}...`,
                                         "info"
                                     );
-                                    waveformPreviewDataIsRequesting.current =
-                                        true;
+                                    waveformPreviewDataIsRequesting.current = true;
                                     try {
                                         const response =
                                             await axios.get<BackendCurveData>(
@@ -1901,8 +1904,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                             error
                                         );
                                     } finally {
-                                        waveformPreviewDataIsRequesting.current =
-                                            false;
+                                        waveformPreviewDataIsRequesting.current = false;
                                     }
                                 }
                             }
