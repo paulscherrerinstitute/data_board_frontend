@@ -460,6 +460,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         const config = {
             responsive: true,
             displaylogo: false,
+            scrollZoom: true,
         } as Plotly.Config;
 
         if (plotRef.current) {

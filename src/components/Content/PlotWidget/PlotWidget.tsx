@@ -1628,6 +1628,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     ],
                 ],
                 doubleClick: false,
+                scrollZoom: true,
             } as Plotly.Config;
         }, [downloadDataCSV, downloadDataJSON, downloadImage, theme]);
 
