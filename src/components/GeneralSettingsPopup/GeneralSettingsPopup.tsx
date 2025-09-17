@@ -667,7 +667,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
 
                     <Box sx={styles.settingBoxStyle}>
                         <FormControl fullWidth>
-                            <InputLabel>Adjust Sidebar</InputLabel>
+                            <InputLabel>Adjust Sidebar Overlap</InputLabel>
                             <Tooltip title="Directs behaviour of sidebar in relation to y-axis">
                                 <Select
                                     value={initialSidebarAdjustState}
@@ -677,12 +677,14 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                                 .value as InitialAdjustSidebarState
                                         )
                                     }
-                                    label="Adjust Sidebar"
+                                    label="Adjust Sidebar Overlap"
                                     MenuProps={SidebarIgnoredMenuProps}
                                 >
-                                    <MenuItem value="overlap">Overlap</MenuItem>
+                                    <MenuItem value="overlap">
+                                        Overlap Content
+                                    </MenuItem>
                                     <MenuItem value="move">
-                                        Move Sidebar
+                                        Move Content
                                     </MenuItem>
                                 </Select>
                             </Tooltip>
