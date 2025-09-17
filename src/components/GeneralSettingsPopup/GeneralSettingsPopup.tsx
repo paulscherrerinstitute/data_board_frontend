@@ -92,10 +92,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         initialSidebarAdjustState,
         setInitialSidebarAdjustStateStorage,
         setInitialSidebarAdjustState,
-    ] = useLocalStorage(
-        "inisitalSidebarAdjustState",
-        defaultAdjustSidebarState
-    );
+    ] = useLocalStorage("initialSidebarAdjustState", defaultAdjustSidebarState);
     const [watermarkOpacity, setWatermarkOpacityStorage, setWatermarkOpacity] =
         useLocalStorage("watermarkOpacity", defaultWatermarkOpacity);
     const [
@@ -680,7 +677,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                                                 .value as InitialAdjustSidebarState
                                         )
                                     }
-                                    label="Initial Sidebar State"
+                                    label="Adjust Sidebar"
                                     MenuProps={SidebarIgnoredMenuProps}
                                 >
                                     <MenuItem value="overlap">Overlap</MenuItem>

@@ -8,6 +8,7 @@ import React, {
 import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
+import { getGridContainerStyle } from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
 import * as uuid from "uuid";
 import {
@@ -692,8 +693,7 @@ const Content: React.FC = () => {
                     onTimeChange={handleTimeChange}
                 />
             </Box>
-
-            <Box sx={styles.gridContainerStyle} ref={gridContainerRef}>
+            <Box sx={getGridContainerStyle()} ref={gridContainerRef}>
                 <div
                     style={{
                         display: "flex",

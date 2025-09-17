@@ -1,6 +1,8 @@
 import { SxProps, Theme } from "@mui/material";
 import plusWhite from "../../media/plus_white.svg";
 import plusBlack from "../../media/plus_black.svg";
+import { InitialAdjustSidebarState } from "../Sidebar/Sidebar.types";
+import { defaultAdjustSidebarState } from "../../helpers/defaults";
 
 export const contentContainerStyle: SxProps<Theme> = {
     flexGrow: 1,
@@ -26,18 +28,26 @@ export const topBarStyle: SxProps<Theme> = {
     overflowY: "hidden",
 };
 
-export const gridContainerStyle: SxProps<Theme> = {
-    width: "100%",
-    height: "calc(min(90vh, 100vh - 80px))",
-    position: "absolute",
-    left: "2.5vw",
-    top: "calc(max(10vh, 80px))",
-    display: "flex",
-    flexDirection: "column",
-    padding: "16px",
-    paddingTop: 0,
-    paddingBottom: 0,
-    overflowY: "auto",
+export const getGridContainerStyle = (): SxProps<Theme> => {
+    const initialSidebarAdjustState = JSON.parse(
+        localStorage.getItem("initialSidebarAdjustState") ||
+            JSON.stringify(defaultAdjustSidebarState)
+    ) as InitialAdjustSidebarState;
+
+    return {
+        width: "100%",
+        height: "calc(min(90vh, 100vh - 80px))",
+        position:
+            initialSidebarAdjustState == "overlap" ? "absolute" : "sticky",
+        left: "2.5vw",
+        top: "calc(max(10vh, 80px))",
+        display: "flex",
+        flexDirection: "column",
+        padding: "16px",
+        paddingTop: 0,
+        paddingBottom: 0,
+        overflowY: "auto",
+    };
 };
 
 export const gridItemStyle: SxProps<Theme> = {
