@@ -8,7 +8,10 @@ import React, {
 import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
-import { getGridContainerStyle } from "./Content.styles";
+import {
+    getGridContainerStyle,
+    getActionButtonBoxStyle,
+} from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
 import * as uuid from "uuid";
 import {
@@ -810,7 +813,7 @@ const Content: React.FC = () => {
                     </ReactGridLayout>
                     <Box sx={styles.actionButtonBoxPlaceholderStyle}></Box>
                 </div>
-                <Box sx={styles.actionButtonBoxStyle}>
+                <Box sx={getActionButtonBoxStyle()}>
                     <Button
                         onDrop={(event) => handleDrop(event, "-1")}
                         onDragOver={(event) => handleDragOver(event, "-1")}

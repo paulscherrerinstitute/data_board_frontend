@@ -96,19 +96,27 @@ export const actionButtonBoxPlaceholderStyle: SxProps<Theme> = {
     alignSelf: "flex-end",
 };
 
-export const actionButtonBoxStyle: SxProps<Theme> = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: "10px",
-    position: "fixed",
-    bottom: 0,
-    paddingBottom: "10px",
-    left: "calc(max(30px, 2.5vw) + 20px)",
-    right: 10,
-    pointerEvents: "none",
-    height: "5vh",
-    minHeight: "60px",
+export const getActionButtonBoxStyle = (): SxProps<Theme> => {
+    const initialSidebarAdjustState = JSON.parse(
+        localStorage.getItem("initialSidebarAdjustState") ||
+            JSON.stringify(defaultAdjustSidebarState)
+    ) as InitialAdjustSidebarState;
+
+    return {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: "10px",
+        position:
+            initialSidebarAdjustState == "overlap" ? "absolute" : "sticky",
+        bottom: 0,
+        paddingBottom: "10px",
+        left: "calc(max(30px, 2.5vw) + 20px)",
+        right: 10,
+        pointerEvents: "none",
+        height: "5vh",
+        minHeight: "60px",
+    };
 };
 
 export const actionButtonStyle: SxProps<Theme> = {
