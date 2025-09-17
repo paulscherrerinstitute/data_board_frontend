@@ -1,4 +1,7 @@
-import { InitialSidebarState } from "../components/Sidebar/Sidebar.types";
+import {
+    InitialSidebarState,
+    InitialAdjustSidebarState,
+} from "../components/Sidebar/Sidebar.types";
 import { AvailableTheme } from "../themes/themes.types";
 
 export const defaultWatermarkOpacity = 0.1;
@@ -32,3 +35,5 @@ export const defaultWidgetHeight = 12;
 
 export const defaultInitialSidebarState: InitialSidebarState =
     "closedIfDashboard";
+
+export const defaultAdjustSidebarState: InitialAdjustSidebarState = "overlap";

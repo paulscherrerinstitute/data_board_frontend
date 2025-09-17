@@ -32,6 +32,7 @@ import {
     defaultCurveMode,
     defaultCurveShape,
     defaultInitialSidebarState,
+    defaultAdjustSidebarState,
     defaultKeepSidebarClosedAfterDrag,
     defaultPlotBackgroundColor,
     defaultTheme,
@@ -44,7 +45,10 @@ import {
     defaultYAxisGridColor,
     defaultYAxisScaling,
 } from "../../helpers/defaults";
-import { InitialSidebarState } from "../Sidebar/Sidebar.types";
+import {
+    InitialSidebarState,
+    InitialAdjustSidebarState,
+} from "../Sidebar/Sidebar.types";
 import { debounce } from "lodash";
 import showSnackbarAndLog from "../../helpers/showSnackbar";
 import { PlotlyHTMLElement } from "../Content/PlotWidget/PlotWidget.types";
@@ -84,6 +88,14 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setInitialSidebarStateStorage,
         setInitialSidebarState,
     ] = useLocalStorage("initialSidebarState", defaultInitialSidebarState);
+    const [
+        initialSidebarAdjustState,
+        setInitialSidebarAdjustStateStorage,
+        setInitialSidebarAdjustState,
+    ] = useLocalStorage(
+        "inisitalSidebarAdjustState",
+        defaultAdjustSidebarState
+    );
     const [watermarkOpacity, setWatermarkOpacityStorage, setWatermarkOpacity] =
         useLocalStorage("watermarkOpacity", defaultWatermarkOpacity);
     const [
@@ -179,6 +191,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
 
     const saveAndClose = useCallback(() => {
         setInitialSidebarStateStorage(initialSidebarState);
+        setInitialSidebarAdjustStateStorage(initialSidebarAdjustState);
         setWatermarkOpacityStorage(watermarkOpacity);
         setPlotBackgroundColorStorage(plotBackgroundColor);
         setXAxisGridColorStorage(xAxisGridColor);
@@ -205,6 +218,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         onClose();
     }, [
         initialSidebarState,
+        initialSidebarAdjustState,
         watermarkOpacity,
         plotBackgroundColor,
         xAxisGridColor,
@@ -223,6 +237,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setTheme,
         onClose,
         setInitialSidebarStateStorage,
+        setInitialSidebarAdjustState,
         setWatermarkOpacityStorage,
         setPlotBackgroundColorStorage,
         setXAxisGridColorStorage,
@@ -241,6 +256,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
 
     const resetToDefaults = () => {
         setInitialSidebarState(defaultInitialSidebarState);
+        setInitialSidebarAdjustState(defaultAdjustSidebarState);
         setPlotBackgroundColor(defaultPlotBackgroundColor);
         setXAxisGridColor(defaultXAxisGridColor);
         setYAxisGridColor(defaultYAxisGridColor);
@@ -261,6 +277,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
     const exportSettings = () => {
         const settings = {
             initialSidebarState,
+            initialSidebarAdjustState,
             plotBackgroundColor,
             xAxisGridColor,
             yAxisGridColor,
@@ -299,6 +316,10 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                 const imported = JSON.parse(e.target?.result as string);
                 if (imported.initialSidebarState !== undefined)
                     setInitialSidebarState(imported.initialSidebarState);
+                if (imported.inisitalSidebarAdjustState !== undefined)
+                    setInitialSidebarAdjustState(
+                        imported.initialSidebarAdjustState
+                    );
                 if (imported.plotBackgroundColor !== undefined)
                     setPlotBackgroundColor(imported.plotBackgroundColor);
                 if (imported.xAxisGridColor !== undefined)
@@ -645,6 +666,30 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                             }
                             sx={styles.colorPickerStyle}
                         ></Input>
+                    </Box>
+
+                    <Box sx={styles.settingBoxStyle}>
+                        <FormControl fullWidth>
+                            <InputLabel>Adjust Sidebar</InputLabel>
+                            <Tooltip title="Directs behaviour of sidebar in relation to y-axis">
+                                <Select
+                                    value={initialSidebarAdjustState}
+                                    onChange={(e) =>
+                                        setInitialSidebarAdjustState(
+                                            e.target
+                                                .value as InitialAdjustSidebarState
+                                        )
+                                    }
+                                    label="Initial Sidebar State"
+                                    MenuProps={SidebarIgnoredMenuProps}
+                                >
+                                    <MenuItem value="overlap">Overlap</MenuItem>
+                                    <MenuItem value="move">
+                                        Move Sidebar
+                                    </MenuItem>
+                                </Select>
+                            </Tooltip>
+                        </FormControl>
                     </Box>
 
                     <Box sx={styles.settingBoxStyle}>
