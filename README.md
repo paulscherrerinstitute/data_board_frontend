@@ -119,6 +119,7 @@ The general section contains settings that affect all plots.
 - **Initial Sidebar State:** Decides the width of the sidebar upon loading the site
 
 - **Theme:** The theme. _Will_ take a bit to be applied upon closing the settings, since this forces all components to be re-rendered.
+- **Adjust Sidebar Overlap** Affects the placement of the content when the sidebar is open. Depending on the selection, the sidebar will either overlap parts of the plots (_default_) or the plots will be shifted so that they won't be covered.
 
 - **Watermark Opacity:** The opacity of the watermark in the plot. Use 0 for no watermark.
 
