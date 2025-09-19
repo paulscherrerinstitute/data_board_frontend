@@ -37,8 +37,7 @@ export const getGridContainerStyle = (): SxProps<Theme> => {
     return {
         width: "100%",
         height: "calc(min(90vh, 100vh - 80px))",
-        position:
-            initialSidebarAdjustState == "overlap" ? "absolute" : "sticky",
+        position: initialSidebarAdjustState == "overlap" ? "fixed" : "sticky",
         left: "2.5vw",
         top: "calc(max(10vh, 80px))",
         display: "flex",
@@ -107,8 +106,7 @@ export const getActionButtonBoxStyle = (): SxProps<Theme> => {
         justifyContent: "center",
         alignItems: "center",
         gap: "10px",
-        position:
-            initialSidebarAdjustState == "overlap" ? "absolute" : "sticky",
+        position: initialSidebarAdjustState == "overlap" ? "fixed" : "sticky",
         bottom: 0,
         paddingBottom: "10px",
         left: "calc(max(30px, 2.5vw) + 20px)",
