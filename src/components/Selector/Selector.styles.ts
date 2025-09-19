@@ -127,17 +127,17 @@ export const autoSizerBoxStyle: SxProps<Theme> = {
     display: "flex",
     minHeight: 0,
     width: "100%",
-    height: "80%",
+    height: "70%",
     "@media (max-height: 1200px)": {
-        height: "70vh",
+        height: "70%",
     },
-        "@media (max-height: 1000px)": {
-        height: "50vh",
+    "@media (max-height: 1000px)": {
+        height: "50%",
     },
     "@media (max-height: 800px)": {
-        height: "40vh",
+        height: "35%",
     },
     "@media (max-height: 600px)": {
-        height: "20vh",
+        height: "30%",
     },
 };
