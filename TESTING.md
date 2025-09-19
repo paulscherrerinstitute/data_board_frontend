@@ -17,6 +17,10 @@
 The following tests are supposed to provide a comprehensive manual on how the application should be tested.
 If you find a major feature or error that is not included into the the testing, feel free to contact the maintainer so that they can be added.
 
+### ℹ️ℹ️ Quick Runthrough ℹ️ℹ️
+
+For a quick runthrough, I recommend the [Channel selection](#31-search-for-and-select-channel), [download Plot data](#36-download-plot-data) and some QUICK changes that you'll see instantaneously from [settings](#32-change-settings) as well as quickly adding a new plot and testing auto-apply.
+
 ### 3.1 Search for and select channel
 
 #### Description
@@ -113,35 +117,119 @@ Settings should be changeable and have a noticable effect. Any settings made sha
 
 #### Description
 
+Tests the bar atop the plots where the timeframe can be customizes, as well as auto-refreshing the plots every few minutes.
+
 #### Steps
 
+> ℹ️ Pressing "_Apply_" should apply the changes of the tobar to the plot.
+
+1. Change the time frame by changing the fields: "_Start Time_" and "_End Time_"
+    > ✅ X-Axis of plot should match the time frame entered.
+2. Change "_Quick Select_" to "Last 1h":
+    > ✅ X-Axis of plot should match the last 1h.
+3. Change "_Options_":
+    > When "_Raw when sparce_" is disabled> ✅ Should not use raw data
+    > When "_Remove empty bins_" is disabled> ✅ Should show more datapoints
+4. Change "_Auto Apply_" to "1 min":
+    > ✅ On activation, a small bar should appear below the dropdown and after a minute, the plot should update to include newer data.
+
 #### Expected Result
+
+Any changes should update and change the plot and mostly the datapoints showed on it.
 
 ### 3.4 Change layout
 
 #### Description
 
+Tests the layout of multiple plots.
+
 #### Steps
 
+1. Press "_+_"
+    > ✅ A new plot should be spawn below the current plot.
+2. Press "_Save layout_"
+    > ✅ Popup: "_Successfully saved dashboard to server! We don't guarantee persistent storage, export to JSON if needed._"
+    > ✅ dasboardId should be added to URL.
+    > ✅ When copying and pasting the url with the dashboardId, the channels and plots that you have added before should automatically be loaded.
+3. Change something and copy the link with the current dashboardId
+4. Press "_Save as new layout_"
+    > ✅ dashboardId in the URL should change
+    > ✅ when pasting in the link from STEP 3, the old dashboard should show up.
+5. Press "_Download layout as JSON_"
+    > ✅ dashboard_CURRENTDATETIME.json should be downloaded automatically, including a bunch of properties like "\_Widgets\*" or "\_Channels\*"
+6. Press "_Import JSON layout_"
+    > ✅ uploading the previously downloaded layout, it should automatically be applied
+    > ✅ if more plots currently exist than in the uploaded layout, those should automatically be removed.
+7. Press "Enable layouting mode"
+    > ✅ should make it possible two move plots around.
+    > ✅ should make it possible to resize plots.
+
 #### Expected Result
+
+Layouts should be saveable as well as imported/exported manually and the plots should be moveable and resizable.
 
 ### 3.5 Change plot settings
 
 #### Description
 
+Tests the settings set individually for each plot.
+
+> ℹ️ For changes like "_Curve Shape_" or "_Curve Mode_" refer to [settings](#32-change-settings), as they behave literally the same.
+
 #### Steps
 
+1. Press the "⚙️" in one of the plots
+2. Change Label at "_Curve Settings_" to another value
+    > ✅ Name of channel should change in legend to specified value
+3. Changing Label at "_Y-Axes_" to another value
+    > ✅ Name of channel should change on y-axis to specified value
+4. Change "_Min_" and "_Max_" to a value
+    > ✅ Should show the plot only with the y-axis only extending from those values
+    > ✅ If no value is input, it should scale automatically
+5. Change "_Scaling_"
+    > ✅ "_Linear_" should show a linear curve/line
+    > ✅ "_Log10_" should turn it into a logarithmic curve/line
+6. Close the Plotsettings and navigate to the icons besides it.
+7. Zoom in and Press "🏠"
+    > ✅ Should reset axes to their starting value
+8. Zoom in and Press the "_Autoscale_"-Button
+    > ✅ Axes should now be automatically set in a way that shows every data point
+9. Press the "_-_" button
+    > ✅ Should zoom out
+10. Press the "_+_" button
+    > ✅ Should zoom in
+11. Press the "📷" button
+    > ✅ Should download the current plot as a PNG
+
 #### Expected Result
+
+Changes of the plot settings influence the plot.
 
 ### 3.6 Download plot data
 
 #### Description
 
+Tests Behaviour on Download of Plotdata
+
 #### Steps
 
+1. Navigate to the 3 disks on the plot.
+2. Press the button "💾" with the tooltip "_Download data as csv_"
+    > ✅ curves\\\_DATETIME.csv should include the datapoints, like "_timestamp, Mean, Min PulseId etc._"
+3. Press the button "💾" with the tooltip "_Download data as json_"
+    > ✅ curves\\\_DATETIME.json should include the datapoints, lik "_timestamp, value etc._"
+4. Press the button "💾" with the tooltip "_Download raw data_"
+    > ℹ️ BE AWARE: If no raw data exists, no link can be provided and all downloads and displays will be empty
+    > when pressing "_COPY LINK_" -> ✅ Should copy link to data-api of the specified channels
+    > when pressing "_DISPLAY DATA_" -> ✅ Should open new browser window with the raw data displayed there
+    > when pressing "_DOWNLOAD AT ONCE_" -> ✅ Should download the raw data as a oneliner JSON file
+    > when pressing "_DOWNLOAD FRAMED_" -> ✅ Should download the raw data as a formatted JSON file
+
 #### Expected Result
+
+Downloading the contents should be possible without major errors.
 
 ## 4. Regression Testing
 
 - Check if upon saving a layout, its "dashboardId" is set into the URL.
-- When searching for channels and many channels are displayed, check that no graphical gliches occur (channels behind parant elements etc.)
+- When searching for channels and many channels are displayed, check that no graphical glitches occur (channels behind parant elements etc.)
