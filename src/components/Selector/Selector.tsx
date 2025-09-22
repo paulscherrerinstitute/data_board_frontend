@@ -37,6 +37,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import { defaultKeepSidebarClosedAfterDrag } from "../../helpers/defaults";
 import { SidebarIgnoredMenuProps } from "../../helpers/misc";
+import AutoSizer from "react-virtualized-auto-sizer";
 
 const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
     const { backendUrl } = useApiUrls();
@@ -559,21 +560,29 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                         {error}
                     </Alert>
                 )}
-                <Box sx={styles.autoSizerBoxStyle}>
-                    <ListWindow
-                        role="list"
-                        rowComponent={ListItemRowComponent}
-                        rowCount={filteredChannels.length}
-                        rowHeight={50}
-                        rowProps={{
-                            filteredChannels,
-                            theme,
-                            handleSelectChannel,
-                            handleDeselectChannel,
-                            handleDragStart,
-                        }}
-                    />
-                </Box>
+                <AutoSizer disableWidth>
+                    {({ height }) => (
+                        <div
+                            style={{
+                                display: "flex",
+                            }}
+                        >
+                            <ListWindow
+                                style={{ height: height - 120 }}
+                                rowComponent={ListItemRowComponent}
+                                rowCount={filteredChannels.length}
+                                rowHeight={55}
+                                rowProps={{
+                                    filteredChannels,
+                                    theme,
+                                    handleSelectChannel,
+                                    handleDeselectChannel,
+                                    handleDragStart,
+                                }}
+                            />
+                        </div>
+                    )}
+                </AutoSizer>
             </Box>
         </Box>
     );
