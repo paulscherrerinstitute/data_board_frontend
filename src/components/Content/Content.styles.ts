@@ -22,22 +22,23 @@ export const topBarStyle: SxProps<Theme> = {
     display: "flex",
     justifyContent: "left",
     alignItems: "center",
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#f0f0f0ff",
     borderBottom: "1px solid #ccc",
     overflowX: "auto",
     overflowY: "hidden",
 };
 
 export const getGridContainerStyle = (): SxProps<Theme> => {
-    const initialSidebarAdjustState = JSON.parse(
-        localStorage.getItem("initialSidebarAdjustState") ||
-            JSON.stringify(defaultAdjustSidebarState)
-    ) as InitialAdjustSidebarState;
+    const isMove =
+        (JSON.parse(
+            localStorage.getItem("initialSidebarAdjustState") ||
+                JSON.stringify(defaultAdjustSidebarState)
+        ) as InitialAdjustSidebarState) == "move";
 
     return {
         width: "100%",
         height: "calc(min(90vh, 100vh - 80px))",
-        position: initialSidebarAdjustState == "overlap" ? "fixed" : "sticky",
+        position: isMove ? "sticky" : "fixed",
         left: "2.5vw",
         top: "calc(max(10vh, 80px))",
         display: "flex",
@@ -55,6 +56,7 @@ export const gridItemStyle: SxProps<Theme> = {
     justifyContent: "center",
     alignItems: "center",
     borderRadius: "8px",
+    backgroundColor: "black",
     boxShadow: (theme) => `0 2px 4px ${theme.palette.divider}`,
     transition: "filter 0.3s ease",
     background: (theme) => theme.palette.background.paper,
@@ -96,21 +98,23 @@ export const actionButtonBoxPlaceholderStyle: SxProps<Theme> = {
 };
 
 export const getActionButtonBoxStyle = (): SxProps<Theme> => {
-    const initialSidebarAdjustState = JSON.parse(
-        localStorage.getItem("initialSidebarAdjustState") ||
-            JSON.stringify(defaultAdjustSidebarState)
-    ) as InitialAdjustSidebarState;
+    const isMove =
+        (JSON.parse(
+            localStorage.getItem("initialSidebarAdjustState") ||
+                JSON.stringify(defaultAdjustSidebarState)
+        ) as InitialAdjustSidebarState) == "move";
 
     return {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         gap: "10px",
-        position: initialSidebarAdjustState == "overlap" ? "fixed" : "sticky",
         bottom: 0,
+        position: isMove ? "sticky" : "fixed",
         paddingBottom: "10px",
-        left: "calc(max(30px, 2.5vw) + 20px)",
-        right: 10,
+        left: isMove ? 10 : "calc(max(30px, 2.5vw) + 20px)",
+        right: isMove ? 5 : 10,
+        width: isMove ? "99%" : "100%",
         pointerEvents: "none",
         height: "5vh",
         minHeight: "60px",
@@ -120,4 +124,5 @@ export const getActionButtonBoxStyle = (): SxProps<Theme> => {
 export const actionButtonStyle: SxProps<Theme> = {
     height: "100%",
     pointerEvents: "all",
+    flexShrink: 0.9,
 };
