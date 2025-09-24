@@ -94,7 +94,7 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                 )
             );
         }
-    }, [open]);
+    }, [open, plotSettings]);
 
     // For the sake of simplicity, there is no safe button, updates are applied on safe.
     const saveAndClose = useCallback(() => {
@@ -694,12 +694,9 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                                 index
                                                             ].scaling !== "log"
                                                                 ? {
-                                                                      disableHoverListener:
-                                                                          true,
-                                                                      disableTouchListener:
-                                                                          true,
-                                                                      disableFocusListener:
-                                                                          true,
+                                                                      disableHoverListener: true,
+                                                                      disableTouchListener: true,
+                                                                      disableFocusListener: true,
                                                                   }
                                                                 : {})}
                                                         >
@@ -740,12 +737,9 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                                                                 index
                                                             ].scaling !== "log"
                                                                 ? {
-                                                                      disableHoverListener:
-                                                                          true,
-                                                                      disableTouchListener:
-                                                                          true,
-                                                                      disableFocusListener:
-                                                                          true,
+                                                                      disableHoverListener: true,
+                                                                      disableTouchListener: true,
+                                                                      disableFocusListener: true,
                                                                   }
                                                                 : {})}
                                                         >

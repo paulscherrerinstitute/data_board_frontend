@@ -234,7 +234,7 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
         setTheme,
         onClose,
         setInitialSidebarStateStorage,
-        setInitialSidebarAdjustState,
+        setInitialSidebarAdjustStateStorage,
         setWatermarkOpacityStorage,
         setPlotBackgroundColorStorage,
         setXAxisGridColorStorage,

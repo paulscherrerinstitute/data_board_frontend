@@ -485,7 +485,7 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
                 displaylogo: false,
             });
         }
-    }, [data]);
+    }, [data, layout]);
 
     useEffect(() => {
         const currentPlotDiv = plotRef.current;

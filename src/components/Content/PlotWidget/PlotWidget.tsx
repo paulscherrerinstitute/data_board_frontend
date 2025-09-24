@@ -301,6 +301,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             curveAttributes,
             yAxisAttributes,
             manualAxisAssignment,
+            onUpdatePlotSettings,
         ]);
 
         useEffect(() => {
@@ -388,7 +389,13 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             ) {
                 setCurveAttributes(newCurveAttributes);
             }
-        }, [channels, getChannelIdentifier, manualAxisAssignment]);
+        }, [
+            channels,
+            getChannelIdentifier,
+            manualAxisAssignment,
+            curveAttributes,
+            yAxisAttributes,
+        ]);
 
         useEffect(() => {
             const handleKeyDown = (event: KeyboardEvent) => {
@@ -1024,7 +1031,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 setCurveAttributes(new Map(newPlotSettings.curveAttributes));
                 setYAxisAttributes([...newPlotSettings.yAxisAttributes]);
             },
-            [curveAttributes, yAxisAttributes]
+            []
         );
 
         const data = useMemo(() => {
@@ -1938,7 +1945,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     handleDoubleClick();
                 }
             }
-        }, [data, config, backendUrl]);
+        }, [data, config, backendUrl, handleDoubleClick, layout]);
 
         useEffect(() => {
             const currentPlotDiv = plotRef.current;
