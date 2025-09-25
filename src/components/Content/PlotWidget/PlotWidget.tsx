@@ -393,7 +393,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             channels,
             getChannelIdentifier,
             manualAxisAssignment,
-            curveAttributes,
             yAxisAttributes,
         ]);
 
