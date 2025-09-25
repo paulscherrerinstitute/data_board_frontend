@@ -21,7 +21,7 @@ import {
 import debounce from "lodash/debounce";
 import axios from "axios";
 import { List as ListWindow } from "react-window";
-import { useApiUrls } from "../ApiContext/ApiContext";
+import { useApiUrls } from "../ApiContext/ApiContextHooks";
 import ListItemRowComponent from "./ListItemRow/ListItemRow";
 import * as styles from "./Selector.styles";
 import { throttle } from "lodash";

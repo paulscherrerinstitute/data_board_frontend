@@ -601,6 +601,32 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                     </Box>
 
                     <Box sx={styles.settingBoxStyle}>
+                        <FormControl fullWidth>
+                            <InputLabel>Adjust Sidebar Overlap</InputLabel>
+                            <Tooltip title="Directs behaviour of sidebar in relation to y-axis">
+                                <Select
+                                    value={initialSidebarAdjustState}
+                                    onChange={(e) =>
+                                        setInitialSidebarAdjustState(
+                                            e.target
+                                                .value as InitialAdjustSidebarState
+                                        )
+                                    }
+                                    label="Adjust Sidebar Overlap"
+                                    MenuProps={SidebarIgnoredMenuProps}
+                                >
+                                    <MenuItem value="overlap">
+                                        Overlap Content
+                                    </MenuItem>
+                                    <MenuItem value="move">
+                                        Move Content
+                                    </MenuItem>
+                                </Select>
+                            </Tooltip>
+                        </FormControl>
+                    </Box>
+
+                    <Box sx={styles.settingBoxStyle}>
                         <Tooltip
                             title="0 means no watermark will be visible"
                             arrow
@@ -664,32 +690,6 @@ const GeneralSettingsPopup: React.FC<GeneralSettingsPopupProps> = ({
                             }
                             sx={styles.colorPickerStyle}
                         ></Input>
-                    </Box>
-
-                    <Box sx={styles.settingBoxStyle}>
-                        <FormControl fullWidth>
-                            <InputLabel>Adjust Sidebar Overlap</InputLabel>
-                            <Tooltip title="Directs behaviour of sidebar in relation to y-axis">
-                                <Select
-                                    value={initialSidebarAdjustState}
-                                    onChange={(e) =>
-                                        setInitialSidebarAdjustState(
-                                            e.target
-                                                .value as InitialAdjustSidebarState
-                                        )
-                                    }
-                                    label="Adjust Sidebar Overlap"
-                                    MenuProps={SidebarIgnoredMenuProps}
-                                >
-                                    <MenuItem value="overlap">
-                                        Overlap Content
-                                    </MenuItem>
-                                    <MenuItem value="move">
-                                        Move Content
-                                    </MenuItem>
-                                </Select>
-                            </Tooltip>
-                        </FormControl>
                     </Box>
 
                     <Box sx={styles.settingBoxStyle}>

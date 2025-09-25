@@ -26,7 +26,7 @@ import "react-resizable/css/styles.css";
 import PlotWidget from "./PlotWidget/PlotWidget";
 import { useSearchParams } from "react-router-dom";
 import axios, { AxiosResponse } from "axios";
-import { useApiUrls } from "../ApiContext/ApiContext";
+import { useApiUrls } from "../ApiContext/ApiContextHooks";
 import {
     TimeSelectorHandle,
     TimeValues,
