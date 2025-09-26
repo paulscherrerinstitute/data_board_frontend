@@ -1925,12 +1925,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         );
 
         const handleDoubleClickRef = useRef(handleDoubleClick);
-        const layoutRef = useRef(layout);
 
         useEffect(() => {
             const currentPlotDiv = plotRef.current;
             const handleDoubleClick = handleDoubleClickRef.current;
-            const layout = layoutRef.current;
 
             if (currentPlotDiv) {
                 plotlyDataRef.current = cloneDeep(data);
