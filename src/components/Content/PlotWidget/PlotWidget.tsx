@@ -20,7 +20,7 @@ import {
     Y_AXIS_ASSIGNMENT_OPTIONS,
     USED_Y_AXES,
 } from "./PlotWidget.types";
-import { useApiUrls } from "../../ApiContext/ApiContext";
+import { useApiUrls } from "../../ApiContext/ApiContextHooks";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { cloneDeep, isEqual } from "lodash";
 import * as styles from "./PlotWidget.styles";
@@ -288,7 +288,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             [backendUrl]
         );
 
+        const onUpdatePlotSettingsRef = useRef(onUpdatePlotSettings);
+        const curveAttributesRef = useRef(curveAttributes);
+        const yAxisAttributesRef = useRef(yAxisAttributes);
+
         useEffect(() => {
+            const onUpdatePlotSettings = onUpdatePlotSettingsRef.current;
             onUpdatePlotSettings(index, {
                 plotTitle: plotTitle,
                 curveAttributes: curveAttributes,
@@ -304,6 +309,9 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
         ]);
 
         useEffect(() => {
+            const curveAttributes = curveAttributesRef.current;
+            const yAxisAttributes = yAxisAttributesRef.current;
+
             const newAxisOptions = Y_AXIS_ASSIGNMENT_OPTIONS;
             const newCurveAttributes = new Map<string, CurveAttributes>();
             const newYAxisAttributes = new Array(...yAxisAttributes);
@@ -1024,7 +1032,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 setCurveAttributes(new Map(newPlotSettings.curveAttributes));
                 setYAxisAttributes([...newPlotSettings.yAxisAttributes]);
             },
-            [curveAttributes, yAxisAttributes]
+            []
         );
 
         const data = useMemo(() => {
@@ -1347,6 +1355,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             [`yaxis${index === 0 ? "" : index + 1}`]: {
                                 type: scaling,
                                 autorange: autorange,
+                                automargin: true,
                                 gridcolor: yAxisGridColor,
                                 linecolor: yAxisGridColor,
                                 zerolinecolor: yAxisGridColor,
@@ -1414,6 +1423,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         [`yaxis${index === 0 ? "" : index + 1}`]: {
                             type: scaling,
                             autorange: autorange,
+                            automargin: true,
                             gridcolor: yAxisGridColor,
                             linecolor: yAxisGridColor,
                             zerolinecolor: yAxisGridColor,
@@ -1498,9 +1508,11 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                               title: { text: "Point Index", standoff: 0 },
                               overlaying: "x",
                               side: "top",
+                              automargin: true,
                           }
                         : { visible: false },
                 yaxis: {
+                    automargin: true,
                     gridcolor: yAxisGridColor,
                     linecolor: yAxisGridColor,
                     zerolinecolor: yAxisGridColor,
@@ -1624,6 +1636,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     ],
                 ],
                 doubleClick: false,
+                scrollZoom: true,
             } as Plotly.Config;
         }, [downloadDataCSV, downloadDataJSON, downloadImage, theme]);
 
@@ -1874,8 +1887,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         `Fetching waveform preview for ${choice === "point" ? "selected point" : "zoomed range"}...`,
                                         "info"
                                     );
-                                    waveformPreviewDataIsRequesting.current =
-                                        true;
+                                    waveformPreviewDataIsRequesting.current = true;
                                     try {
                                         const response =
                                             await axios.get<BackendCurveData>(
@@ -1901,8 +1913,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                             error
                                         );
                                     } finally {
-                                        waveformPreviewDataIsRequesting.current =
-                                            false;
+                                        waveformPreviewDataIsRequesting.current = false;
                                     }
                                 }
                             }
@@ -1913,8 +1924,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             [backendUrl]
         );
 
+        const handleDoubleClickRef = useRef(handleDoubleClick);
+
         useEffect(() => {
             const currentPlotDiv = plotRef.current;
+            const handleDoubleClick = handleDoubleClickRef.current;
+
             if (currentPlotDiv) {
                 plotlyDataRef.current = cloneDeep(data);
                 plotlyConfigRef.current = cloneDeep(config);
@@ -1935,7 +1950,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     handleDoubleClick();
                 }
             }
-        }, [data, config, backendUrl]);
+        }, [data, config, backendUrl, handleDoubleClick, layout]);
 
         useEffect(() => {
             const currentPlotDiv = plotRef.current;

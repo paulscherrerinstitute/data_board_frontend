@@ -15,7 +15,7 @@ import showSnackbarAndLog, {
 } from "../../../../helpers/showSnackbar";
 import { DownloadLink, DownloadRawPopupProps } from "./DownloadRawPopup.types";
 import axios from "axios";
-import { useApiUrls } from "../../../ApiContext/ApiContext";
+import { useApiUrls } from "../../../ApiContext/ApiContextHooks";
 
 const DownloadRawPopup: React.FC<DownloadRawPopupProps> = ({
     startTime,

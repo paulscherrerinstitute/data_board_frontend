@@ -7,3 +7,5 @@ export type InitialSidebarState =
     | "alwaysOpen"
     | "alwaysClosed"
     | "closedIfDashboard";
+
+export type InitialAdjustSidebarState = "overlap" | "move";

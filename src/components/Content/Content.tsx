@@ -8,6 +8,10 @@ import React, {
 import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as styles from "./Content.styles";
+import {
+    getGridContainerStyle,
+    getActionButtonBoxStyle,
+} from "./Content.styles";
 import TimeSelector from "./TimeSelector/TimeSelector";
 import * as uuid from "uuid";
 import {
@@ -22,7 +26,7 @@ import "react-resizable/css/styles.css";
 import PlotWidget from "./PlotWidget/PlotWidget";
 import { useSearchParams } from "react-router-dom";
 import axios, { AxiosResponse } from "axios";
-import { useApiUrls } from "../ApiContext/ApiContext";
+import { useApiUrls } from "../ApiContext/ApiContextHooks";
 import {
     TimeSelectorHandle,
     TimeValues,
@@ -692,8 +696,7 @@ const Content: React.FC = () => {
                     onTimeChange={handleTimeChange}
                 />
             </Box>
-
-            <Box sx={styles.gridContainerStyle} ref={gridContainerRef}>
+            <Box sx={getGridContainerStyle()} ref={gridContainerRef}>
                 <div
                     style={{
                         display: "flex",
@@ -810,7 +813,7 @@ const Content: React.FC = () => {
                     </ReactGridLayout>
                     <Box sx={styles.actionButtonBoxPlaceholderStyle}></Box>
                 </div>
-                <Box sx={styles.actionButtonBoxStyle}>
+                <Box sx={getActionButtonBoxStyle()}>
                     <Button
                         onDrop={(event) => handleDrop(event, "-1")}
                         onDragOver={(event) => handleDragOver(event, "-1")}
