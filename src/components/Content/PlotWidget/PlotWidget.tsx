@@ -288,12 +288,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             [backendUrl]
         );
 
-        const onUpdatePlotSettingsRef = useRef(onUpdatePlotSettings);
-        const curveAttributesRef = useRef(curveAttributes);
-        const yAxisAttributesRef = useRef(yAxisAttributes);
-
         useEffect(() => {
-            const onUpdatePlotSettings = onUpdatePlotSettingsRef.current;
             onUpdatePlotSettings(index, {
                 plotTitle: plotTitle,
                 curveAttributes: curveAttributes,
@@ -306,12 +301,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             curveAttributes,
             yAxisAttributes,
             manualAxisAssignment,
+            onUpdatePlotSettings,
         ]);
 
         useEffect(() => {
-            const curveAttributes = curveAttributesRef.current;
-            const yAxisAttributes = yAxisAttributesRef.current;
-
             const newAxisOptions = Y_AXIS_ASSIGNMENT_OPTIONS;
             const newCurveAttributes = new Map<string, CurveAttributes>();
             const newYAxisAttributes = new Array(...yAxisAttributes);
@@ -396,7 +389,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             ) {
                 setCurveAttributes(newCurveAttributes);
             }
-        }, [channels, getChannelIdentifier, manualAxisAssignment]);
+        }, [
+            channels,
+            getChannelIdentifier,
+            manualAxisAssignment,
+            yAxisAttributes,
+        ]);
 
         useEffect(() => {
             const handleKeyDown = (event: KeyboardEvent) => {
@@ -1924,11 +1922,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             [backendUrl]
         );
 
-        const handleDoubleClickRef = useRef(handleDoubleClick);
-
         useEffect(() => {
             const currentPlotDiv = plotRef.current;
-            const handleDoubleClick = handleDoubleClickRef.current;
 
             if (currentPlotDiv) {
                 plotlyDataRef.current = cloneDeep(data);

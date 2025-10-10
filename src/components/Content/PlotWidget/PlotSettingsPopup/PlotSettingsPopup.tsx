@@ -77,12 +77,10 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
         )
     );
     const [localPlotSettings, setLocalPlotSettings] = useState(plotSettings);
-    const plotSettingsRef = useRef(plotSettings);
 
     // When the widget is opened, update the local Plot Settings
     useEffect(() => {
         if (open) {
-            const plotSettings = plotSettingsRef.current;
             setLocalPlotSettings(plotSettings);
 
             setInputsMin(
@@ -96,7 +94,7 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                 )
             );
         }
-    }, [open]);
+    }, [open, plotSettings]);
 
     // For the sake of simplicity, there is no safe button, updates are applied on safe.
     const saveAndClose = useCallback(() => {
