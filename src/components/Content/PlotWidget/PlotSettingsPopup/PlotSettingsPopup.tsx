@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     Dialog,
     DialogTitle,
@@ -94,7 +94,7 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
                 )
             );
         }
-    }, [open, plotSettings]);
+    }, [open]);
 
     // For the sake of simplicity, there is no safe button, updates are applied on safe.
     const saveAndClose = useCallback(() => {
