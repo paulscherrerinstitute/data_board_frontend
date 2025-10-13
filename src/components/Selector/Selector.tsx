@@ -171,6 +171,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
 
     const debouncedSearch = useMemo(
         () =>
+            // eslint-disable-next-line react-hooks/refs -- safe: ref accessed in debounced async callback --> function may be redeclared on render, but not executed on render.
             debounce(async (term: string) => {
                 if (searchIsRunningRef.current) {
                     return;
