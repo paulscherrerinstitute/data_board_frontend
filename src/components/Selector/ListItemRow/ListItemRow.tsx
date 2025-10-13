@@ -95,7 +95,9 @@ export default function ListItemRowComponent({
                             handleDragStart(e, seriesId)
                         }
                     >
-                        <DragIndicatorIcon />
+                        <Tooltip title="Press, hold and drag channel onto plot">
+                            <DragIndicatorIcon />
+                        </Tooltip>
                     </ListItemIcon>
                 )}
             </Box>

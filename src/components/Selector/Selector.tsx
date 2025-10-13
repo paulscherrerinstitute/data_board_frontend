@@ -17,6 +17,7 @@ import {
     Checkbox,
     ListItemText,
     useTheme,
+    Tooltip,
 } from "@mui/material";
 import debounce from "lodash/debounce";
 import axios from "axios";
@@ -538,11 +539,13 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                 </Typography>
                 <Box sx={styles.selectedOptionsStyle}>
                     <Box sx={styles.selectAllStyle}>
-                        <Checkbox
-                            checked={selectAll}
-                            onChange={handleSelectAll}
-                            sx={styles.checkboxStyle}
-                        />
+                        <Tooltip title="Click on a checkbox and press the '+ Add selected' to add a channel to the plot">
+                            <Checkbox
+                                checked={selectAll}
+                                onChange={handleSelectAll}
+                                sx={styles.checkboxStyle}
+                            />
+                        </Tooltip>
                         <Typography>Select All</Typography>
                     </Box>
                     <Button
