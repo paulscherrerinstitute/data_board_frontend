@@ -301,7 +301,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             curveAttributes,
             yAxisAttributes,
             manualAxisAssignment,
-            onUpdatePlotSettings,
         ]);
 
         useEffect(() => {
@@ -389,12 +388,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             ) {
                 setCurveAttributes(newCurveAttributes);
             }
-        }, [
-            channels,
-            getChannelIdentifier,
-            manualAxisAssignment,
-            yAxisAttributes,
-        ]);
+        }, [channels, getChannelIdentifier, manualAxisAssignment]);
 
         useEffect(() => {
             const handleKeyDown = (event: KeyboardEvent) => {
@@ -1030,7 +1024,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 setCurveAttributes(new Map(newPlotSettings.curveAttributes));
                 setYAxisAttributes([...newPlotSettings.yAxisAttributes]);
             },
-            []
+            [curveAttributes, yAxisAttributes]
         );
 
         const data = useMemo(() => {
@@ -1924,7 +1918,6 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
         useEffect(() => {
             const currentPlotDiv = plotRef.current;
-
             if (currentPlotDiv) {
                 plotlyDataRef.current = cloneDeep(data);
                 plotlyConfigRef.current = cloneDeep(config);
@@ -1945,7 +1938,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     handleDoubleClick();
                 }
             }
-        }, [data, config, backendUrl, handleDoubleClick, layout]);
+        }, [data, config, backendUrl]);
 
         useEffect(() => {
             const currentPlotDiv = plotRef.current;
