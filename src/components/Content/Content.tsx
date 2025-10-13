@@ -110,15 +110,25 @@ const Content: React.FC = () => {
                             )
                         );
 
-                    if (existingChannel) {
+                    const newW: Widget[] = widgets.filter((widget) => {
+                        widget.channels.filter((w) => {
+                            channels.filter((c) => {
+                                (w.backend === c.backend &&
+                                    w.name === c.name &&
+                                    w.type === c.type) == false;
+                            }).length > 0;
+                        });
+                    });
+                    const alredyExisting = newW.length == 0;
+
+                    if (alredyExisting) {
                         showSnackbarAndLog(
-                            `Widget already contains the channel: ${existingChannel.name}`,
+                            `Widget already contains selected channels!`,
                             "warning"
                         );
                         return;
                     }
-
-                    const newWidgets = widgets.map((widget) =>
+                    const newWidgets = newW.map((widget) =>
                         widget.layout.i === key
                             ? {
                                   ...widget,
@@ -656,16 +666,27 @@ const Content: React.FC = () => {
                 )
             );
 
-            if (existingChannel) {
+            const newW: Widget[] = widgets.filter((widget) => {
+                widget.channels.filter((w) => {
+                    channels.filter((c) => {
+                        (w.backend === c.backend &&
+                            w.name === c.name &&
+                            w.type === c.type) == false;
+                    }).length > 0;
+                });
+            });
+            const alredyExisting = newW.length == 0;
+
+            if (alredyExisting) {
                 showSnackbarAndLog(
-                    `Widget already contains the channel: ${existingChannel.name}`,
+                    `Widget already contains all selected channels!`,
                     "warning"
                 );
                 return;
             }
 
             // Add channels to the first widget
-            const newWidgets = widgets.map((widget, index) =>
+            const newWidgets = newW.map((widget, index) =>
                 index === 0
                     ? {
                           ...widget,
