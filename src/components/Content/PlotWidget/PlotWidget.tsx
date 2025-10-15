@@ -1572,59 +1572,60 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             return {
                 displaylogo: false,
                 displayModeBar: true,
-                modeBarButtonsToAdd: [
-                    {
-                        name: "downloadCSV",
-                        title: "Download data as csv",
-                        icon: Plotly.Icons.disk,
-                        click: (() => {
-                            downloadDataCSV();
-                        }) as ButtonClickEvent,
-                    },
-                    {
-                        name: "downloadJSON",
-                        title: "Download data as json",
-                        icon: Plotly.Icons.disk,
-                        click: (() => {
-                            downloadDataJSON();
-                        }) as ButtonClickEvent,
-                    },
-                    {
-                        name: "downloadRaw",
-                        title: "Download raw data",
-                        icon: Plotly.Icons.disk,
-                        click: (() => {
-                            setShowRawDownloadPopup(true);
-                        }) as ButtonClickEvent,
-                    },
-                    {
-                        name: "toImage",
-                        title: "Download Picture of the current Plot as PNG",
-                        icon: Plotly.Icons["camera"],
-                        click: (() => {
-                            downloadImage();
-                        }) as ButtonClickEvent,
-                    },
-                    {
-                        name: "plotSettings",
-                        title: "Open Plot Settings",
-                        icon: {
-                            svg:
-                                theme.palette.mode === "dark"
-                                    ? gearIconWhite
-                                    : gearIconBlack,
+                modeBarButtons: [
+                    [
+                        {
+                            name: "downloadCSV",
+                            title: "Download data as csv",
+                            icon: Plotly.Icons.disk,
+                            click: () => {
+                                downloadDataCSV();
+                            },
                         },
-                        click: (() =>
-                            setOpenPlotSettings(true)) as ButtonClickEvent,
-                    },
-                ],
-
-                modeBarButtonsToRemove: [
-                    "lasso2d",
-                    "toImage",
-                    "zoom2d",
-                    "pan2d",
-                    "select2d",
+                        {
+                            name: "downloadJSON",
+                            title: "Download data as json",
+                            icon: Plotly.Icons.disk,
+                            click: () => {
+                                downloadDataJSON();
+                            },
+                        },
+                        {
+                            name: "downloadRaw",
+                            title: "Download raw data",
+                            icon: Plotly.Icons.disk,
+                            click: () => {
+                                setShowRawDownloadPopup(true);
+                            },
+                        },
+                    ],
+                    [
+                        {
+                            name: "toImage",
+                            title: "Download Picture of the current Plot as PNG",
+                            icon: Plotly.Icons["camera"],
+                            click: () => {
+                                downloadImage();
+                            },
+                        },
+                        "zoomIn2d",
+                        "zoomOut2d",
+                        "autoScale2d",
+                        "resetScale2d",
+                    ],
+                    [
+                        {
+                            name: "plotSettings",
+                            title: "Open Plot Settings",
+                            icon: {
+                                svg:
+                                    theme.palette.mode === "dark"
+                                        ? gearIconWhite
+                                        : gearIconBlack,
+                            },
+                            click: () => setOpenPlotSettings(true),
+                        },
+                    ],
                 ],
                 doubleClick: false,
                 scrollZoom: true,
@@ -1921,7 +1922,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 plotlyDataRef.current = cloneDeep(data);
                 plotlyConfigRef.current = cloneDeep(config);
 
-                Plotly.react(
+                Plotly.newPlot(
                     currentPlotDiv,
                     plotlyDataRef.current,
                     plotlyLayoutRef.current || {},
