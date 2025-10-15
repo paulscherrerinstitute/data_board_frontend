@@ -28,7 +28,7 @@ jobs:
           CI: true
       - name: Lint
         # Use npx eslint here so we can pass the explicit config file and include TS files
-        run: npx eslint --config eslint.config.js src --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives
+        run: npx eslint --config eslint.config.js src --ext .js,.jsx,.ts,.tsx
         env:
           CI: true
   test:
