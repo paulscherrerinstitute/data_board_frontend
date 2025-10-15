@@ -27,7 +27,7 @@ import * as styles from "./PlotWidget.styles";
 import { Channel } from "../../Selector/Selector.types";
 import gearIconWhite from "../../../media/gear_white.svg?raw";
 import gearIconBlack from "../../../media/gear_black.svg?raw";
-import Plotly from "plotly.js";
+import Plotly, { ButtonClickEvent } from "plotly.js";
 import { useLocalStorage } from "../../../helpers/useLocalStorage";
 import {
     defaultCurveColors,
@@ -1572,60 +1572,59 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             return {
                 displaylogo: false,
                 displayModeBar: true,
-                modeBarButtons: [
-                    [
-                        {
-                            name: "downloadCSV",
-                            title: "Download data as csv",
-                            icon: Plotly.Icons.disk,
-                            click: () => {
-                                downloadDataCSV();
-                            },
+                modeBarButtonsToAdd: [
+                    {
+                        name: "downloadCSV",
+                        title: "Download data as csv",
+                        icon: Plotly.Icons.disk,
+                        click: (() => {
+                            downloadDataCSV();
+                        }) as ButtonClickEvent,
+                    },
+                    {
+                        name: "downloadJSON",
+                        title: "Download data as json",
+                        icon: Plotly.Icons.disk,
+                        click: (() => {
+                            downloadDataJSON();
+                        }) as ButtonClickEvent,
+                    },
+                    {
+                        name: "downloadRaw",
+                        title: "Download raw data",
+                        icon: Plotly.Icons.disk,
+                        click: (() => {
+                            setShowRawDownloadPopup(true);
+                        }) as ButtonClickEvent,
+                    },
+                    {
+                        name: "toImage",
+                        title: "Download Picture of the current Plot as PNG",
+                        icon: Plotly.Icons["camera"],
+                        click: (() => {
+                            downloadImage();
+                        }) as ButtonClickEvent,
+                    },
+                    {
+                        name: "plotSettings",
+                        title: "Open Plot Settings",
+                        icon: {
+                            svg:
+                                theme.palette.mode === "dark"
+                                    ? gearIconWhite
+                                    : gearIconBlack,
                         },
-                        {
-                            name: "downloadJSON",
-                            title: "Download data as json",
-                            icon: Plotly.Icons.disk,
-                            click: () => {
-                                downloadDataJSON();
-                            },
-                        },
-                        {
-                            name: "downloadRaw",
-                            title: "Download raw data",
-                            icon: Plotly.Icons.disk,
-                            click: () => {
-                                setShowRawDownloadPopup(true);
-                            },
-                        },
-                    ],
-                    [
-                        {
-                            name: "toImage",
-                            title: "Download Picture of the current Plot as PNG",
-                            icon: Plotly.Icons["camera"],
-                            click: () => {
-                                downloadImage();
-                            },
-                        },
-                        "zoomIn2d",
-                        "zoomOut2d",
-                        "autoScale2d",
-                        "resetScale2d",
-                    ],
-                    [
-                        {
-                            name: "plotSettings",
-                            title: "Open Plot Settings",
-                            icon: {
-                                svg:
-                                    theme.palette.mode === "dark"
-                                        ? gearIconWhite
-                                        : gearIconBlack,
-                            },
-                            click: () => setOpenPlotSettings(true),
-                        },
-                    ],
+                        click: (() =>
+                            setOpenPlotSettings(true)) as ButtonClickEvent,
+                    },
+                ],
+
+                modeBarButtonsToRemove: [
+                    "lasso2d",
+                    "toImage",
+                    "zoom2d",
+                    "pan2d",
+                    "select2d",
                 ],
                 doubleClick: false,
                 scrollZoom: true,
