@@ -98,25 +98,17 @@ const Content: React.FC = () => {
                 if (key === "-1") {
                     handleCreateWidget(channels);
                 } else {
-                    // check if target widget contains the same channel
-                    const existingChannel = widgets
-                        .find((widget) => widget.layout.i === key)
-                        ?.channels.find((channel) =>
-                            channels.find(
-                                (newChannel) =>
-                                    newChannel.backend === channel.backend &&
-                                    newChannel.name === channel.name &&
-                                    newChannel.type === channel.type
-                            )
-                        );
-
                     const newW: Widget[] = widgets.filter((widget) => {
-                        widget.channels.filter((w) => {
-                            channels.filter((c) => {
-                                (w.backend === c.backend &&
-                                    w.name === c.name &&
-                                    w.type === c.type) == false;
-                            }).length > 0;
+                        return widget.channels.filter((w) => {
+                            return (
+                                channels.filter((c) => {
+                                    return (
+                                        (w.backend === c.backend &&
+                                            w.name === c.name &&
+                                            w.type === c.type) == false
+                                    );
+                                }).length > 0
+                            );
                         });
                     });
                     const alredyExisting = newW.length == 0;
@@ -654,6 +646,7 @@ const Content: React.FC = () => {
                 return;
             }
 
+            /*
             const firstWidget = widgets[0];
 
             // Check for duplicates
@@ -665,14 +658,19 @@ const Content: React.FC = () => {
                         newChannel.type === channel.type
                 )
             );
+            */
 
             const newW: Widget[] = widgets.filter((widget) => {
-                widget.channels.filter((w) => {
-                    channels.filter((c) => {
-                        (w.backend === c.backend &&
-                            w.name === c.name &&
-                            w.type === c.type) == false;
-                    }).length > 0;
+                return widget.channels.filter((w) => {
+                    return (
+                        channels.filter((c) => {
+                            return (
+                                (w.backend === c.backend &&
+                                    w.name === c.name &&
+                                    w.type === c.type) == false
+                            );
+                        }).length > 0
+                    );
                 });
             });
             const alredyExisting = newW.length == 0;
