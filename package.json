@@ -20,7 +20,7 @@
         "@mui/material": "^7.3.4",
         "@mui/system": "7.3.3",
         "@mui/x-date-pickers": "^8.15.0",
-        "axios": "^1.12.2",
+        "axios": "^1.13.0",
         "dayjs": "^1.11.18",
         "html2canvas": "^1.4.1",
         "lodash": "^4.17.21",
