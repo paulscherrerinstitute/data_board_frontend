@@ -21,7 +21,7 @@
         "@mui/system": "7.3.3",
         "@mui/x-date-pickers": "^8.16.0",
         "axios": "^1.13.1",
-        "dayjs": "^1.11.18",
+        "dayjs": "^1.11.19",
         "html2canvas": "^1.4.1",
         "lodash": "^4.17.21",
         "object-hash": "^3.0.0",
