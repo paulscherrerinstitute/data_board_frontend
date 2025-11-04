@@ -186,8 +186,8 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                 setError(null);
                 setLoading(true);
                 try {
-                    var isRegexFormat = term.match(/\/.*\//g);
-                    var searchText = term;
+                    const isRegexFormat = term.match(/\/.*\//g);
+                    let searchText = term;
                     if (isRegexFormat) {
                         searchText = searchText.replaceAll("/", "").trim();
                         setSearchRegex(searchText);
