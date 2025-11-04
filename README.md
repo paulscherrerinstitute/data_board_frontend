@@ -17,6 +17,8 @@ You can search for channels by using the sidebar to the left. This sidebar can b
 
 The sidebar searches for all channels matching the search string, using [Datahub](https://github.com/paulscherrerinstitute/datahub), which in turn accesses the [Daqbuf API V4](https://data-api.psi.ch/api/4/docs/index.html).
 
+> ℹ️ It supports general searches like 'ABCD:1234' that match the entire string, but it also supports RegExp: By encasing a string between two forward-slashes, it will be treated as RexExp (like '/[a-Z]:.\*:[0-9]/').
+
 The initial width of the sidebar can be configured in the [General Settings](#general).
 
 The filters are dynamically selected based on the data the search returned. If no filters are selected, all values are shown.

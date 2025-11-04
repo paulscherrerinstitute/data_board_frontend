@@ -84,6 +84,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
             const matchesType =
                 selectedTypes.length === 0 ||
                 selectedTypes.includes(channel.attributes.type);
+
             const matchesSearch =
                 !searchRegex ||
                 (regex && regex.test(channel.attributes.name)) ||
@@ -170,6 +171,10 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
         fetchRecent();
     }, [fetchRecent]);
 
+    const escapeRegExp = (str: string) => {
+        return str.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    };
+
     const debouncedSearch = useMemo(
         () =>
             // eslint-disable-next-line react-hooks/refs -- safe: ref accessed in debounced async callback --> function may be redeclared on render, but not executed on render.
@@ -181,13 +186,20 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                 setError(null);
                 setLoading(true);
                 try {
-                    setSearchRegex(term.trim());
+                    var isRegexFormat = term.match(/\/.*\//g);
+                    var searchText = term;
+                    if (isRegexFormat) {
+                        searchText = searchText.replaceAll("/", "").trim();
+                        setSearchRegex(searchText);
+                    } else {
+                        setSearchRegex(`^${escapeRegExp(term.trim())}`);
+                    }
 
                     const response = await axios.get<{
                         channels: Channel[];
                     }>(`${backendUrl}/channels/search`, {
                         params: {
-                            search_text: term,
+                            search_text: searchText,
                         },
                     });
 
