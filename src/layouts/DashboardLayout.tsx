@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Box } from "@mui/material";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Content from "../components/Content/Content";
@@ -11,7 +11,7 @@ const DashboardLayout: React.FC = () => {
 
     const initialSidebarState = JSON.parse(
         localStorage.getItem("initialSidebarState") ||
-            JSON.stringify(defaultInitialSidebarState)
+        JSON.stringify(defaultInitialSidebarState)
     ) as InitialSidebarState;
 
     const isSidebarOpen =

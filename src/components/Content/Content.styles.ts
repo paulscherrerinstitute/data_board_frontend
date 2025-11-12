@@ -26,6 +26,10 @@ export const topBarStyle: SxProps<Theme> = {
     borderBottom: "1px solid #ccc",
     overflowX: "auto",
     overflowY: "hidden",
+
+    "@media (max-width:1000px)": {
+        paddingTop: "10px",
+    },
 };
 
 export const getGridContainerStyle = (): SxProps<Theme> => {
@@ -118,6 +122,20 @@ export const getActionButtonBoxStyle = (): SxProps<Theme> => {
         pointerEvents: "none",
         height: "5vh",
         minHeight: "60px",
+
+        "@media (max-width:1000px)": {
+            position: "sticky",
+            gap: "7px",
+            "& > button": {
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: " center",
+                textTransform: "none",
+                padding: 2,
+                maxWidth: "18%",
+            },
+        },
     };
 };
 
@@ -125,4 +143,6 @@ export const actionButtonStyle: SxProps<Theme> = {
     height: "100%",
     pointerEvents: "all",
     flexShrink: 0.9,
+
+    "@media (max-width:1000px)": {},
 };

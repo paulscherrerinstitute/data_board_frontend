@@ -123,9 +123,9 @@ const Content: React.FC = () => {
                     const newWidgets = newW.map((widget) =>
                         widget.layout.i === key
                             ? {
-                                  ...widget,
-                                  channels: [...widget.channels, ...channels],
-                              }
+                                ...widget,
+                                channels: [...widget.channels, ...channels],
+                            }
                             : widget
                     );
                     setWidgets(newWidgets);
@@ -417,9 +417,9 @@ const Content: React.FC = () => {
                                     searchResults.data.channels.filter(
                                         (returnedChannel) =>
                                             returnedChannel.backend ===
-                                                init_backends[i] &&
+                                            init_backends[i] &&
                                             returnedChannel.name ===
-                                                init_channel_names[i]
+                                            init_channel_names[i]
                                     );
 
                                 if (filteredResults.length == 0) {
@@ -687,9 +687,9 @@ const Content: React.FC = () => {
             const newWidgets = newW.map((widget, index) =>
                 index === 0
                     ? {
-                          ...widget,
-                          channels: [...widget.channels, ...channels],
-                      }
+                        ...widget,
+                        channels: [...widget.channels, ...channels],
+                    }
                     : widget
             );
 
@@ -773,14 +773,14 @@ const Content: React.FC = () => {
                                     initialPlotSettings={
                                         plotSettings
                                             ? {
-                                                  ...plotSettings,
-                                                  curveAttributes: new Map(
-                                                      Object.entries(
-                                                          plotSettings.curveAttributes ||
-                                                              []
-                                                      )
-                                                  ),
-                                              }
+                                                ...plotSettings,
+                                                curveAttributes: new Map(
+                                                    Object.entries(
+                                                        plotSettings.curveAttributes ||
+                                                        []
+                                                    )
+                                                ),
+                                            }
                                             : undefined
                                     }
                                     onChannelsChange={(updatedChannels) => {
@@ -788,10 +788,10 @@ const Content: React.FC = () => {
                                             prevWidgets.map((widget) =>
                                                 widget.layout.i === layout.i
                                                     ? {
-                                                          ...widget,
-                                                          channels:
-                                                              updatedChannels,
-                                                      }
+                                                        ...widget,
+                                                        channels:
+                                                            updatedChannels,
+                                                    }
                                                     : widget
                                             )
                                         );
@@ -813,15 +813,15 @@ const Content: React.FC = () => {
                                             ...prev.map((widget) =>
                                                 widget.layout.i === index
                                                     ? {
-                                                          ...widget,
-                                                          plotSettings: {
-                                                              ...newPlotSettings,
-                                                              curveAttributes:
-                                                                  Object.fromEntries(
-                                                                      newPlotSettings.curveAttributes
-                                                                  ),
-                                                          } as StoredPlotSettings,
-                                                      }
+                                                        ...widget,
+                                                        plotSettings: {
+                                                            ...newPlotSettings,
+                                                            curveAttributes:
+                                                                Object.fromEntries(
+                                                                    newPlotSettings.curveAttributes
+                                                                ),
+                                                        } as StoredPlotSettings,
+                                                    }
                                                     : widget
                                             ),
                                         ]);
@@ -853,28 +853,45 @@ const Content: React.FC = () => {
                         variant="contained"
                         onClick={() => handleSaveDashboard()}
                     >
-                        Save Layout
+                        <span>
+                            Save
+                        </span>
                     </Button>
                     <Button
                         sx={styles.actionButtonStyle}
                         variant="contained"
                         onClick={() => handleCreateDashboard()}
                     >
-                        Save as new Layout
+                        <span>
+                            Save
+                        </span>
+                        <span>
+                            New Layout
+                        </span>
                     </Button>
                     <Button
                         sx={styles.actionButtonStyle}
                         variant="contained"
                         onClick={() => handleDownloadDashboard()}
                     >
-                        Download Layout as JSON
+                        <span>
+                            Download
+                        </span>
+                        <span>
+                            Layout
+                        </span>
                     </Button>
                     <Button
                         sx={styles.actionButtonStyle}
                         variant="contained"
                         onClick={() => handleImportDashboard()}
                     >
-                        Import JSON Layout
+                        <span>
+                            Import
+                        </span>
+                        <span>
+                            Layout
+                        </span>
                     </Button>
                     <Tooltip
                         sx={styles.actionButtonStyle}
@@ -888,8 +905,8 @@ const Content: React.FC = () => {
                             onClick={() => setIsLayoutingMode((prev) => !prev)}
                         >
                             {isLayoutingMode
-                                ? "Disable Layouting Mode"
-                                : "Enable Layouting Mode"}
+                                ? "Disable Layouting"
+                                : "Enable Layouting"}
                         </Button>
                     </Tooltip>
                 </Box>
