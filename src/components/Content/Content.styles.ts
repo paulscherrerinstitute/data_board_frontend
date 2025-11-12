@@ -72,7 +72,7 @@ export const gridItemStyle: SxProps<Theme> = {
 export const menuStyle: SxProps<Theme> = {
     height: "4vw",
     width: "4vw",
-    backgroundColor: "#1976d2",
+    backgroundColor: "rgba(25, 118, 210, 1)",
     color: "#ffffff",
     padding: 1,
     cursor: "pointer",
@@ -136,12 +136,10 @@ export const getActionButtonBoxStyle = (): SxProps<Theme> => {
         width: isMove ? "99%" : "100%",
         height: "5vh",
         minHeight: "60px",
-
         "@media (max-width:1000px)": {
-            position: "sticky",
+            position: "fixed",
             gap: "7px",
             justifyContent: "start",
-            paddingLeft: 2,
             "& > button": {
                 display: "flex",
                 flexDirection: "column",
