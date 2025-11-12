@@ -69,6 +69,21 @@ export const gridItemStyle: SxProps<Theme> = {
     },
 };
 
+export const menuStyle: SxProps<Theme> = {
+    height: "4vw",
+    width: "4vw",
+    backgroundColor: "#1976d2",
+    color: "#ffffff",
+    padding: 1,
+    cursor: "pointer",
+
+    borderRadius: "8px",
+    "@media (max-width: 700px)": {
+        height: "8vw",
+        width: "8vw",
+    },
+};
+
 export const createWidgetStyle: SxProps<Theme> = {
     ...gridItemStyle,
     height: "100%",
@@ -119,13 +134,14 @@ export const getActionButtonBoxStyle = (): SxProps<Theme> => {
         left: isMove ? 10 : "calc(max(30px, 2.5vw) + 20px)",
         right: isMove ? 5 : 10,
         width: isMove ? "99%" : "100%",
-        pointerEvents: "none",
         height: "5vh",
         minHeight: "60px",
 
         "@media (max-width:1000px)": {
             position: "sticky",
             gap: "7px",
+            justifyContent: "start",
+            paddingLeft: 2,
             "& > button": {
                 display: "flex",
                 flexDirection: "column",

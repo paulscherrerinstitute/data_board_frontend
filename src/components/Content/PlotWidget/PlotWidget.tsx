@@ -528,15 +528,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 response?.data.curve[channelIdentifier],
                             [channel.name + "_min"]:
                                 response?.data.curve[
-                                    channelIdentifier + "_min"
+                                channelIdentifier + "_min"
                                 ] || {},
                             [channel.name + "_max"]:
                                 response?.data.curve[
-                                    channelIdentifier + "_max"
+                                channelIdentifier + "_max"
                                 ] || {},
                             [channel.name + "_meta"]:
                                 response?.data.curve[
-                                    channelIdentifier + "_meta"
+                                channelIdentifier + "_meta"
                                 ] || {},
                         },
                     };
@@ -1121,7 +1121,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const color =
                             curveAttributes.get(label)?.color ||
                             initialCurveColors[
-                                index % initialCurveColors.length
+                            index % initialCurveColors.length
                             ];
                         const yAxis =
                             curveAttributes.get(label)?.axisAssignment || "y1";
@@ -1178,7 +1178,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const color =
                             curveAttributes.get(label)?.color ||
                             initialCurveColors[
-                                index % initialCurveColors.length
+                            index % initialCurveColors.length
                             ];
                         const yAxis =
                             curveAttributes.get(label)?.axisAssignment || "y1";
@@ -1358,10 +1358,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 position:
                                     index % 2 === 0
                                         ? index /
-                                          (40 * (window.innerWidth / 2560))
+                                        (40 * (window.innerWidth / 2560))
                                         : 1 -
-                                          index /
-                                              (40 * (window.innerWidth / 2560)),
+                                        index /
+                                        (40 * (window.innerWidth / 2560)),
                                 ...range,
                             },
                         });
@@ -1427,7 +1427,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 index % 2 === 0
                                     ? index / (40 * (window.innerWidth / 2560))
                                     : 1 -
-                                      index / (40 * (window.innerWidth / 2560)),
+                                    index / (40 * (window.innerWidth / 2560)),
                             ...range,
                         },
                     });
@@ -1480,28 +1480,28 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     zerolinecolor: xAxisGridColor,
                     title: hasNonWaveformChannels
                         ? {
-                              title: { text: xLabel },
-                          }
+                            title: { text: xLabel },
+                        }
                         : { text: "Point Index", standoff: 0 },
                     ...{
                         // Specify the width of the X axis to leave enough room for all y axes
                         domain: [
                             0.01 +
-                                leftYAxes / (40 * (window.innerWidth / 2560)),
+                            leftYAxes / (40 * (window.innerWidth / 2560)),
                             1.01 -
-                                rightYAxes /
-                                    (40 * 0.5 * (window.innerWidth / 2560)),
+                            rightYAxes /
+                            (40 * 0.5 * (window.innerWidth / 2560)),
                         ],
                     },
                 },
                 xaxis2:
                     hasNonWaveformChannels && isWaveformPresent
                         ? {
-                              title: { text: "Point Index", standoff: 0 },
-                              overlaying: "x",
-                              side: "top",
-                              automargin: true,
-                          }
+                            title: { text: "Point Index", standoff: 0 },
+                            overlaying: "x",
+                            side: "top",
+                            automargin: true,
+                        }
                         : { visible: false },
                 yaxis: {
                     automargin: true,
@@ -1534,21 +1534,21 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
                         ...(channels.length === 0
                             ? {
-                                  x: 0.5,
-                                  y: 0.5,
-                                  sizex: 1,
-                                  sizey: 1,
-                                  xanchor: "center",
-                                  yanchor: "middle",
-                              }
+                                x: 0.5,
+                                y: 0.5,
+                                sizex: 1,
+                                sizey: 1,
+                                xanchor: "center",
+                                yanchor: "middle",
+                            }
                             : {
-                                  x: 0.5,
-                                  y: 1,
-                                  sizex: 0.2,
-                                  sizey: 0.2,
-                                  xanchor: "center",
-                                  yanchor: "top",
-                              }),
+                                x: 0.5,
+                                y: 1,
+                                sizex: 0.2,
+                                sizey: 0.2,
+                                xanchor: "center",
+                                yanchor: "top",
+                            }),
                     },
                 ],
             } as Plotly.Layout;
@@ -1629,6 +1629,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 ],
                 doubleClick: false,
                 scrollZoom: true,
+                responsive: true,
             } as Plotly.Config;
         }, [downloadDataCSV, downloadDataJSON, downloadImage, theme]);
 
@@ -1818,7 +1819,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                             (acc, obj) =>
                                                 acc +
                                                 (curve.shape[0] as number) *
-                                                    (obj.count ?? 0),
+                                                (obj.count ?? 0),
                                             0
                                         );
 
@@ -2051,7 +2052,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             const color =
                                 curveAttributes.get(label)?.color ||
                                 initialCurveColors[
-                                    index % initialCurveColors.length
+                                index % initialCurveColors.length
                                 ];
 
                             return (

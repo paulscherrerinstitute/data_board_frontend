@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import MenuIcon from "@mui/icons-material/Menu";
 import * as styles from "./Content.styles";
 import {
     getGridContainerStyle,
@@ -154,6 +155,8 @@ const Content: React.FC = () => {
         setDraggedOverKey("");
     };
 
+    const [showMenu, setShowMenu] = useState<boolean>(false);
+
     const handleRemoveWidget = (key: string) => {
         setWidgets((prevWidgets) =>
             prevWidgets.filter((widget) => widget.layout.i !== key)
@@ -228,12 +231,21 @@ const Content: React.FC = () => {
     };
 
     useEffect(() => {
+        if (window.innerWidth < 1200) {
+            setShowMenu(false);
+        } else setShowMenu(true);
         document.addEventListener("mousedown", interceptMouseDown, true); // true for capture phase
 
         return () => {
             document.removeEventListener("mousedown", interceptMouseDown, true);
         };
     }, []);
+
+    useEffect(() => {
+        if (window.innerWidth < 1200) {
+            setShowMenu(false)
+        } else setShowMenu(true);
+    }, [window.innerWidth])
 
     useEffect(() => {
         // In case widgets have been added, scroll to the bottom, but wait a bit for animation to finish
@@ -648,7 +660,7 @@ const Content: React.FC = () => {
 
             /*
             const firstWidget = widgets[0];
-
+    
             // Check for duplicates
             const existingChannel = firstWidget.channels.find((channel) =>
                 channels.find(
@@ -706,6 +718,11 @@ const Content: React.FC = () => {
                 handleAddChannels
             );
     }, [widgets, handleCreateWidget]);
+
+    const toggleMenu = () => {
+        console.log("TOGGLE")
+        setShowMenu(!showMenu);
+    }
 
     return (
         <Box sx={styles.contentContainerStyle}>
@@ -832,87 +849,96 @@ const Content: React.FC = () => {
                     </ReactGridLayout>
                     <Box sx={styles.actionButtonBoxPlaceholderStyle}></Box>
                 </div>
+                <Box>
+                </Box>
                 <Box sx={getActionButtonBoxStyle()}>
-                    <Button
-                        onDrop={(event) => handleDrop(event, "-1")}
-                        onDragOver={(event) => handleDragOver(event, "-1")}
-                        onDragLeave={handleDragLeave}
-                        sx={{
-                            ...styles.actionButtonStyle,
-                            ...styles.createWidgetStyle,
-                            filter:
-                                draggedOverKey === "-1"
-                                    ? "brightness(0.5)"
-                                    : "",
-                        }}
-                        aria-label="Add new"
-                        onClick={() => handleCreateWidget()}
-                    ></Button>
-                    <Button
-                        sx={styles.actionButtonStyle}
-                        variant="contained"
-                        onClick={() => handleSaveDashboard()}
-                    >
-                        <span>
-                            Save
-                        </span>
-                    </Button>
-                    <Button
-                        sx={styles.actionButtonStyle}
-                        variant="contained"
-                        onClick={() => handleCreateDashboard()}
-                    >
-                        <span>
-                            Save
-                        </span>
-                        <span>
-                            New Layout
-                        </span>
-                    </Button>
-                    <Button
-                        sx={styles.actionButtonStyle}
-                        variant="contained"
-                        onClick={() => handleDownloadDashboard()}
-                    >
-                        <span>
-                            Download
-                        </span>
-                        <span>
-                            Layout
-                        </span>
-                    </Button>
-                    <Button
-                        sx={styles.actionButtonStyle}
-                        variant="contained"
-                        onClick={() => handleImportDashboard()}
-                    >
-                        <span>
-                            Import
-                        </span>
-                        <span>
-                            Layout
-                        </span>
-                    </Button>
-                    <Tooltip
-                        sx={styles.actionButtonStyle}
-                        title="Toggles whether or not the plots can be moved and resized"
-                        placement="top"
-                        arrow
-                    >
-                        <Button
-                            variant="contained"
-                            color="secondary"
-                            onClick={() => setIsLayoutingMode((prev) => !prev)}
-                        >
-                            {isLayoutingMode
-                                ? "Disable Layouting"
-                                : "Enable Layouting"}
-                        </Button>
-                    </Tooltip>
+                    {window.innerWidth < 1200 && <MenuIcon sx={styles.menuStyle} onClick={toggleMenu} />}
+                    {showMenu &&
+                        <>
+                            <Button
+                                onDrop={(event) => handleDrop(event, "-1")}
+                                onDragOver={(event) => handleDragOver(event, "-1")}
+                                onDragLeave={handleDragLeave}
+                                sx={{
+                                    ...styles.actionButtonStyle,
+                                    ...styles.createWidgetStyle,
+                                    filter:
+                                        draggedOverKey === "-1"
+                                            ? "brightness(0.5)"
+                                            : "",
+                                }}
+                                aria-label="Add new"
+                                onClick={() => handleCreateWidget()}
+                            ></Button>
+                            <Button
+                                sx={styles.actionButtonStyle}
+                                variant="contained"
+                                onClick={() => handleSaveDashboard()}
+                            >
+                                <span>
+                                    Save
+                                </span>
+                            </Button>
+                            <Button
+                                sx={styles.actionButtonStyle}
+                                variant="contained"
+                                onClick={() => handleCreateDashboard()}
+                            >
+                                <span>
+                                    Save
+                                </span>
+                                <span>
+                                    New Layout
+                                </span>
+                            </Button>
+                            <Button
+                                sx={styles.actionButtonStyle}
+                                variant="contained"
+                                onClick={() => handleDownloadDashboard()}
+                            >
+                                <span>
+                                    Download
+                                </span>
+                                <span>
+                                    Layout
+                                </span>
+                            </Button>
+                            <Button
+                                sx={styles.actionButtonStyle}
+                                variant="contained"
+                                onClick={() => handleImportDashboard()}
+                            >
+                                <span>
+                                    Import
+                                </span>
+                                <span>
+                                    Layout
+                                </span>
+                            </Button>
+                            <Tooltip
+                                sx={styles.actionButtonStyle}
+                                title="Toggles whether or not the plots can be moved and resized"
+                                placement="top"
+                                arrow
+                            >
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    onClick={() => setIsLayoutingMode((prev) => !prev)}
+                                >
+                                    {isLayoutingMode
+                                        ? "Disable Layouting"
+                                        : "Enable Layouting"}
+                                </Button>
+                            </Tooltip>
+                        </>
+                    }
                 </Box>
             </Box>
         </Box>
     );
 };
+
+
 
 export default Content;
