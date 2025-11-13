@@ -27,11 +27,15 @@ export const buttonContainerStyle: SxProps<Theme> = {
     background: (theme) => theme.palette.custom.sidebar.background.primary,
     paddingLeft: "20px",
     borderRadius: 1,
+
+    "@media (max-width:1000px)": {
+        width: "10vw",
+    },
 };
 
 export const toggleButtonStyle: SxProps<Theme> = {
     flex: 1,
-    minWidth: "100%",
+    minWidth: "5%",
     width: "100%",
     margin: 0,
 };
@@ -57,4 +61,21 @@ export const menuButtonStyle: SxProps<Theme> = {
             theme.palette.custom.sidebar.background.primary
         ),
     maxWidth: "100%",
+};
+
+export const selectorStyle = (
+    sidebarWidth: number,
+    windowWidth: number
+): SxProps<Theme> => {
+    return {
+        display:
+            sidebarWidth >= windowWidth * 0.1 && windowWidth >= 200
+                ? "block"
+                : "none",
+        "@media (max-width: 1200px)": {
+            height: "80%",
+            overflowY: "scroll",
+        },
+        height: "100%",
+    };
 };

@@ -26,6 +26,10 @@ export const topBarStyle: SxProps<Theme> = {
     borderBottom: "1px solid #ccc",
     overflowX: "auto",
     overflowY: "hidden",
+
+    "@media (max-width:1000px)": {
+        paddingTop: "10px",
+    },
 };
 
 export const getGridContainerStyle = (): SxProps<Theme> => {
@@ -46,7 +50,7 @@ export const getGridContainerStyle = (): SxProps<Theme> => {
         padding: "16px",
         paddingTop: 0,
         paddingBottom: 0,
-        overflowY: "auto",
+        overflowY: "scroll",
     };
 };
 
@@ -62,6 +66,21 @@ export const gridItemStyle: SxProps<Theme> = {
     background: (theme) => theme.palette.background.paper,
     "&:hover": {
         backgroundColor: (theme) => theme.palette.action.hover,
+    },
+};
+
+export const menuStyle: SxProps<Theme> = {
+    height: "4vw",
+    width: "4vw",
+    backgroundColor: "rgba(25, 118, 210, 1)",
+    color: "#ffffff",
+    padding: 0.4,
+    cursor: "pointer",
+
+    borderRadius: "8px",
+    "@media (max-width: 700px)": {
+        height: "8vw",
+        width: "8vw",
     },
 };
 
@@ -112,12 +131,25 @@ export const getActionButtonBoxStyle = (): SxProps<Theme> => {
         bottom: 0,
         position: isMove ? "sticky" : "fixed",
         paddingBottom: "10px",
-        left: isMove ? 10 : "calc(max(30px, 2.5vw) + 20px)",
+        left: isMove ? 10 : "calc(max(30px, 2.5vw) + 10px)",
         right: isMove ? 5 : 10,
-        width: isMove ? "99%" : "100%",
-        pointerEvents: "none",
+        width: "95%",
         height: "5vh",
         minHeight: "60px",
+        "@media (max-width:1000px)": {
+            position: "fixed",
+            gap: "5px",
+            justifyContent: "start",
+            "& > button": {
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                textTransform: "none",
+                padding: 2,
+                maxWidth: "18%",
+            },
+        },
     };
 };
 
