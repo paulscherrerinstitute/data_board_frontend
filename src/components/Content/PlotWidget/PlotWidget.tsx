@@ -390,6 +390,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             }
         }, [channels, getChannelIdentifier, manualAxisAssignment]);
 
+        const [isSmall, setIsSmall] = useState<boolean>(false);
+
         useEffect(() => {
             const handleKeyDown = (event: KeyboardEvent) => {
                 if (event.key === "Control") {
@@ -405,6 +407,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
 
             window.addEventListener("keydown", handleKeyDown);
             window.addEventListener("keyup", handleKeyUp);
+
+            if (window.innerWidth < 1200) setIsSmall(true);
 
             return () => {
                 window.removeEventListener("keydown", handleKeyDown);
@@ -1628,10 +1632,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                     ],
                 ],
                 doubleClick: false,
-                scrollZoom: true,
+                scrollZoom: !isSmall,
                 responsive: true,
             } as Plotly.Config;
-        }, [downloadDataCSV, downloadDataJSON, downloadImage, theme]);
+        }, [downloadDataCSV, downloadDataJSON, downloadImage, theme, isSmall]);
 
         const handleRelayout = useCallback(
             (e: Readonly<Plotly.PlotRelayoutEvent>) => {

@@ -72,7 +72,10 @@ export const selectorStyle = (
             sidebarWidth >= windowWidth * 0.1 && windowWidth >= 200
                 ? "block"
                 : "none",
+        "@media (max-width: 1200px)": {
+            height: "80%",
+            overflowY: "scroll",
+        },
         height: "100%",
-        overflowY: "scroll",
     };
 };
