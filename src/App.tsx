@@ -4,7 +4,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import { ApiProvider } from "./components/ApiContext/ApiContext";
 import axios from "axios";
 import showSnackbarAndLog, { logToConsole } from "./helpers/showSnackbar";
-import { loginRequest, msalInstance } from "./helpers/auth-config";
+import { msalInstance } from "./helpers/auth-config";
 
 interface EnvWindow extends Window {
     _env_?: {
@@ -53,20 +53,6 @@ const App: React.FC = () => {
             controller.abort();
         };
     }, [apiUrls.backendUrl]);
-
-    useEffect(() => {
-        msalInstance.initialize();
-        const account = msalInstance.getActiveAccount() ?? undefined;
-        console.log(account)
-
-        if (account == null || account == undefined) {
-            msalInstance.loginRedirect({
-                ...loginRequest,
-                account
-            });
-        }
-
-    }, [])
 
     return (
         <ApiProvider apiUrls={apiUrls}>

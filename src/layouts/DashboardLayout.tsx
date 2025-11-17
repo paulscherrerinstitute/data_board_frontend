@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Box } from "@mui/material";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Content from "../components/Content/Content";
 import { defaultInitialSidebarState } from "../helpers/defaults";
 import { InitialSidebarState } from "../components/Sidebar/Sidebar.types";
 import { useSearchParams } from "react-router-dom";
+import { loginRequest, msalInstance } from "../helpers/auth-config";
 
 const DashboardLayout: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -19,6 +20,21 @@ const DashboardLayout: React.FC = () => {
         (initialSidebarState === "alwaysOpen" ||
             (initialSidebarState !== "alwaysClosed" &&
                 !searchParams.get("dashboardId")));
+
+    useEffect(() => {
+        const auth = async () => {
+            const account = msalInstance.getActiveAccount() ?? undefined;
+            await msalInstance.initialize();
+            if (account == null || account == undefined) {
+                await msalInstance.loginRedirect({
+                    ...loginRequest,
+                    account
+                });
+            }
+        }
+        if (msalInstance.getActiveAccount()) auth();
+
+    }, [])
 
     return (
         <>
