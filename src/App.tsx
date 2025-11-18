@@ -4,7 +4,6 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import { ApiProvider } from "./components/ApiContext/ApiContext";
 import axios from "axios";
 import showSnackbarAndLog, { logToConsole } from "./helpers/showSnackbar";
-import { msalInstance } from "./helpers/auth-config";
 
 interface EnvWindow extends Window {
     _env_?: {

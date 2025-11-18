@@ -51,6 +51,8 @@ export const msalConfig = {
     },
 };
 
+export const msalInstance = new PublicClientApplication(msalConfig);
+
 export const loginRequest = {
     scopes: SCOPES,
 };
@@ -89,7 +91,6 @@ export async function isUserAuthenticated(
     }
 }
 
-export const msalInstance = new PublicClientApplication(msalConfig);
 export function useAuthProvider() {
     return { AuthProvider };
 }

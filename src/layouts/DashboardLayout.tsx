@@ -1,10 +1,11 @@
-import React, { useEffect } from "react";
-import { Box } from "@mui/material";
+import React from "react";
+import { Box, Button } from "@mui/material";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Content from "../components/Content/Content";
 import { defaultInitialSidebarState } from "../helpers/defaults";
 import { InitialSidebarState } from "../components/Sidebar/Sidebar.types";
 import { useSearchParams } from "react-router-dom";
+import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
 import { loginRequest, msalInstance } from "../helpers/auth-config";
 
 const DashboardLayout: React.FC = () => {
@@ -21,20 +22,20 @@ const DashboardLayout: React.FC = () => {
             (initialSidebarState !== "alwaysClosed" &&
                 !searchParams.get("dashboardId")));
 
-    useEffect(() => {
-        const auth = async () => {
-            const account = msalInstance.getActiveAccount() ?? undefined;
-            await msalInstance.initialize();
-            if (account == null || account == undefined) {
-                await msalInstance.loginRedirect({
-                    ...loginRequest,
-                    account
-                });
-            }
-        }
-        if (msalInstance.getActiveAccount()) auth();
+    const handleLogin = async () => {
+        const activeAccount = msalInstance.getActiveAccount();
 
-    }, [])
+        if (activeAccount) {
+            msalInstance.acquireTokenSilent({
+                ...loginRequest,
+                account: activeAccount,
+            });
+        } else {
+            msalInstance.loginRedirect({
+                ...loginRequest
+            })
+        }
+    }
 
     return (
         <>
@@ -59,8 +60,16 @@ const DashboardLayout: React.FC = () => {
                     }
                     maxWidthPercent={Math.min(80, (100 * 800) / window.innerWidth)}
                 />
-                <Content />
-            </Box>
+                <Box sx={{ display: "flex", marginInline: `auto`, alignItems: "center" }}>
+                    <UnauthenticatedTemplate>
+                        <Button sx={{ height: "50px" }} variant="contained" onClick={handleLogin}>Log in</Button>
+                    </UnauthenticatedTemplate>
+                </Box>
+
+                <AuthenticatedTemplate>
+                    <Content />
+                </AuthenticatedTemplate>
+            </Box >
             <Box sx={{
                 "@media (orientation: portrait)": {
                     display: "flex",

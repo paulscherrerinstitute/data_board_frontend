@@ -9,7 +9,6 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-
     if (!msalInstance.getActiveAccount() && msalInstance.getAllAccounts().length > 0) {
         msalInstance.setActiveAccount(msalInstance.getAllAccounts()[0]);
     }

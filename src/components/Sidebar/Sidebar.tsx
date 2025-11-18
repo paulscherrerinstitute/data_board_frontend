@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import LogOutIcon from "@mui/icons-material/Logout";
 import { Resizable } from "re-resizable";
 import { SidebarProps } from "./Sidebar.types";
 import * as styles from "./Sidebar.styles";
@@ -9,6 +10,8 @@ import Selector from "../Selector/Selector";
 import GeneralSettingsPopup from "../GeneralSettingsPopup/GeneralSettingsPopup";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import { defaultCloseSidebarOnOutsideClick } from "../../helpers/defaults";
+import { msalInstance } from "../../helpers/auth-config";
+import { AuthenticatedTemplate } from "@azure/msal-react";
 
 const Sidebar: React.FC<SidebarProps> = ({
     initialWidthPercent = 10,
@@ -123,6 +126,13 @@ const Sidebar: React.FC<SidebarProps> = ({
         );
     };
 
+    const handleLogOut = () => {
+        const logoutRequest = {
+            account: msalInstance.getActiveAccount(),
+        }
+        msalInstance.logoutRedirect(logoutRequest);
+    }
+
     return (
         <Box sx={styles.sidebarStyle} ref={sidebarRef}>
             <Resizable
@@ -140,18 +150,21 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* Option buttons */}
                 <Box sx={styles.buttonOptionsStyle}>
-                    <IconButton
-                        sx={styles.menuButtonStyle}
-                        onClick={() => setOpenSettings(true)}
-                    >
-                        <Tooltip
-                            title="Open General Settings"
-                            arrow
-                            placement="right"
+                    <AuthenticatedTemplate>
+
+                        <IconButton
+                            sx={styles.menuButtonStyle}
+                            onClick={() => setOpenSettings(true)}
                         >
-                            <SettingsIcon />
-                        </Tooltip>
-                    </IconButton>
+                            <Tooltip
+                                title="Open General Settings"
+                                arrow
+                                placement="right"
+                            >
+                                <SettingsIcon />
+                            </Tooltip>
+                        </IconButton>
+                    </AuthenticatedTemplate>
                     <IconButton
                         sx={styles.menuButtonStyle}
                         href="https://github.com/paulscherrerinstitute/data_board_frontend/blob/main/README.md"
@@ -166,6 +179,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                             <HelpOutlineIcon />
                         </Tooltip>
                     </IconButton>
+                    <AuthenticatedTemplate>
+                        <IconButton>
+                            <Tooltip title="Log Out">
+                                <LogOutIcon sx={styles.menuButtonStyle} onClick={handleLogOut} />
+                            </Tooltip>
+                        </IconButton>
+                    </AuthenticatedTemplate>
 
                     <GeneralSettingsPopup
                         open={openSettings}
@@ -177,7 +197,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <Box
                     sx={styles.selectorStyle(sidebarWidth, windowWidth)}
                 >
-                    <Selector setSidebarIsFocused={setSidebarFocus} />
+                    <AuthenticatedTemplate>
+
+                        <Selector setSidebarIsFocused={setSidebarFocus} />
+                    </AuthenticatedTemplate>
                 </Box>
             </Resizable>
         </Box>
