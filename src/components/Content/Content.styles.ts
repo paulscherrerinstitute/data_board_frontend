@@ -157,4 +157,7 @@ export const actionButtonStyle: SxProps<Theme> = {
     height: "100%",
     pointerEvents: "all",
     flexShrink: 0.9,
+    "& > span": {
+        margin: 0.25,
+    },
 };

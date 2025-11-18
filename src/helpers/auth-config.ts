@@ -14,7 +14,7 @@ export const msalConfig = {
     auth: {
         clientId: CLIENT, //ENV?.RPM_PACKAGES_AUTH_CLIENT_ID ?? "",
         authority: AUTHORITY, //ENV?.RPM_PACKAGES_AUTH_AUTHORITY ?? "",
-        redirectUri: "/",
+        redirectUri: window.location.origin,
     },
     cache: {
         cacheLocation: "sessionStorage",
@@ -56,40 +56,6 @@ export const msalInstance = new PublicClientApplication(msalConfig);
 export const loginRequest = {
     scopes: SCOPES,
 };
-
-export function redoAuthentication({
-    setIsAuthenticated,
-    msalInstance,
-}: {
-    setIsAuthenticated?: (value: boolean) => void;
-    msalInstance: PublicClientApplication;
-}) {
-    const activeAccount = msalInstance.getActiveAccount();
-
-    if (activeAccount) {
-        msalInstance.acquireTokenSilent({
-            ...loginRequest,
-            account: activeAccount,
-        });
-        if (setIsAuthenticated) setIsAuthenticated(true);
-        return true;
-    } else {
-        if (setIsAuthenticated) setIsAuthenticated(false);
-        return false;
-    }
-}
-
-export async function isUserAuthenticated(
-    msalInstance: PublicClientApplication
-) {
-    if (msalInstance.getActiveAccount()) {
-        return true;
-    } else {
-        redoAuthentication({ msalInstance });
-        window.location.reload();
-        return false;
-    }
-}
 
 export function useAuthProvider() {
     return { AuthProvider };

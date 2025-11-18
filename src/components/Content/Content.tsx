@@ -876,7 +876,10 @@ const Content: React.FC = () => {
                                 onClick={() => handleSaveDashboard()}
                             >
                                 <span>
-                                    Update Current
+                                    Update
+                                </span>
+                                <span>
+                                    Current
                                 </span>
                             </Button>
                             <Button

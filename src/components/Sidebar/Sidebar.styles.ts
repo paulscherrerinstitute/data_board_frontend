@@ -79,3 +79,10 @@ export const selectorStyle = (
         height: "100%",
     };
 };
+
+export const unauthenticatedMessageStyle: SxProps<Theme> = {
+    color: "white",
+    display: "flex",
+    justifyContent: "center",
+    marginTop: 50,
+};

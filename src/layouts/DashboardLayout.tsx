@@ -7,6 +7,7 @@ import { InitialSidebarState } from "../components/Sidebar/Sidebar.types";
 import { useSearchParams } from "react-router-dom";
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
 import { loginRequest, msalInstance } from "../helpers/auth-config";
+import * as styles from "./DashboardLayout.styles";
 
 const DashboardLayout: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -40,17 +41,7 @@ const DashboardLayout: React.FC = () => {
     return (
         <>
             <Box
-                sx={{
-                    "@media (orientation: portrait)": {
-                        display: "none"
-                    },
-                    "@media (orientation: landscape)": {
-                        display: "flex",
-                        height: "100vh",
-                        width: "100vw",
-                        overflow: "hidden",
-                    }
-                }}
+                sx={styles.layoutWrapper}
             >
                 <Sidebar
                     initialWidthPercent={
@@ -60,27 +51,16 @@ const DashboardLayout: React.FC = () => {
                     }
                     maxWidthPercent={Math.min(80, (100 * 800) / window.innerWidth)}
                 />
-                <Box sx={{ display: "flex", marginInline: `auto`, alignItems: "center" }}>
+                <Box sx={styles.loginButtonWrapper}>
                     <UnauthenticatedTemplate>
-                        <Button sx={{ height: "50px" }} variant="contained" onClick={handleLogin}>Log in</Button>
+                        <Button sx={styles.loginButton} variant="contained" onClick={handleLogin}>Log in</Button>
                     </UnauthenticatedTemplate>
                 </Box>
-
                 <AuthenticatedTemplate>
                     <Content />
                 </AuthenticatedTemplate>
             </Box >
-            <Box sx={{
-                "@media (orientation: portrait)": {
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    paddingBlock: "80%",
-                },
-                "@media (orientation: landscape)": {
-                    display: "none"
-                }
-            }}>Turn your phone sideways to view the page!</Box>
+            <Box sx={styles.turnPhoneMessageWrapper}>Turn your phone sideways to view the page!</Box>
         </>
     );
 };

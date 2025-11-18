@@ -11,7 +11,7 @@ import GeneralSettingsPopup from "../GeneralSettingsPopup/GeneralSettingsPopup";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import { defaultCloseSidebarOnOutsideClick } from "../../helpers/defaults";
 import { msalInstance } from "../../helpers/auth-config";
-import { AuthenticatedTemplate } from "@azure/msal-react";
+import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
 
 const Sidebar: React.FC<SidebarProps> = ({
     initialWidthPercent = 10,
@@ -182,7 +182,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <AuthenticatedTemplate>
                         <IconButton>
                             <Tooltip title="Log Out">
-                                <LogOutIcon sx={styles.menuButtonStyle} onClick={handleLogOut} />
+                                <LogOutIcon sx={{ ...styles.menuButtonStyle, color: "rgb(255, 75, 30)" }} onClick={handleLogOut} />
                             </Tooltip>
                         </IconButton>
                     </AuthenticatedTemplate>
@@ -198,9 +198,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                     sx={styles.selectorStyle(sidebarWidth, windowWidth)}
                 >
                     <AuthenticatedTemplate>
-
                         <Selector setSidebarIsFocused={setSidebarFocus} />
                     </AuthenticatedTemplate>
+                    <UnauthenticatedTemplate>
+                        <Box sx={styles.unauthenticatedMessageStyle}>Log in to view channels and widgets</Box>
+                    </UnauthenticatedTemplate>
                 </Box>
             </Resizable>
         </Box>
