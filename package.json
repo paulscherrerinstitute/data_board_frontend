@@ -19,7 +19,7 @@
         "@mui/icons-material": "^7.3.5",
         "@mui/material": "^7.3.5",
         "@mui/system": "7.3.5",
-        "@mui/x-date-pickers": "^8.18.0",
+        "@mui/x-date-pickers": "^8.19.0",
         "axios": "^1.13.2",
         "dayjs": "^1.11.19",
         "html2canvas": "^1.4.1",
