@@ -357,6 +357,9 @@ If you want to add a feature or extend the application in any other way, please 
 
 For any contribution to be merged, all pipelines need to be successful, and the linter should not give any errors. (Warnings are tolerated if reasonable). Additionally, all new features need to be documented here.
 
+Tip: If you only want to update the frontend, you dont need to set up a local backend. Simply make your frontend point to the actual backend ;=)
+To do this, you can edit [`public/env-config.js`](./public/env-config.js) to have **DATA_BOARD_PUBLIC_BACKEND_URL** set to `http://databoard.psi.ch/api/`.
+
 ### 🎨 Adding Custom Themes
 
 Adding a custom theme can be done by opening a PR with the following changes:
