@@ -79,6 +79,8 @@ The query parameters are defined for all plots and can be set in the topbar. Mak
 
 - **Quick Select:** You can also utilise quick select to get an absolute timestamp for relative time. If you apply the query parameters, relative times will be recalculated, if quick select is active.
 
+<span id="raw-when-sparse"></span>
+
 - **Raw when sparse:** This toggle defines if the curves should be drawn using raw data if there are not enough points for binned data. This simply removes unnecessary min/max curves and is highly recommended to stay activated.
 
 <span id="remove-empty-bins"></span>
@@ -297,7 +299,7 @@ This is unfortunately not supported by the timepicker of barely any browser. You
 
 #### No data available in selected timerange, but other tools show data?
 
-It might be that other tools simply show empty / propagated bins, that have a count of 0. These are filtered out by default. Try [showing them](#remove-empty-bins) to see if you still see no data. Make sure to apply after showing!
+It might be that other tools simply show empty / propagated bins, that have a count of 0. These are filtered out by default. Try [showing them](#remove-empty-bins) (also [disable raw data if sparse](#raw-when-sparse)) to see if you still see no data. Make sure to apply after showing!
 
 ---
 
