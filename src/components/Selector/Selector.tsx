@@ -17,6 +17,7 @@ import {
     Checkbox,
     ListItemText,
     useTheme,
+    Tooltip,
 } from "@mui/material";
 import debounce from "lodash/debounce";
 import axios from "axios";
@@ -83,6 +84,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
             const matchesType =
                 selectedTypes.length === 0 ||
                 selectedTypes.includes(channel.attributes.type);
+
             const matchesSearch =
                 !searchRegex ||
                 (regex && regex.test(channel.attributes.name)) ||
@@ -169,8 +171,13 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
         fetchRecent();
     }, [fetchRecent]);
 
+    const escapeRegExp = (str: string) => {
+        return str.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    };
+
     const debouncedSearch = useMemo(
         () =>
+            // eslint-disable-next-line react-hooks/refs -- safe: ref accessed in debounced async callback --> function may be redeclared on render, but not executed on render.
             debounce(async (term: string) => {
                 if (searchIsRunningRef.current) {
                     return;
@@ -179,13 +186,20 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                 setError(null);
                 setLoading(true);
                 try {
-                    setSearchRegex(term.trim());
+                    const isRegexFormat = term.match(/\/.*\//g);
+                    let searchText = term;
+                    if (isRegexFormat) {
+                        searchText = searchText.replaceAll("/", "").trim();
+                        setSearchRegex(searchText);
+                    } else {
+                        setSearchRegex(`^${escapeRegExp(term.trim())}`);
+                    }
 
                     const response = await axios.get<{
                         channels: Channel[];
                     }>(`${backendUrl}/channels/search`, {
                         params: {
-                            search_text: term,
+                            search_text: searchText,
                         },
                     });
 
@@ -537,11 +551,13 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                 </Typography>
                 <Box sx={styles.selectedOptionsStyle}>
                     <Box sx={styles.selectAllStyle}>
-                        <Checkbox
-                            checked={selectAll}
-                            onChange={handleSelectAll}
-                            sx={styles.checkboxStyle}
-                        />
+                        <Tooltip title="Click on a checkbox and press the '+ Add selected' to add a channel to the plot">
+                            <Checkbox
+                                checked={selectAll}
+                                onChange={handleSelectAll}
+                                sx={styles.checkboxStyle}
+                            />
+                        </Tooltip>
                         <Typography>Select All</Typography>
                     </Box>
                     <Button

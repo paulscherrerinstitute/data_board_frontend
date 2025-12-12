@@ -11,7 +11,7 @@ const DashboardLayout: React.FC = () => {
 
     const initialSidebarState = JSON.parse(
         localStorage.getItem("initialSidebarState") ||
-            JSON.stringify(defaultInitialSidebarState)
+        JSON.stringify(defaultInitialSidebarState)
     ) as InitialSidebarState;
 
     const isSidebarOpen =
@@ -21,24 +21,42 @@ const DashboardLayout: React.FC = () => {
                 !searchParams.get("dashboardId")));
 
     return (
-        <Box
-            sx={{
-                display: "flex",
-                height: "100vh",
-                width: "100vw",
-                overflow: "hidden",
-            }}
-        >
-            <Sidebar
-                initialWidthPercent={
-                    isSidebarOpen
-                        ? Math.min(30, (100 * 800) / window.innerWidth)
-                        : 0
+        <>
+            <Box
+                sx={{
+                    "@media (orientation: portrait)": {
+                        display: "none"
+                    },
+                    "@media (orientation: landscape)": {
+                        display: "flex",
+                        height: "100vh",
+                        width: "100vw",
+                        overflow: "hidden",
+                    }
+                }}
+            >
+                <Sidebar
+                    initialWidthPercent={
+                        isSidebarOpen
+                            ? Math.min(30, (100 * 800) / window.innerWidth)
+                            : 0
+                    }
+                    maxWidthPercent={Math.min(80, (100 * 800) / window.innerWidth)}
+                />
+                <Content />
+            </Box>
+            <Box sx={{
+                "@media (orientation: portrait)": {
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    paddingBlock: "80%",
+                },
+                "@media (orientation: landscape)": {
+                    display: "none"
                 }
-                maxWidthPercent={Math.min(80, (100 * 800) / window.innerWidth)}
-            />
-            <Content />
-        </Box>
+            }}>Turn your phone sideways to view the page!</Box>
+        </>
     );
 };
 

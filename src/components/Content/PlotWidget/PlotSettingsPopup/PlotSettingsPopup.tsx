@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     Dialog,
     DialogTitle,
@@ -77,12 +77,10 @@ const PlotSettingsPopup: React.FC<PlotSettingsPopupProps> = ({
         )
     );
     const [localPlotSettings, setLocalPlotSettings] = useState(plotSettings);
-    const plotSettingsRef = useRef(plotSettings);
 
     // When the widget is opened, update the local Plot Settings
     useEffect(() => {
         if (open) {
-            const plotSettings = plotSettingsRef.current;
             setLocalPlotSettings(plotSettings);
 
             setInputsMin(

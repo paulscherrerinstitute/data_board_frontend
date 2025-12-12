@@ -80,12 +80,6 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
 
         const localRef = useRef<LocalTimeSelectorHandle>(null);
 
-        useImperativeHandle(localRef, () => ({
-            autoApply: () => {
-                handleApply();
-            },
-        }));
-
         useEffect(() => {
             const handleResize = () => {
                 setOptionsCollapsed(
@@ -264,6 +258,12 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             startTime,
             historyIndex,
         ]);
+
+        useImperativeHandle(localRef, () => ({
+            autoApply: () => {
+                handleApply();
+            },
+        }));
 
         const simulateAutoApplyPress = () => {
             setIsAutoApplyPressSimulated(true);

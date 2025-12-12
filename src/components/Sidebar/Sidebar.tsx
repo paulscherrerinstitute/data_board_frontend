@@ -175,14 +175,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* Selector */}
                 <Box
-                    sx={{
-                        display:
-                            sidebarWidth >= windowWidth * 0.1 &&
-                            windowWidth >= 200
-                                ? "block"
-                                : "none",
-                        height: "100%",
-                    }}
+                    sx={styles.selectorStyle(sidebarWidth, windowWidth)}
                 >
                     <Selector setSidebarIsFocused={setSidebarFocus} />
                 </Box>

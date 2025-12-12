@@ -17,6 +17,8 @@ You can search for channels by using the sidebar to the left. This sidebar can b
 
 The sidebar searches for all channels matching the search string, using [Datahub](https://github.com/paulscherrerinstitute/datahub), which in turn accesses the [Daqbuf API V4](https://data-api.psi.ch/api/4/docs/index.html).
 
+> ℹ️ It supports general searches like 'ABCD:1234' that match the entire string, but it also supports RegExp: By encasing a string between two forward-slashes, it will be treated as RexExp (like '/[a-Z]:.\*:[0-9]/').
+
 The initial width of the sidebar can be configured in the [General Settings](#general).
 
 The filters are dynamically selected based on the data the search returned. If no filters are selected, all values are shown.
@@ -63,7 +65,7 @@ To also make the sidebar be collaped on load, you may specify the `closeSidebar`
 
 ### Set Query Parameters
 
-The query parameters are defined for all plots and can be set in the topbar.
+The query parameters are defined for all plots and can be set in the topbar. Make sure to click apply after changing any query parameters!
 
 - **Timerange:** The timerange can be defined using local time. If your browser's date/time picker doesn't support seconds, you can click in the text field and set the seconds there.
 
@@ -77,7 +79,11 @@ The query parameters are defined for all plots and can be set in the topbar.
 
 - **Quick Select:** You can also utilise quick select to get an absolute timestamp for relative time. If you apply the query parameters, relative times will be recalculated, if quick select is active.
 
+<span id="raw-when-sparse"></span>
+
 - **Raw when sparse:** This toggle defines if the curves should be drawn using raw data if there are not enough points for binned data. This simply removes unnecessary min/max curves and is highly recommended to stay activated.
+
+<span id="remove-empty-bins"></span>
 
 - **Remove empty bins:** Traditionally, if a bin has no data in it, the bin will have no min or max but a value, and this is taken from the last bin that has data. This can be seen as duplicated (and undesirable) data points, but it could also be argued to be logical, as some may wish to assume that the data remains as it was previously if no event indicating otherwise has occurred. This toggle specifies whether such "duplicated" data points should be displayed or filtered out (removed).
 
@@ -291,6 +297,10 @@ If your browser yells at you about too many WebGL contexts:
 
 This is unfortunately not supported by the timepicker of barely any browser. You **can**, however, specify the milliseconds by adjusting the Unix timestamps in the URL parameters.
 
+#### No data available in selected timerange, but other tools show data?
+
+It might be that other tools simply show empty / propagated bins, that have a count of 0. These are filtered out by default. Try [showing them](#remove-empty-bins) (also [disable raw data if sparse](#raw-when-sparse)) to see if you still see no data. Make sure to apply after showing!
+
 ---
 
 ## 🛠️ Build
@@ -346,6 +356,9 @@ If you find any bugs, please open a GitHub issue.
 If you want to add a feature or extend the application in any other way, please get in contact with the [current maintainer](#contact--support).
 
 For any contribution to be merged, all pipelines need to be successful, and the linter should not give any errors. (Warnings are tolerated if reasonable). Additionally, all new features need to be documented here.
+
+Tip: If you only want to update the frontend, you dont need to set up a local backend. Simply make your frontend point to the actual backend ;=)
+To do this, you can edit [`public/env-config.js`](./public/env-config.js) to have **DATA_BOARD_PUBLIC_BACKEND_URL** set to `http://databoard.psi.ch/api/`.
 
 ### 🎨 Adding Custom Themes
 

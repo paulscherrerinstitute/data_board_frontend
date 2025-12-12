@@ -20,108 +20,107 @@ const LegendEntry: React.FC<{
     onChannelDragStart,
     handleRemoveCurve,
 }) => {
-    const [isSmall, setIsSmall] = useState(false);
-    const legendEntryRef = useRef<HTMLDivElement | null>(null);
+        const [isSmall, setIsSmall] = useState(false);
+        const legendEntryRef = useRef<HTMLDivElement | null>(null);
 
-    useEffect(() => {
-        const observer = new ResizeObserver(() => {
-            if (legendEntryRef.current) {
-                const width = legendEntryRef.current.offsetWidth;
-                setIsSmall(width < 200);
-            }
-        });
+        useEffect(() => {
+            const observer = new ResizeObserver(() => {
+                if (legendEntryRef.current) {
+                    const width = legendEntryRef.current.offsetWidth;
+                    setIsSmall(width < 200);
+                }
+            });
 
-        const currentRef = legendEntryRef.current;
+            const currentRef = legendEntryRef.current;
 
-        if (currentRef) {
-            observer.observe(currentRef);
-        }
-
-        return () => {
             if (currentRef) {
-                observer.unobserve(currentRef);
+                observer.observe(currentRef);
             }
-        };
-    }, []);
 
-    return (
-        <Box
-            className="legendEntry"
-            ref={legendEntryRef}
-            sx={{
-                ...styles.legendEntryStyle,
-                flexDirection: isSmall ? "column" : "row",
-                alignItems: isSmall ? "center" : "flex-start",
-            }}
-        >
+            return () => {
+                if (currentRef) {
+                    observer.unobserve(currentRef);
+                }
+            };
+        }, []);
+
+        return (
             <Box
+                className="legendEntry"
+                ref={legendEntryRef}
                 sx={{
-                    alignSelf: isSmall ? "unset" : "center",
-                }}
-            >
-                {curve.isLoading ? (
-                    <CircularProgress
-                        size="1rem"
-                        disableShrink={true}
-                        sx={styles.statusSymbolStyle}
-                    />
-                ) : curve.error ? (
-                    <Tooltip title={curve.error} arrow>
-                        <ErrorOutlineIcon color="error" />
-                    </Tooltip>
-                ) : (
-                    <span
-                        style={{
-                            display: "inline-block",
-                            width: "16px",
-                            height: "16px",
-                            backgroundColor: color,
-                        }}
-                    ></span>
-                )}
-            </Box>
-            <span
-                style={{
-                    overflowWrap: "break-word",
-                    maxWidth: isSmall ? "" : "calc(100% - 100px)",
-                    textAlign: isSmall ? "center" : "left",
-                    writingMode: isSmall ? "vertical-rl" : "horizontal-tb",
-                }}
-            >
-                {displayLabel}
-            </span>
-            <Box
-                sx={{
-                    ...styles.interactiveLegendElementsStyle,
+                    ...styles.legendEntryStyle,
                     flexDirection: isSmall ? "column" : "row",
-                    marginLeft: isSmall ? "0" : "auto",
-                    alignSelf: isSmall ? "unset" : "center",
+                    alignItems: isSmall ? "center" : "flex-start",
                 }}
             >
                 <Box
-                    sx={styles.dragIconStyle}
-                    draggable={true}
-                    onDragStart={(e: React.DragEvent) => {
-                        onChannelDragStart(e, curve);
+                    sx={{
+                        alignSelf: isSmall ? "unset" : "center",
                     }}
                 >
-                    <DragIndicatorIcon />
+                    {curve.isLoading ? (
+                        <CircularProgress
+                            size="1rem"
+                            disableShrink={true}
+                            sx={styles.statusSymbolStyle}
+                        />
+                    ) : curve.error ? (
+                        <Tooltip title={curve.error} arrow>
+                            <ErrorOutlineIcon color="error" />
+                        </Tooltip>
+                    ) : (
+                        <span
+                            style={{
+                                display: "inline-block",
+                                width: "16px",
+                                height: "16px",
+                                backgroundColor: color,
+                            }}
+                        ></span>
+                    )}
                 </Box>
-                <button
+                <span
                     style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "red",
-                        fontWeight: "bold",
+                        overflowWrap: "break-word",
+                        maxWidth: isSmall ? "" : "calc(100% - 100px)",
+                        textAlign: isSmall ? "center" : "left",
                     }}
-                    onClick={() => handleRemoveCurve(label)}
                 >
-                    ✖
-                </button>
+                    {displayLabel}
+                </span>
+                <Box
+                    sx={{
+                        ...styles.interactiveLegendElementsStyle,
+                        flexDirection: "row",
+                        marginLeft: isSmall ? "0" : "auto",
+                        alignSelf: isSmall ? "unset" : "center",
+                    }}
+                >
+                    <Box
+                        sx={styles.dragIconStyle}
+                        draggable={true}
+                        onDragStart={(e: React.DragEvent) => {
+                            onChannelDragStart(e, curve);
+                        }}
+                    >
+                        {!isSmall && <DragIndicatorIcon />}
+                    </Box>
+                    <button
+                        style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            color: "red",
+                            fontWeight: "bold",
+                        }}
+                        onClick={() => handleRemoveCurve(label)}
+                    >
+                        ✖
+                    </button>
+                </Box>
             </Box>
-        </Box>
-    );
-};
+        );
+    };
 
 export default LegendEntry;

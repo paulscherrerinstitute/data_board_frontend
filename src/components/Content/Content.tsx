@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import MenuIcon from "@mui/icons-material/Menu";
 import * as styles from "./Content.styles";
 import {
     getGridContainerStyle,
@@ -98,32 +99,34 @@ const Content: React.FC = () => {
                 if (key === "-1") {
                     handleCreateWidget(channels);
                 } else {
-                    // check if target widget contains the same channel
-                    const existingChannel = widgets
-                        .find((widget) => widget.layout.i === key)
-                        ?.channels.find((channel) =>
-                            channels.find(
-                                (newChannel) =>
-                                    newChannel.backend === channel.backend &&
-                                    newChannel.name === channel.name &&
-                                    newChannel.type === channel.type
-                            )
-                        );
+                    const newW: Widget[] = widgets.filter((widget) => {
+                        return widget.channels.filter((w) => {
+                            return (
+                                channels.filter((c) => {
+                                    return (
+                                        (w.backend === c.backend &&
+                                            w.name === c.name &&
+                                            w.type === c.type) == false
+                                    );
+                                }).length > 0
+                            );
+                        });
+                    });
+                    const alredyExisting = newW.length == 0;
 
-                    if (existingChannel) {
+                    if (alredyExisting) {
                         showSnackbarAndLog(
-                            `Widget already contains the channel: ${existingChannel.name}`,
+                            `Widget already contains selected channels!`,
                             "warning"
                         );
                         return;
                     }
-
-                    const newWidgets = widgets.map((widget) =>
+                    const newWidgets = newW.map((widget) =>
                         widget.layout.i === key
                             ? {
-                                  ...widget,
-                                  channels: [...widget.channels, ...channels],
-                              }
+                                ...widget,
+                                channels: [...widget.channels, ...channels],
+                            }
                             : widget
                     );
                     setWidgets(newWidgets);
@@ -151,6 +154,8 @@ const Content: React.FC = () => {
     const handleDragLeave = () => {
         setDraggedOverKey("");
     };
+
+    const [showMenu, setShowMenu] = useState<boolean>(false);
 
     const handleRemoveWidget = (key: string) => {
         setWidgets((prevWidgets) =>
@@ -226,12 +231,21 @@ const Content: React.FC = () => {
     };
 
     useEffect(() => {
+        if (window.innerWidth < 1200) {
+            setShowMenu(false);
+        } else setShowMenu(true);
         document.addEventListener("mousedown", interceptMouseDown, true); // true for capture phase
 
         return () => {
             document.removeEventListener("mousedown", interceptMouseDown, true);
         };
     }, []);
+
+    useEffect(() => {
+        if (window.innerWidth < 1200) {
+            setShowMenu(false)
+        } else setShowMenu(true);
+    }, [window.innerWidth])
 
     useEffect(() => {
         // In case widgets have been added, scroll to the bottom, but wait a bit for animation to finish
@@ -415,9 +429,9 @@ const Content: React.FC = () => {
                                     searchResults.data.channels.filter(
                                         (returnedChannel) =>
                                             returnedChannel.backend ===
-                                                init_backends[i] &&
+                                            init_backends[i] &&
                                             returnedChannel.name ===
-                                                init_channel_names[i]
+                                            init_channel_names[i]
                                     );
 
                                 if (filteredResults.length == 0) {
@@ -644,8 +658,9 @@ const Content: React.FC = () => {
                 return;
             }
 
+            /*
             const firstWidget = widgets[0];
-
+    
             // Check for duplicates
             const existingChannel = firstWidget.channels.find((channel) =>
                 channels.find(
@@ -655,22 +670,38 @@ const Content: React.FC = () => {
                         newChannel.type === channel.type
                 )
             );
+            */
 
-            if (existingChannel) {
+            const newW: Widget[] = widgets.filter((widget) => {
+                return widget.channels.filter((w) => {
+                    return (
+                        channels.filter((c) => {
+                            return (
+                                (w.backend === c.backend &&
+                                    w.name === c.name &&
+                                    w.type === c.type) == false
+                            );
+                        }).length > 0
+                    );
+                });
+            });
+            const alredyExisting = newW.length == 0;
+
+            if (alredyExisting) {
                 showSnackbarAndLog(
-                    `Widget already contains the channel: ${existingChannel.name}`,
+                    `Widget already contains all selected channels!`,
                     "warning"
                 );
                 return;
             }
 
             // Add channels to the first widget
-            const newWidgets = widgets.map((widget, index) =>
+            const newWidgets = newW.map((widget, index) =>
                 index === 0
                     ? {
-                          ...widget,
-                          channels: [...widget.channels, ...channels],
-                      }
+                        ...widget,
+                        channels: [...widget.channels, ...channels],
+                    }
                     : widget
             );
 
@@ -687,6 +718,11 @@ const Content: React.FC = () => {
                 handleAddChannels
             );
     }, [widgets, handleCreateWidget]);
+
+    const toggleMenu = () => {
+        console.log("TOGGLE")
+        setShowMenu(!showMenu);
+    }
 
     return (
         <Box sx={styles.contentContainerStyle}>
@@ -754,14 +790,14 @@ const Content: React.FC = () => {
                                     initialPlotSettings={
                                         plotSettings
                                             ? {
-                                                  ...plotSettings,
-                                                  curveAttributes: new Map(
-                                                      Object.entries(
-                                                          plotSettings.curveAttributes ||
-                                                              []
-                                                      )
-                                                  ),
-                                              }
+                                                ...plotSettings,
+                                                curveAttributes: new Map(
+                                                    Object.entries(
+                                                        plotSettings.curveAttributes ||
+                                                        []
+                                                    )
+                                                ),
+                                            }
                                             : undefined
                                     }
                                     onChannelsChange={(updatedChannels) => {
@@ -769,10 +805,10 @@ const Content: React.FC = () => {
                                             prevWidgets.map((widget) =>
                                                 widget.layout.i === layout.i
                                                     ? {
-                                                          ...widget,
-                                                          channels:
-                                                              updatedChannels,
-                                                      }
+                                                        ...widget,
+                                                        channels:
+                                                            updatedChannels,
+                                                    }
                                                     : widget
                                             )
                                         );
@@ -794,15 +830,15 @@ const Content: React.FC = () => {
                                             ...prev.map((widget) =>
                                                 widget.layout.i === index
                                                     ? {
-                                                          ...widget,
-                                                          plotSettings: {
-                                                              ...newPlotSettings,
-                                                              curveAttributes:
-                                                                  Object.fromEntries(
-                                                                      newPlotSettings.curveAttributes
-                                                                  ),
-                                                          } as StoredPlotSettings,
-                                                      }
+                                                        ...widget,
+                                                        plotSettings: {
+                                                            ...newPlotSettings,
+                                                            curveAttributes:
+                                                                Object.fromEntries(
+                                                                    newPlotSettings.curveAttributes
+                                                                ),
+                                                        } as StoredPlotSettings,
+                                                    }
                                                     : widget
                                             ),
                                         ]);
@@ -813,70 +849,96 @@ const Content: React.FC = () => {
                     </ReactGridLayout>
                     <Box sx={styles.actionButtonBoxPlaceholderStyle}></Box>
                 </div>
+                <Box>
+                </Box>
                 <Box sx={getActionButtonBoxStyle()}>
-                    <Button
-                        onDrop={(event) => handleDrop(event, "-1")}
-                        onDragOver={(event) => handleDragOver(event, "-1")}
-                        onDragLeave={handleDragLeave}
-                        sx={{
-                            ...styles.actionButtonStyle,
-                            ...styles.createWidgetStyle,
-                            filter:
-                                draggedOverKey === "-1"
-                                    ? "brightness(0.5)"
-                                    : "",
-                        }}
-                        aria-label="Add new"
-                        onClick={() => handleCreateWidget()}
-                    ></Button>
-                    <Button
-                        sx={styles.actionButtonStyle}
-                        variant="contained"
-                        onClick={() => handleSaveDashboard()}
-                    >
-                        Save Layout
-                    </Button>
-                    <Button
-                        sx={styles.actionButtonStyle}
-                        variant="contained"
-                        onClick={() => handleCreateDashboard()}
-                    >
-                        Save as new Layout
-                    </Button>
-                    <Button
-                        sx={styles.actionButtonStyle}
-                        variant="contained"
-                        onClick={() => handleDownloadDashboard()}
-                    >
-                        Download Layout as JSON
-                    </Button>
-                    <Button
-                        sx={styles.actionButtonStyle}
-                        variant="contained"
-                        onClick={() => handleImportDashboard()}
-                    >
-                        Import JSON Layout
-                    </Button>
-                    <Tooltip
-                        sx={styles.actionButtonStyle}
-                        title="Toggles whether or not the plots can be moved and resized"
-                        placement="top"
-                        arrow
-                    >
-                        <Button
-                            variant="contained"
-                            color="secondary"
-                            onClick={() => setIsLayoutingMode((prev) => !prev)}
-                        >
-                            {isLayoutingMode
-                                ? "Disable Layouting Mode"
-                                : "Enable Layouting Mode"}
-                        </Button>
-                    </Tooltip>
+                    {window.innerWidth < 1200 && <MenuIcon sx={styles.menuStyle} onClick={toggleMenu} />}
+                    {showMenu &&
+                        <>
+                            <Button
+                                onDrop={(event) => handleDrop(event, "-1")}
+                                onDragOver={(event) => handleDragOver(event, "-1")}
+                                onDragLeave={handleDragLeave}
+                                sx={{
+                                    ...styles.actionButtonStyle,
+                                    ...styles.createWidgetStyle,
+                                    filter:
+                                        draggedOverKey === "-1"
+                                            ? "brightness(0.5)"
+                                            : "",
+                                }}
+                                aria-label="Add new"
+                                onClick={() => handleCreateWidget()}
+                            ></Button>
+                            <Button
+                                sx={styles.actionButtonStyle}
+                                variant="contained"
+                                onClick={() => handleSaveDashboard()}
+                            >
+                                <span>
+                                    Update Current
+                                </span>
+                            </Button>
+                            <Button
+                                sx={styles.actionButtonStyle}
+                                variant="contained"
+                                onClick={() => handleCreateDashboard()}
+                            >
+                                <span>
+                                    Save
+                                </span>
+                                <span>
+                                    New
+                                </span>
+                            </Button>
+                            <Button
+                                sx={styles.actionButtonStyle}
+                                variant="contained"
+                                onClick={() => handleDownloadDashboard()}
+                            >
+                                <span>
+                                    Download
+                                </span>
+                                <span>
+                                    Layout
+                                </span>
+                            </Button>
+                            <Button
+                                sx={styles.actionButtonStyle}
+                                variant="contained"
+                                onClick={() => handleImportDashboard()}
+                            >
+                                <span>
+                                    Import
+                                </span>
+                                <span>
+                                    Layout
+                                </span>
+                            </Button>
+                            <Tooltip
+                                sx={styles.actionButtonStyle}
+                                title="Toggles whether or not the plots can be moved and resized"
+                                placement="top"
+                                arrow
+                            >
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    onClick={() => setIsLayoutingMode((prev) => !prev)}
+                                >
+                                    {isLayoutingMode
+                                        ? "Disable Layouting"
+                                        : "Enable Layouting"}
+                                </Button>
+                            </Tooltip>
+                        </>
+                    }
                 </Box>
             </Box>
         </Box>
     );
 };
+
+
 
 export default Content;

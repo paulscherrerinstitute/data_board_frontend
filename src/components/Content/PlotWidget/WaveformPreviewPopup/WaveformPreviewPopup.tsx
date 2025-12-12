@@ -478,11 +478,8 @@ const WaveformPreviewPopup: React.FC<WaveformPreviewPopupProps> = ({
         [yAxisTimestamps, visibleTimestamps]
     );
 
-    const layoutRef = useRef(layout);
-
     useEffect(() => {
         const currentPlotDiv = plotRef.current;
-        const layout = layoutRef.current;
         if (currentPlotDiv) {
             Plotly.react(currentPlotDiv, data, layout || {}, {
                 displaylogo: false,
