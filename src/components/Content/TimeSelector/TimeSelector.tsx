@@ -370,7 +370,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             setStartTime(dayjs(start));
             setEndTime(dayjs(end));
 
-            let newRawWhenSparse = false;
+            let newRawWhenSparse = true;
             if (rawWhenSparse) {
                 if (rawWhenSparse === "true") {
                     newRawWhenSparse = true;
@@ -380,7 +380,7 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                 }
             }
 
-            let newRemoveEmptyBins = false;
+            let newRemoveEmptyBins = true;
             if (removeEmptyBins) {
                 if (removeEmptyBins === "true") {
                     newRemoveEmptyBins = true;
