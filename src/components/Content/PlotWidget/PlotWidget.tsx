@@ -1205,7 +1205,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             timeMs += 5000;
                         }
 
-                        showSnackbarAndLog(message, "error", null, 10000);
+                        showSnackbarAndLog(message, "error", null, timeMs);
                     }
                     if (valuesLostInMapping) {
                         // This is quite common and shouldnt impact ux negatively by popping up all the time, so lets put it into the console so it can be used for debugging bad plots
