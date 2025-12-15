@@ -1084,6 +1084,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             (meta) => meta.pulseId
                         );
 
+                    const isXRaw = metaData.raw;
+
+                    let combiningRawWithBinned = false;
+                    let timestampsNotMatching = false;
+                    let valuesLostInMapping = false;
+
                     for (let index = 0; index < curves.length; index++) {
                         if (index === xCurveIndex) continue;
 
@@ -1091,6 +1097,10 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         const baseData = curve.curveData.curve.value;
                         const curveTimestamps = Object.keys(baseData);
                         const curveValues = Object.values(baseData);
+
+                        if (isXRaw !== curve.curveData.curve.meta.raw) {
+                            combiningRawWithBinned = true;
+                        }
 
                         let i = 0,
                             j = 0;
@@ -1117,6 +1127,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             } else {
                                 j++;
                             }
+                        }
+
+                        // Check if none of the timestamps match to signal to the user that there are bad curves
+                        if (xTimestamps.length > 0 && mergedX.length === 0) {
+                            timestampsNotMatching = true;
+                        }
+
+                        // Check if the curves are not of the same size to alert the user of data loss
+                        if (xTimestamps.length != curveTimestamps.length) {
+                            valuesLostInMapping = true;
                         }
 
                         const label = getLabelForCurve(curve);
@@ -1171,6 +1191,28 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             yaxis: yAxis === "y1" ? "y" : yAxis,
                             line: { color: color, shape: shape },
                         } as Plotly.Data);
+                    }
+
+                    // Tell the user about anomalies
+                    if (timestampsNotMatching) {
+                        // Since this message is important and somewhat long, give it enough time (and increase if message expanded) such that it can be read.
+                        let timeMs = 5000;
+                        let message =
+                            "Some curves have mismatching timestamps and cannot be correlated.";
+                        if (combiningRawWithBinned) {
+                            message +=
+                                " Try disabling raw when sparse in the time-selector bar to get binned data for all curves.";
+                            timeMs += 5000;
+                        }
+
+                        showSnackbarAndLog(message, "error", null, 10000);
+                    }
+                    if (valuesLostInMapping) {
+                        // This is quite common and shouldnt impact ux negatively by popping up all the time, so lets put it into the console so it can be used for debugging bad plots
+                        logToConsole(
+                            "Some curves have different sizes, only values with matching timestamps have been correlated.",
+                            "warning"
+                        );
                     }
                 } else {
                     for (let index = 0; index < curves.length; index++) {
