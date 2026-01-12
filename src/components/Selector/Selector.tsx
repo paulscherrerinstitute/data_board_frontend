@@ -275,7 +275,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                 }
                 setLoading(false);
                 searchIsRunningRef.current = false;
-            }, 500),
+            }, 1000),
         [
             backendUrl,
             selectedBackends.length,
