@@ -740,9 +740,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
             const beginTimestamp = formatDateWithMs(
                 new Date(timeValues.startTime)
             );
-            const endTimeStamp = formatDateWithMs(
-                new Date(timeValues.startTime)
-            );
+            const endTimeStamp = formatDateWithMs(new Date(timeValues.endTime));
 
             for (const channel of channels) {
                 const label = getLabelForChannelAttributes(
