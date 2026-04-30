@@ -15,6 +15,9 @@ import {
     Typography,
     Tooltip,
     LinearProgress,
+    InputAdornment,
+    InputAdornmentProps,
+    IconButton,
 } from "@mui/material";
 import {
     AutoApplyOption,
@@ -28,7 +31,7 @@ import {
 import * as styles from "./TimeSelector.styles";
 import { useSearchParams } from "react-router-dom";
 import { DateTimePicker } from "@mui/x-date-pickers";
-import { ArrowBack, ArrowForward } from "@mui/icons-material";
+import { ArrowBack, ArrowForward, Update } from "@mui/icons-material";
 import dayjs, { Dayjs } from "dayjs";
 import { cloneDeep } from "lodash";
 
@@ -497,6 +500,26 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             return () => window.removeEventListener("keydown", handleKeyDown);
         }, [undoTimeChange, redoTimeChange]);
 
+        const EndTimeAdornment = (props: InputAdornmentProps) => {
+            return (
+                <InputAdornment {...props} position="end">
+                    <Tooltip title="Set end time to now" arrow>
+                        <IconButton
+                            edge="end"
+                            onClick={() => {
+                                timeSourceRef.current = "manual";
+                                setSelectedQuickOption(false);
+                                setEndTime(dayjs());
+                            }}
+                        >
+                            <Update fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                    {props.children}
+                </InputAdornment>
+            );
+        };
+
         return (
             <Box sx={styles.timeSelectorContainerStyle}>
                 <Box sx={styles.timeFieldStyle}>
@@ -522,6 +545,12 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
                             setEndTime(dayjs(newTime));
                             timeSourceRef.current = "manual";
                             setSelectedQuickOption(false);
+                        }}
+                        slots={{
+                            inputAdornment: EndTimeAdornment,
+                        }}
+                        slotProps={{
+                            field: { openPickerButtonPosition: "end" },
                         }}
                     />
                 </Box>
