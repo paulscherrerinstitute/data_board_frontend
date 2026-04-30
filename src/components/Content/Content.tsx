@@ -720,7 +720,6 @@ const Content: React.FC = () => {
     }, [widgets, handleCreateWidget]);
 
     const toggleMenu = () => {
-        console.log("TOGGLE")
         setShowMenu(!showMenu);
     }
 
@@ -875,45 +874,31 @@ const Content: React.FC = () => {
                                 variant="contained"
                                 onClick={() => handleSaveDashboard()}
                             >
-                                <span>
-                                    Update Current
-                                </span>
+                                <span>Update Current</span>
                             </Button>
                             <Button
                                 sx={styles.actionButtonStyle}
                                 variant="contained"
                                 onClick={() => handleCreateDashboard()}
                             >
-                                <span>
-                                    Save
-                                </span>
-                                <span>
-                                    New
-                                </span>
+                                <span>Save</span>
+                                <span>&nbsp;New</span>
                             </Button>
                             <Button
                                 sx={styles.actionButtonStyle}
                                 variant="contained"
                                 onClick={() => handleDownloadDashboard()}
                             >
-                                <span>
-                                    Download
-                                </span>
-                                <span>
-                                    Layout
-                                </span>
+                                <span>Download</span>
+                                <span>&nbsp;Layout</span>
                             </Button>
                             <Button
                                 sx={styles.actionButtonStyle}
                                 variant="contained"
                                 onClick={() => handleImportDashboard()}
                             >
-                                <span>
-                                    Import
-                                </span>
-                                <span>
-                                    Layout
-                                </span>
+                                <span>Import</span>
+                                <span>&nbsp;Layout</span>
                             </Button>
                             <Tooltip
                                 sx={styles.actionButtonStyle}

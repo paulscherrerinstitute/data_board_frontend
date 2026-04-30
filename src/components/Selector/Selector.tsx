@@ -192,7 +192,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                         searchText = searchText.replaceAll("/", "").trim();
                         setSearchRegex(searchText);
                     } else {
-                        setSearchRegex(`^${escapeRegExp(term.trim())}`);
+                        setSearchRegex(escapeRegExp(term.trim()));
                     }
 
                     const response = await axios.get<{
@@ -275,7 +275,7 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                 }
                 setLoading(false);
                 searchIsRunningRef.current = false;
-            }, 500),
+            }, 1000),
         [
             backendUrl,
             selectedBackends.length,
