@@ -869,40 +869,65 @@ const Content: React.FC = () => {
                                 aria-label="Add new"
                                 onClick={() => handleCreateWidget()}
                             ></Button>
-                            <Button
-                                sx={styles.actionButtonStyle}
-                                variant="contained"
-                                onClick={() => handleSaveDashboard()}
-                            >
-                                <span>Update Current</span>
-                            </Button>
-                            <Button
-                                sx={styles.actionButtonStyle}
-                                variant="contained"
-                                onClick={() => handleCreateDashboard()}
-                            >
-                                <span>Save</span>
-                                <span>&nbsp;New</span>
-                            </Button>
-                            <Button
-                                sx={styles.actionButtonStyle}
-                                variant="contained"
-                                onClick={() => handleDownloadDashboard()}
-                            >
-                                <span>Download</span>
-                                <span>&nbsp;Layout</span>
-                            </Button>
-                            <Button
-                                sx={styles.actionButtonStyle}
-                                variant="contained"
-                                onClick={() => handleImportDashboard()}
-                            >
-                                <span>Import</span>
-                                <span>&nbsp;Layout</span>
-                            </Button>
                             <Tooltip
                                 sx={styles.actionButtonStyle}
-                                title="Toggles whether or not the plots can be moved and resized"
+                                title="Overwrite layout saved on server with current layout"
+                                placement="top"
+                                arrow
+                            >
+                                <Button
+                                    variant="contained"
+                                    onClick={() => handleSaveDashboard()}
+                                >
+                                    <span>Update</span>
+                                    <span>&nbsp;Current</span>
+                                </Button>
+                            </Tooltip>
+                            <Tooltip
+                                sx={styles.actionButtonStyle}
+                                title="Save this layout as a new document on the server"
+                                placement="top"
+                                arrow
+                            >
+                                <Button
+                                    variant="contained"
+                                    onClick={() => handleCreateDashboard()}
+                                >
+                                    <span>Save</span>
+                                    <span>&nbsp;New</span>
+                                </Button>
+                            </Tooltip>
+                            <Tooltip
+                                sx={styles.actionButtonStyle}
+                                title="Download the current layout to a JSON file"
+                                placement="top"
+                                arrow
+                            >
+                                <Button
+                                    variant="contained"
+                                    onClick={() => handleDownloadDashboard()}
+                                >
+                                    <span>Download</span>
+                                    <span>&nbsp;Layout</span>
+                                </Button>
+                            </Tooltip>
+                            <Tooltip
+                                sx={styles.actionButtonStyle}
+                                title="Import and apply a layout from a local JSON file"
+                                placement="top"
+                                arrow
+                            >
+                                <Button
+                                    variant="contained"
+                                    onClick={() => handleImportDashboard()}
+                                >
+                                    <span>Import</span>
+                                    <span>&nbsp;Layout</span>
+                                </Button>
+                            </Tooltip>
+                            <Tooltip
+                                sx={styles.actionButtonStyle}
+                                title="Toggle whether or not the plots can be moved and resized"
                                 placement="top"
                                 arrow
                             >
