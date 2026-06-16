@@ -365,6 +365,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         curveAttributes.get(label) as CurveAttributes
                     );
                 }
+
+                // Set curve shape to digital (hv) in case the channel is a string or enum and nothing else is set
+                if ((channel.type == "string" || channel.type == "enum")) {
+                    const attributes = newCurveAttributes.get(label);
+                    if (attributes && !attributes.curveShape) {
+                        attributes.curveShape = "hv";
+                        showSnackbarAndLog(
+                            `By default, curve shape for ${label} has been set to digital, since its type is ${channel.type}`,
+                            "info"
+                        );
+                    }
+                }
             });
 
             // Compare and only update new data, to avoid endless loops
