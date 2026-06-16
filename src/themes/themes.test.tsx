@@ -6,7 +6,7 @@ import { render } from "@testing-library/react";
 describe("themes", () => {
     it("all themes can be compiled by createTheme", () => {
         for (const [, value] of Object.entries(themes)) {
-            expect(() => createTheme(value.theme)).not.toThrowError();
+            expect(() => createTheme(value.theme)).not.toThrow();
         }
     });
 
@@ -19,7 +19,7 @@ describe("themes", () => {
                         <Typography>Hello from {value.displayName}</Typography>
                     </ThemeProvider>
                 );
-            }).not.toThrowError();
+            }).not.toThrow();
         }
     });
 });

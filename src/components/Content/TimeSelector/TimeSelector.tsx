@@ -74,11 +74,10 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
         const [history, setHistory] = useState<AppliedTimeValues[]>([]);
         const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
-        const autoApplyIntervalRef = useRef<NodeJS.Timeout | null>(null);
-        const autoApplyProgressIntervalRef = useRef<NodeJS.Timeout | null>(
-            null
-        );
+        const autoApplyIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+        const autoApplyProgressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
         const timeSourceRef = useRef<TimeSourceOption>("quickselect");
+
         const isUrlParsed = useRef(false);
 
         const localRef = useRef<LocalTimeSelectorHandle>(null);
@@ -361,7 +360,6 @@ const TimeSelector = forwardRef<TimeSelectorHandle, TimeSelectorProps>(
             if (!isNaN(startTime) && !isNaN(endTime) && startTime * endTime) {
                 start = new Date(startTime);
                 end = new Date(endTime);
-                validTime = true;
             } else if (!validTime) {
                 // Else, default to ten minutes ago
                 timeSourceRef.current = "quickselect";

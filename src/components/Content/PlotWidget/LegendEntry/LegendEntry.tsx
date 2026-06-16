@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { Curve } from "../PlotWidget.types";
 import * as styles from "./LegendEntry.styles";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 
 const LegendEntry: React.FC<{
     curve: Curve;

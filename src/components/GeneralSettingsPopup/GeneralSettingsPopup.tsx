@@ -22,7 +22,7 @@ import {
     ThemeProvider,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlined";
 import { GeneralSettingsPopupProps } from "./GeneralSettingsPopup.types";
 import * as styles from "./GeneralSettingsPopup.styles";
 import { useLocalStorage } from "../../helpers/useLocalStorage";

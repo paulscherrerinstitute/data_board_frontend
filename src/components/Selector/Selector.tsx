@@ -38,7 +38,6 @@ import AddIcon from "@mui/icons-material/Add";
 import { useLocalStorage } from "../../helpers/useLocalStorage";
 import { defaultKeepSidebarClosedAfterDrag } from "../../helpers/defaults";
 import { SidebarIgnoredMenuProps } from "../../helpers/misc";
-import AutoSizer from "react-virtualized-auto-sizer";
 
 const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
     const { backendUrl } = useApiUrls();
@@ -576,29 +575,28 @@ const Selector: React.FC<SelectorProps> = ({ setSidebarIsFocused }) => {
                         {error}
                     </Alert>
                 )}
-                <AutoSizer disableWidth>
-                    {({ height }) => (
-                        <div
-                            style={{
-                                display: "flex",
-                            }}
-                        >
-                            <ListWindow
-                                style={{ height: height - 120 }}
-                                rowComponent={ListItemRowComponent}
-                                rowCount={filteredChannels.length}
-                                rowHeight={55}
-                                rowProps={{
-                                    filteredChannels,
-                                    theme,
-                                    handleSelectChannel,
-                                    handleDeselectChannel,
-                                    handleDragStart,
-                                }}
-                            />
-                        </div>
-                    )}
-                </AutoSizer>
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        height: "calc(100vh - 120px)",
+                        minHeight: 0,
+                    }}
+                    >
+                    <ListWindow
+                        style={{ height: "100%" }}
+                        rowComponent={ListItemRowComponent}
+                        rowCount={filteredChannels.length}
+                        rowHeight={55}
+                        rowProps={{
+                        filteredChannels,
+                        theme,
+                        handleSelectChannel,
+                        handleDeselectChannel,
+                        handleDragStart,
+                        }}
+                    />
+                </Box>
             </Box>
         </Box>
     );
