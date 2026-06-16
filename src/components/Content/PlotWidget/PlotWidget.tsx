@@ -513,6 +513,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         fetchTimeValues.rawWhenSparse,
                                     removeEmptyBins:
                                         fetchTimeValues.removeEmptyBins,
+                                    isString:
+                                        channel.type == "string",
                                 },
                                 signal: requestSignal,
                             }
