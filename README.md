@@ -7,7 +7,7 @@
 
 This is the frontend for the Data Board project. It is a React application written in TypeScript that uses the [Data Board Backend](https://github.com/paulscherrerinstitute/data_board_backend).
 
-![alt text](screenshots/full-page.png)
+![Example Dashboard](screenshots/full-page.png)
 ---
 
 ## 🖥️ Usage
@@ -70,8 +70,11 @@ To also make the sidebar be collapsed on load, you may specify the `closeSidebar
 The query parameters are defined for all plots and can be set in the topbar. Make sure to click apply after changing any query parameters!
 
 - **Timerange:** The timerange can be defined using local time. If your browser's date/time picker doesn't support seconds, you can click in the text field and set the seconds there.
-
     > ⚠️ **Important:** The time displayed in the plots will also be in **local time**, _not_ UTC!
+    
+    For the end-time, you can also set it to the current time automatically by using the clock-button to the right of the date/time picker. This is a one-time action and is meant to make time ranges "until now" easier.
+    
+    ![End Time Date/Time Picker](screenshots/end-time-picker.png)
 
 <span id="undo-redo-timerange"></span>
 
