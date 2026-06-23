@@ -151,6 +151,7 @@ The plot default section contains settings which are also applied to all plots, 
 - **Curve Color Scheme:** The scheme with which new curves are colored.
 - **Y-Axis Scaling:** Choose between logarithmic and linear scaling.
 - **Curve Shape:** Defines how the connections between data points are drawn. Based on [Plotly's CurveShape](https://plotly.com/javascript/line-charts/#line-shape-options-for-interpolation).
+> _Hint_: If a channel is added with String or Enum type, it's curve shape will be initialized to be digital (hv), no matter the default. This can be overwritten and is part of the [plot specific settings](#plot-specific-settings).
 
 - **Curve Mode:** Defines how data points are drawn and if connections are made between the points.
 
@@ -209,12 +210,22 @@ In these settings, you can define properties that only affect the current plot, 
 
 It is possible to correlate one or more channels to a base channel. For this, you can simply change the `Axis` for the desired base channel to "x". All other channels will then be correlated to this one.
 
+> _Hint_: If you do activate correlation, the curves are all automatically set to have the curve mode "Markers", you can however change this back if you want.
+
 #### Hover-Information
 
 When you hover over a data point, you see a little popup with the information for this point. If [correlation is activated](#activating-correlation), you can also see two calculated correlation coefficients for this curve, namely:
 
 - **[Pearson Correlation Coefficient](https://w.wiki/Ksu)**
 - **[Spearman's Rank Correlation Coefficient](https://w.wiki/6AM9)**
+
+If the channel type is Enum, the point-value will be the numerical value, and the hover-information will show the associated string as "Description".
+
+If the channel type is String, the hover-information will show that string as "Value". Undefined strings will have an empty value, empty strings will have empty quotes (""). However, the Value used in the plot is either 0 or 1, depending on whether the string is empty/undefined or not. Empty or undefined strings will have 0 as a value, whereas anything else will have a 1.
+
+![Example-Hover-Information Enum Channel](screenshots/hover-info-enum.png)
+![Example Hover-Information String Channel](screenshots/hover-info-string.png)
+
 
 #### Requery on Zoom
 
@@ -427,7 +438,7 @@ If you are sure your problem is a bug in DataBoard, you can also directly open a
 
 ### Contact / Support
 
-The current maintainer is Erik Schwarz <erik.schwarz{at}psi.ch>
+The current product owner is Andrej Babic, Paul Scherrer Institute.
 
 ---
 
