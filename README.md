@@ -7,11 +7,13 @@
 
 This is the frontend for the Data Board project. It is a React application written in TypeScript that uses the [Data Board Backend](https://github.com/paulscherrerinstitute/data_board_backend).
 
+![alt text](screenshots/full-page.png)
 ---
 
 ## 🖥️ Usage
 
 ### Search for Channels
+<img src="screenshots/channel-search.png" style="float:right;margin-left:20px"/>
 
 You can search for channels by using the sidebar to the left. This sidebar can be expanded either by using the buttons at the top left of the sidebar or by dragging the edge of the sidebar to the desired position for more granular control.
 
