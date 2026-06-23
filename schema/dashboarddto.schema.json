@@ -161,92 +161,6 @@
       ],
       "type": "object"
     },
-    "ReactGridLayout.Layout": {
-      "additionalProperties": false,
-      "properties": {
-        "h": {
-          "description": "Height in grid units.",
-          "type": "number"
-        },
-        "i": {
-          "description": "A string corresponding to the component key. Uses the index of components instead if not provided.",
-          "type": "string"
-        },
-        "isBounded": {
-          "description": "If true and draggable, item will be moved only within grid.",
-          "type": "boolean"
-        },
-        "isDraggable": {
-          "description": "If false, will not be draggable. Overrides `static`.",
-          "type": "boolean"
-        },
-        "isResizable": {
-          "description": "If false, will not be resizable. Overrides `static`.",
-          "type": "boolean"
-        },
-        "maxH": {
-          "description": "Maximum height in grid units.",
-          "type": "number"
-        },
-        "maxW": {
-          "description": "Maximum width in grid units.",
-          "type": "number"
-        },
-        "minH": {
-          "description": "Minimum height in grid units.",
-          "type": "number"
-        },
-        "minW": {
-          "description": "Minimum width in grid units.",
-          "type": "number"
-        },
-        "moved": {
-          "description": "set by DragEvents (onDragStart, onDrag, onDragStop) and ResizeEvents (onResizeStart, onResize, onResizeStop)",
-          "type": "boolean"
-        },
-        "resizeHandles": {
-          "description": "By default, a handle is only shown on the bottom-right (southeast) corner. Note that resizing from the top or left is generally not intuitive.",
-          "items": {
-            "enum": [
-              "s",
-              "w",
-              "e",
-              "n",
-              "sw",
-              "nw",
-              "se",
-              "ne"
-            ],
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "static": {
-          "description": "If true, equal to `isDraggable: false` and `isResizable: false`.",
-          "type": "boolean"
-        },
-        "w": {
-          "description": "Width in grid units.",
-          "type": "number"
-        },
-        "x": {
-          "description": "X position in grid units.",
-          "type": "number"
-        },
-        "y": {
-          "description": "Y position in grid units.",
-          "type": "number"
-        }
-      },
-      "required": [
-        "i",
-        "x",
-        "y",
-        "w",
-        "h"
-      ],
-      "type": "object"
-    },
     "StoredPlotSettings": {
       "additionalProperties": false,
       "properties": {
@@ -287,7 +201,110 @@
           "type": "array"
         },
         "layout": {
-          "$ref": "#/definitions/ReactGridLayout.Layout"
+          "additionalProperties": false,
+          "description": "A single item in the grid layout.\n\nPosition (x, y) is in grid units, not pixels. Size (w, h) is in grid units.",
+          "properties": {
+            "constraints": {
+              "description": "Per-item layout constraints. Applied in addition to grid-level constraints.",
+              "items": {
+                "additionalProperties": false,
+                "description": "Interface for layout constraints.\n\nImplement this interface to create custom position/size constraints. Built-in constraints: gridBounds, minMaxSize, containerBounds, boundedX, boundedY.",
+                "properties": {
+                  "name": {
+                    "description": "Constraint identifier for debugging",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "h": {
+              "description": "Height in grid units",
+              "type": "number"
+            },
+            "i": {
+              "description": "Unique identifier for this item",
+              "type": "string"
+            },
+            "isBounded": {
+              "description": "If true, item is constrained to the grid container bounds. Overrides grid-level isBounded for this item.",
+              "type": "boolean"
+            },
+            "isDraggable": {
+              "description": "If false, item cannot be dragged (but may still be resizable). Overrides grid-level isDraggable for this item.",
+              "type": "boolean"
+            },
+            "isResizable": {
+              "description": "If false, item cannot be resized (but may still be draggable). Overrides grid-level isResizable for this item.",
+              "type": "boolean"
+            },
+            "maxH": {
+              "description": "Maximum height in grid units",
+              "type": "number"
+            },
+            "maxW": {
+              "description": "Maximum width in grid units",
+              "type": "number"
+            },
+            "minH": {
+              "description": "Minimum height in grid units",
+              "type": "number"
+            },
+            "minW": {
+              "description": "Minimum width in grid units",
+              "type": "number"
+            },
+            "moved": {
+              "description": "Internal flag set during drag/resize operations to indicate the item has moved from its original position.",
+              "type": "boolean"
+            },
+            "resizeHandles": {
+              "description": "Which resize handles to show for this item. Overrides grid-level resizeHandles for this item.",
+              "items": {
+                "description": "Axis identifiers for resize handles.\n- Cardinal: 'n', 's', 'e', 'w' (north, south, east, west)\n- Diagonal: 'ne', 'nw', 'se', 'sw'",
+                "enum": [
+                  "s",
+                  "w",
+                  "e",
+                  "n",
+                  "sw",
+                  "nw",
+                  "se",
+                  "ne"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "static": {
+              "description": "If true, item cannot be dragged or resized, and other items will move around it during compaction.",
+              "type": "boolean"
+            },
+            "w": {
+              "description": "Width in grid units",
+              "type": "number"
+            },
+            "x": {
+              "description": "X position in grid units (0-indexed from left)",
+              "type": "number"
+            },
+            "y": {
+              "description": "Y position in grid units (0-indexed from top)",
+              "type": "number"
+            }
+          },
+          "required": [
+            "i",
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "type": "object"
         },
         "plotSettings": {
           "$ref": "#/definitions/StoredPlotSettings"
