@@ -61,7 +61,7 @@ You can define up to 10 initial channels by setting url parameters in the follow
 
 Note that indexed keys overwrite non-indexed keys, so init_c0 will be used instead of init_c and init_b0 will be used instead of init_b.
 
-To also make the sidebar be collaped on load, you may specify the `closeSidebar` url parameter to any arbitrary non null value. So setting it to false will do the same as true, it is only checked if this url parameter is defined. This parameter overwrites any [settings](#settings) defining the sidebar state otherwise.
+To also make the sidebar be collapsed on load, you may specify the `closeSidebar` url parameter to any arbitrary non null value. So setting it to false will do the same as true, it is only checked if this url parameter is defined. This parameter overwrites any [settings](#settings) defining the sidebar state otherwise.
 
 ### Set Query Parameters
 
@@ -139,7 +139,7 @@ The general section contains settings that affect all plots.
     > ⚠️ **Warning:** This setting is an experimental _workaround_ and may break the plotting.
 
 - **Keep Sidebar Closed after Dragging a Channel**
-  If this is enabled, the sidebar will stay closed after one or multiple channels have been dragged. (It is closed upon starting the drag to make plots visible currently under the sidebar). The sidebar will stay closed, no matter what happend with the dragged channels. So even if they were not dragged into a plot, the sidebar will stay closed until it is opened again manually.
+  If this is enabled, the sidebar will stay closed after one or multiple channels have been dragged. (It is closed upon starting the drag to make plots visible currently under the sidebar). The sidebar will stay closed, no matter what happened with the dragged channels. So even if they were not dragged into a plot, the sidebar will stay closed until it is opened again manually.
 - **Close Sidebar when Outside is Clicked**
   This setting decides whether or not the sidebar should be closed if the user clicks anywhere outside of the sidebar. The general settings popup is exempt from this and will not trigger a sidebar collapse.
 - **Initial Widget Height / Width:** Initial dimensions new plots take when they are created. Does not affect the very first plot.
@@ -165,7 +165,7 @@ The modebar buttons are buttons that define some quick actions you can perform o
 
 - **Download data as CSV/JSON:** Downloads the data, as received from the archiver, in the selected format.
 
-    > ℹ️ **Note**: The downloaded file does not only contain the points of the graph where points differ in either X- or Y-Axis, but the values at regular intervals inbetween too (f.ex. when a graph flatlines over the course of 1 second, there will still be 5 entries with identical value, with a time interval of abt. 200 milliseconds instead of a single entry). As a result, this file is multiple times larger than the raw data of the graph. **RECOMMENDATION**: For details use `Download as JSON`, for an overview, use `Download Raw Data`
+    > ℹ️ **Note**: The downloaded file does not only contain the points of the graph where points differ in either X- or Y-Axis, but the values at regular intervals in between too (f.ex. when a graph flatlines over the course of 1 second, there will still be 5 entries with identical value, with a time interval of about 200 milliseconds instead of a single entry). As a result, this file is multiple times larger than the raw data of the graph. **RECOMMENDATION**: For details use `Download as JSON`, for an overview, use `Download Raw Data`
 
 - **Download Picture as PNG:** Downloads a picture of the plot and legend as PNG. The resolution is 4x the display resolution; therefore, the generating process may take a second or two.
 
@@ -177,7 +177,7 @@ The modebar buttons are buttons that define some quick actions you can perform o
     - `Download At Once`: Downloads the raw data as JSON, as a oneliner.
     - `Download Framed`: Downloads the raw data as JSON, formatted to be human readable.
 
-    > ℹ️ **Note**: Although the buttons `Download data as JSON` and `Download Raw Data` BOTH result in JSONs, the data contained is not entirely the same. The JSON originating from `Download Raw Data` contains essentially the points on the graph where something changes (f.ex. when the data only changes twice in the graph, only two entries will be in the JSON - the value and the point in time it occured).
+    > ℹ️ **Note**: Although the buttons `Download data as JSON` and `Download Raw Data` BOTH result in JSONs, the data contained is not entirely the same. The JSON originating from `Download Raw Data` contains essentially the points on the graph where something changes (e.g. when the data only changes twice in the graph, only two entries will be in the JSON - the value and the point in time it occured).
 
 - **Zoom In/ Zoom Out, Autoscale, Reset Axes:** These are default Plotly buttons.
 
@@ -237,7 +237,7 @@ Waveform only show the waveform's average by default, thus behaving like regular
 
 ##### **Waveform Preview**
 
-When a point of a waveform curve in its binned representation is clicked and the number of waveform points under the clicked point is reasonably small (See console.log output on the browser for this limit if it is reached), a popup window will open above the plot, allowing you to preview all raw waveforms under that point. If it only one waveform, it will be displayed as a regular curve.
+When a point of a waveform curve in its binned representation is clicked and the number of waveform points under the clicked point is reasonably small (See console.log output on the browser for this limit if it is reached), a popup window will open above the plot, allowing you to preview all raw waveforms under that point. If there is only one waveform, it will be displayed as a regular curve.
 
 When there are multiple waveforms:
 
