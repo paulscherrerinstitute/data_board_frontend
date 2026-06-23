@@ -21,7 +21,7 @@ import {
     DashboardReturnDTO,
     StoredPlotSettings,
 } from "./Content.types";
-import ReactGridLayout from "react-grid-layout";
+import { ReactGridLayout, Layout } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import PlotWidget from "./PlotWidget/PlotWidget";
@@ -285,7 +285,7 @@ const Content: React.FC = () => {
         []
     );
 
-    const handleLayoutChange = (newLayout: ReactGridLayout.Layout[]) => {
+    const handleLayoutChange = (newLayout: Layout) => {
         setWidgets((prevWidgets) =>
             prevWidgets.map((widget) => {
                 const updatedLayout = newLayout.find(
@@ -739,14 +739,20 @@ const Content: React.FC = () => {
                     }}
                 >
                     <ReactGridLayout
-                        cols={12}
-                        rowHeight={30}
+                        gridConfig={{
+                            cols: 12,
+                            rowHeight: 30,
+                        }}
                         width={gridWidth}
                         autoSize={true}
-                        resizeHandles={["sw", "nw", "se", "ne"]}
+                        resizeConfig={{
+                            enabled: isLayoutingMode,
+                            handles: ["sw", "nw", "se", "ne"]
+                        }}
+                        dragConfig={{
+                            enabled: isLayoutingMode
+                        }}
                         onLayoutChange={handleLayoutChange}
-                        isDraggable={isLayoutingMode}
-                        isResizable={isLayoutingMode}
                     >
                         {widgets.map(({ channels, layout, plotSettings }) => (
                             <Box
