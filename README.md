@@ -46,6 +46,9 @@ The destination can be one of the following:
 3. If your browser supports it, you can also drag the channel outside of the browser tab and, e.g., drop it into a notepad app.
     > _Hint_: You can also do the inverse if your browser supports it (add channels by dragging from outside the browser); the DragEvent utilises simple text data.
 
+![Example of Multiple Selected Channels](screenshots/multiple-channels-selected.png)
+![Example of Multiple Selected Channels Dragging](screenshots/multiple-channels-dragging.png)
+
 You can also [define initial channels](#initial-channels) for the first plot.
 
 ### Initial Channels
@@ -211,6 +214,8 @@ In these settings, you can define properties that only affect the current plot, 
     - **Label:** The text displayed on the axis.
         > 💡 **Tip:** You can also set the axis limits (Min/Max) by clicking the top/bottom of an axis. Limits set this way are saved as if they were set via the settings.
 
+![Example Plot Specific Settings](screenshots/plot-specific-settings.png)
+
 #### Activating Correlation
 
 It is possible to correlate one or more channels to a base channel. For this, you can simply change the `Axis` for the desired base channel to "x". All other channels will then be correlated to this one.
@@ -244,10 +249,14 @@ Waveform only show the waveform's average by default, thus behaving like regular
 
 When a point of a waveform curve in its binned representation is clicked and the number of waveform points under the clicked point is reasonably small (See console.log output on the browser for this limit if it is reached), a popup window will open above the plot, allowing you to preview all raw waveforms under that point. If there is only one waveform, it will be displayed as a regular curve.
 
+![Clicking On Waveform Point](screenshots/waveform-point-clicked.png)
+
 When there are multiple waveforms:
 
 - If [WebGL](#use-webgl) is enabled: a 3D plot will be rendered where you can view all waveforms. On hover you see more information about each point.
+![Waveform Preview 3D](screenshots/waveform-preview-3d.png)
 - Otherwise: a heatmap will be drawn with each waveform's data in it.
+![Waveform Preview 2D](screenshots/waveform-preview-2d.png)
 
 ##### **Zoom to Waveform**
 
