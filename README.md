@@ -13,7 +13,7 @@ This is the frontend for the Data Board project. It is a React application writt
 ## 🖥️ Usage
 
 ### Search for Channels
-<img src="screenshots/channel-search.png" style="float:right;margin-left:20px"/>
+<img src="screenshots/channel-search.png" align="right" width="200px" style="margin-left:20px"/>
 
 You can search for channels by using the sidebar to the left. This sidebar can be expanded either by using the buttons at the top left of the sidebar or by dragging the edge of the sidebar to the desired position for more granular control.
 
