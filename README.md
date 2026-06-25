@@ -7,11 +7,13 @@
 
 This is the frontend for the Data Board project. It is a React application written in TypeScript that uses the [Data Board Backend](https://github.com/paulscherrerinstitute/data_board_backend).
 
+![Example Dashboard](screenshots/full-page.png)
 ---
 
 ## 🖥️ Usage
 
 ### Search for Channels
+<img src="screenshots/channel-search.png" align="right" width="200px" style="margin-left:20px"/>
 
 You can search for channels by using the sidebar to the left. This sidebar can be expanded either by using the buttons at the top left of the sidebar or by dragging the edge of the sidebar to the desired position for more granular control.
 
@@ -44,6 +46,9 @@ The destination can be one of the following:
 3. If your browser supports it, you can also drag the channel outside of the browser tab and, e.g., drop it into a notepad app.
     > _Hint_: You can also do the inverse if your browser supports it (add channels by dragging from outside the browser); the DragEvent utilises simple text data.
 
+![Example of Multiple Selected Channels](screenshots/multiple-channels-selected.png)
+![Example of Multiple Selected Channels Dragging](screenshots/multiple-channels-dragging.png)
+
 You can also [define initial channels](#initial-channels) for the first plot.
 
 ### Initial Channels
@@ -61,15 +66,18 @@ You can define up to 10 initial channels by setting url parameters in the follow
 
 Note that indexed keys overwrite non-indexed keys, so init_c0 will be used instead of init_c and init_b0 will be used instead of init_b.
 
-To also make the sidebar be collaped on load, you may specify the `closeSidebar` url parameter to any arbitrary non null value. So setting it to false will do the same as true, it is only checked if this url parameter is defined. This parameter overwrites any [settings](#settings) defining the sidebar state otherwise.
+To also make the sidebar be collapsed on load, you may specify the `closeSidebar` url parameter to any arbitrary non null value. So setting it to false will do the same as true, it is only checked if this url parameter is defined. This parameter overwrites any [settings](#settings) defining the sidebar state otherwise.
 
 ### Set Query Parameters
 
 The query parameters are defined for all plots and can be set in the topbar. Make sure to click apply after changing any query parameters!
 
 - **Timerange:** The timerange can be defined using local time. If your browser's date/time picker doesn't support seconds, you can click in the text field and set the seconds there.
-
     > ⚠️ **Important:** The time displayed in the plots will also be in **local time**, _not_ UTC!
+    
+    For the end-time, you can also set it to the current time automatically by using the clock-button to the right of the date/time picker. This is a one-time action and is meant to make time ranges "until now" easier.
+    
+    ![End Time Date/Time Picker](screenshots/end-time-picker.png)
 
 <span id="undo-redo-timerange"></span>
 
@@ -139,7 +147,7 @@ The general section contains settings that affect all plots.
     > ⚠️ **Warning:** This setting is an experimental _workaround_ and may break the plotting.
 
 - **Keep Sidebar Closed after Dragging a Channel**
-  If this is enabled, the sidebar will stay closed after one or multiple channels have been dragged. (It is closed upon starting the drag to make plots visible currently under the sidebar). The sidebar will stay closed, no matter what happend with the dragged channels. So even if they were not dragged into a plot, the sidebar will stay closed until it is opened again manually.
+  If this is enabled, the sidebar will stay closed after one or multiple channels have been dragged. (It is closed upon starting the drag to make plots visible currently under the sidebar). The sidebar will stay closed, no matter what happened with the dragged channels. So even if they were not dragged into a plot, the sidebar will stay closed until it is opened again manually.
 - **Close Sidebar when Outside is Clicked**
   This setting decides whether or not the sidebar should be closed if the user clicks anywhere outside of the sidebar. The general settings popup is exempt from this and will not trigger a sidebar collapse.
 - **Initial Widget Height / Width:** Initial dimensions new plots take when they are created. Does not affect the very first plot.
@@ -151,6 +159,7 @@ The plot default section contains settings which are also applied to all plots, 
 - **Curve Color Scheme:** The scheme with which new curves are colored.
 - **Y-Axis Scaling:** Choose between logarithmic and linear scaling.
 - **Curve Shape:** Defines how the connections between data points are drawn. Based on [Plotly's CurveShape](https://plotly.com/javascript/line-charts/#line-shape-options-for-interpolation).
+> _Hint_: If a channel is added with String or Enum type, it's curve shape will be initialized to be digital (hv), no matter the default. This can be overwritten and is part of the [plot specific settings](#plot-specific-settings).
 
 - **Curve Mode:** Defines how data points are drawn and if connections are made between the points.
 
@@ -164,7 +173,7 @@ The modebar buttons are buttons that define some quick actions you can perform o
 
 - **Download data as CSV/JSON:** Downloads the data, as received from the archiver, in the selected format.
 
-    > ℹ️ **Note**: The downloaded file does not only contain the points of the graph where points differ in either X- or Y-Axis, but the values at regular intervals inbetween too (f.ex. when a graph flatlines over the course of 1 second, there will still be 5 entries with identical value, with a time interval of abt. 200 milliseconds instead of a single entry). As a result, this file is multiple times larger than the raw data of the graph. **RECOMMENDATION**: For details use `Download as JSON`, for an overview, use `Download Raw Data`
+    > ℹ️ **Note**: The downloaded file does not only contain the points of the graph where points differ in either X- or Y-Axis, but the values at regular intervals in between too (f.ex. when a graph flatlines over the course of 1 second, there will still be 5 entries with identical value, with a time interval of about 200 milliseconds instead of a single entry). As a result, this file is multiple times larger than the raw data of the graph. **RECOMMENDATION**: For details use `Download as JSON`, for an overview, use `Download Raw Data`
 
 - **Download Picture as PNG:** Downloads a picture of the plot and legend as PNG. The resolution is 4x the display resolution; therefore, the generating process may take a second or two.
 
@@ -176,7 +185,7 @@ The modebar buttons are buttons that define some quick actions you can perform o
     - `Download At Once`: Downloads the raw data as JSON, as a oneliner.
     - `Download Framed`: Downloads the raw data as JSON, formatted to be human readable.
 
-    > ℹ️ **Note**: Although the buttons `Download data as JSON` and `Download Raw Data` BOTH result in JSONs, the data contained is not entirely the same. The JSON originating from `Download Raw Data` contains essentially the points on the graph where something changes (f.ex. when the data only changes twice in the graph, only two entries will be in the JSON - the value and the point in time it occured).
+    > ℹ️ **Note**: Although the buttons `Download data as JSON` and `Download Raw Data` BOTH result in JSONs, the data contained is not entirely the same. The JSON originating from `Download Raw Data` contains essentially the points on the graph where something changes (e.g. when the data only changes twice in the graph, only two entries will be in the JSON - the value and the point in time it occured).
 
 - **Zoom In/ Zoom Out, Autoscale, Reset Axes:** These are default Plotly buttons.
 
@@ -205,9 +214,13 @@ In these settings, you can define properties that only affect the current plot, 
     - **Label:** The text displayed on the axis.
         > 💡 **Tip:** You can also set the axis limits (Min/Max) by clicking the top/bottom of an axis. Limits set this way are saved as if they were set via the settings.
 
+![Example Plot Specific Settings](screenshots/plot-specific-settings.png)
+
 #### Activating Correlation
 
 It is possible to correlate one or more channels to a base channel. For this, you can simply change the `Axis` for the desired base channel to "x". All other channels will then be correlated to this one.
+
+> _Hint_: If you do activate correlation, the curves are all automatically set to have the curve mode "Markers", you can however change this back if you want.
 
 #### Hover-Information
 
@@ -215,6 +228,14 @@ When you hover over a data point, you see a little popup with the information fo
 
 - **[Pearson Correlation Coefficient](https://w.wiki/Ksu)**
 - **[Spearman's Rank Correlation Coefficient](https://w.wiki/6AM9)**
+
+If the channel type is Enum, the point-value will be the numerical value, and the hover-information will show the associated string as "Description".
+
+If the channel type is String, the hover-information will show that string as "Value". Undefined strings will have an empty value, empty strings will have empty quotes (""). However, the Value used in the plot is either 0 or 1, depending on whether the string is empty/undefined or not. Empty or undefined strings will have 0 as a value, whereas anything else will have a 1.
+
+![Example-Hover-Information Enum Channel](screenshots/hover-info-enum.png)
+![Example Hover-Information String Channel](screenshots/hover-info-string.png)
+
 
 #### Requery on Zoom
 
@@ -226,12 +247,16 @@ Waveform only show the waveform's average by default, thus behaving like regular
 
 ##### **Waveform Preview**
 
-When a point of a waveform curve in its binned representation is clicked and the number of waveform points under the clicked point is reasonably small (See console.log output on the browser for this limit if it is reached), a popup window will open above the plot, allowing you to preview all raw waveforms under that point. If it only one waveform, it will be displayed as a regular curve.
+When a point of a waveform curve in its binned representation is clicked and the number of waveform points under the clicked point is reasonably small (See console.log output on the browser for this limit if it is reached), a popup window will open above the plot, allowing you to preview all raw waveforms under that point. If there is only one waveform, it will be displayed as a regular curve.
+
+![Clicking On Waveform Point](screenshots/waveform-point-clicked.png)
 
 When there are multiple waveforms:
 
 - If [WebGL](#use-webgl) is enabled: a 3D plot will be rendered where you can view all waveforms. On hover you see more information about each point.
+![Waveform Preview 3D](screenshots/waveform-preview-3d.png)
 - Otherwise: a heatmap will be drawn with each waveform's data in it.
+![Waveform Preview 2D](screenshots/waveform-preview-2d.png)
 
 ##### **Zoom to Waveform**
 
@@ -427,7 +452,7 @@ If you are sure your problem is a bug in DataBoard, you can also directly open a
 
 ### Contact / Support
 
-The current maintainer is Erik Schwarz <erik.schwarz{at}psi.ch>
+The current product owner is Andrej Babic, Paul Scherrer Institute.
 
 ---
 

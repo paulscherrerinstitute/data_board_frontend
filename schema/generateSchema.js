@@ -21,7 +21,7 @@ const generateSchemas = () => {
             const outputPath = `schema/${type.toLowerCase()}.schema.json`;
             console.log(`Generating schema for ${type} from ${path}`);
             execSync(
-                `npx ts-json-schema-generator --path ${path} --type ${type} --out ${outputPath}`
+                `npx ts-json-schema-generator --path ${path} --type ${type} --out ${outputPath} --tsconfig tsconfig.app.json`
             );
         });
     });

@@ -365,6 +365,18 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         curveAttributes.get(label) as CurveAttributes
                     );
                 }
+
+                // Set curve shape to digital (hv) in case the channel is a string or enum and nothing else is set
+                if ((channel.type == "string" || channel.type == "enum")) {
+                    const attributes = newCurveAttributes.get(label);
+                    if (attributes && !attributes.curveShape) {
+                        attributes.curveShape = "hv";
+                        showSnackbarAndLog(
+                            `By default, curve shape for ${label} has been set to digital, since its type is ${channel.type}`,
+                            "info"
+                        );
+                    }
+                }
             });
 
             // Compare and only update new data, to avoid endless loops
@@ -513,6 +525,8 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         fetchTimeValues.rawWhenSparse,
                                     removeEmptyBins:
                                         fetchTimeValues.removeEmptyBins,
+                                    isString:
+                                        channel.type == "string",
                                 },
                                 signal: requestSignal,
                             }
@@ -633,6 +647,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 meta: meta as {
                                     count?: number;
                                     pulseId?: number;
+                                    desc?: string;
                                 },
                             }))
                             .filter(
@@ -649,6 +664,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                     [timestamp: string]: {
                                         count?: number;
                                         pulseId?: number;
+                                        desc?: string;
                                     };
                                 }
                             );
@@ -891,6 +907,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                 "Max",
                 "Count",
                 "PulseId",
+                "Description",
             ];
             const rows: string[] = [];
 
@@ -915,6 +932,7 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             maxData[timestamp] ?? "",
                             pointMetaData?.[timestamp].count ?? "",
                             pointMetaData?.[timestamp].pulseId ?? "",
+                            pointMetaData?.[timestamp].desc ?? "",
                         ].join(";")
                     );
                 }
@@ -1079,6 +1097,12 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                         Object.values(metaData.pointMeta).some(
                             (meta) => meta.pulseId
                         );
+                    
+                    const hasDescriptions =
+                        metaData.pointMeta &&
+                        Object.values(metaData.pointMeta).some(
+                            (meta) => meta.desc
+                        );
 
                     const isXRaw = metaData.raw;
 
@@ -1173,6 +1197,14 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 }
                             }
 
+                            if (hasDescriptions) {
+                                const description =
+                                    metaData.pointMeta[xTimestamps[i]]?.desc;
+                                if (description !== undefined) {
+                                    text += `<br>Description: ${description}`;
+                                }
+                            }
+
                             return text;
                         });
 
@@ -1256,10 +1288,23 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                             Object.values(metaData.pointMeta).some(
                                 (meta) => meta.pulseId
                             );
+                        
+                        const hasDescriptions =
+                            metaData.pointMeta &&
+                            Object.values(metaData.pointMeta).some(
+                                (meta) => meta.desc
+                            );
 
                         const xText = metaData.waveform ? "Point No." : "Time";
                         const hoverText = xValues.map((timestamp, i) => {
-                            let text = `${displayLabel}<br>${xText}: ${timestamp}<br>Value: ${yBase[i]}`;
+                            let text = `${displayLabel}<br>${xText}: ${timestamp}`;
+                            const isString = curve.type == "string";
+                            if (isString) {
+                                const description = metaData.pointMeta[timestamp]?.desc;
+                                text += `<br>Value: ${description == "" ? "\"\"" : description}`;
+                            } else {
+                                text += `<br>Value: ${yBase[i]}`;
+                            }
 
                             if (hasPulseIds) {
                                 const pulseId =
@@ -1267,6 +1312,16 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                 if (pulseId !== undefined) {
                                     text += `<br>Pulse ID: ${pulseId}`;
                                 }
+                            }
+
+                            if (hasDescriptions && !isString) {
+                                const description =
+                                    metaData.pointMeta[timestamp]?.desc;
+                                if (description !== undefined) {
+                                    text += `<br>Description: ${description}`;
+                                }
+                            } else if (isString) {
+                                text += `<br>This is a string channel.`;
                             }
 
                             if (metaData.waveform) {
@@ -1281,6 +1336,15 @@ const PlotWidget: React.FC<PlotWidgetProps> = React.memo(
                                         )[0].pulseId;
                                         if (pulseId !== undefined) {
                                             text += `<br>   Pulse ID: ${pulseId}`;
+                                        }
+                                    }
+
+                                    if (hasDescriptions) {
+                                        const description = Object.values(
+                                            metaData.pointMeta
+                                        )[0].desc;
+                                        if (description !== undefined) {
+                                            text += `<br>   Description: ${description}`;
                                         }
                                     }
                                 }

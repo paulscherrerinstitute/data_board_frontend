@@ -34,6 +34,7 @@ export type CurveMeta = {
         [timestamp: string]: {
             count?: number;
             pulseId?: number;
+            desc?: string;
         };
     };
 };
